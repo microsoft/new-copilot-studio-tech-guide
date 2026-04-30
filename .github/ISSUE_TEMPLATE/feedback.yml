@@ -25,14 +25,3 @@ body:
       placeholder: Your feedback here...
     validations:
       required: true
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment (optional)
-      description: If relevant, share your environment details.
-      placeholder: |
-        - Power Platform environment region:
-        - Browser:
-        - Copilot Studio model:
-    validations:
-      required: false
