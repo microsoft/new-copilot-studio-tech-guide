@@ -1,0 +1,38 @@
+name: Feedback
+description: Share feedback about the ETC sample or guide
+title: "[Feedback] "
+labels: ["feedback"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: What does your feedback relate to?
+      options:
+        - Scenario walkthrough (minisite)
+        - Chat UI
+        - Solution import / deployment
+        - Connector / MCP tools
+        - Documentation / README
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: Tell us what you think, what worked, what didn't, or what you'd like to see improved.
+      placeholder: Your feedback here...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (optional)
+      description: If relevant, share your environment details.
+      placeholder: |
+        - Power Platform environment region:
+        - Browser:
+        - Copilot Studio model:
+    validations:
+      required: false
