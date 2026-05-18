@@ -1,0 +1,193 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Brand Template Generation | Enhanced Task Completion">
+  <article class="scenario">
+    <div class="container">
+      <a href={base} class="back">&larr; All scenarios</a>
+
+      <header class="scenario__header">
+        <span class="badge badge--primary">Template-Aware Generation</span>
+        <h1>Brand Template Generation</h1>
+        <p class="scenario__lead">
+          The agent reads a brand-styled PowerPoint or Word template, preserves its
+          shapes, logos, and formatting, and fills placeholders with contextual content
+          from the user's request and prior tool calls.
+        </p>
+      </header>
+
+      <section class="convo">
+        <h2>The conversation</h2>
+        <p class="convo__intro">
+          Use this with a brand-approved template when the source file's layout, logos,
+          and formatting must stay intact.
+        </p>
+
+        <ol class="timeline">
+          <li class="tl-user">
+            <div class="tl-marker">1</div>
+            <div class="tl-content">
+              <div class="tl-label">You</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">
+                  Here's our standard customer QBR deck. Identify the shapes and logos
+                  that should be preserved and turn the editable text into placeholders.
+                </blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+            <div class="tl-content">
+              <div class="tl-label">Agent</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">templatize_*</span> preserves decorative shapes, logos, images, and layout</div>
+                <p>Replaces editable text frames with named placeholders such as <code>{'{{exec_summary}}'}</code> and <code>{'{{section_1_title}}'}</code>.</p>
+              </div>
+            </div>
+          </li>
+          <li class="tl-user">
+            <div class="tl-marker">2</div>
+            <div class="tl-content">
+              <div class="tl-label">You</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">
+                  Using this templatized deck, generate a Q1 review for Contoso. The
+                  exec summary should pull from the email thread I shared, and the
+                  metrics slide should use the figures from the attached spreadsheet.
+                </blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+            <div class="tl-content">
+              <div class="tl-label">Agent</div>
+              <div class="tl-steps">
+                <p>Reads the placeholder list, determines which values can be inferred, and asks only for missing details.</p>
+                <div class="tl-tool"><span class="tl-tool-name">fill_template</span> writes placeholder values back in place</div>
+                <p>Returns the finished file with the original brand system intact.</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="scenario__section">
+        <h2>Why this matters</h2>
+        <p class="scenario__body">
+          Most "make me a deck" agents regenerate slides from scratch and lose the
+          customer's brand system in the process: fonts shift, logos move, footers
+          disappear, and color palettes drift. This scenario keeps the original file as
+          the source of truth and only writes into the spots that are meant to change.
+        </p>
+      </section>
+
+      <section class="scenario__section">
+        <h2>Setup</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Import the solution</h3>
+            <p>
+              Import <code>sample/templates/PPTWORDTemplateGenerator_1_0_0_2.zip</code>
+              into a Power Platform environment with Copilot Studio on the
+              <strong>Early Release</strong> channel.
+            </p>
+          </div>
+          <div class="value-card">
+            <h3>Add the scripts</h3>
+            <p>
+              Use the scripts under <code>sample/templates/scripts/</code> as the
+              template-processing tools. Add any companion fill script from the
+              contributed package before running the end-to-end flow.
+            </p>
+          </div>
+          <div class="value-card">
+            <h3>Enable ETC</h3>
+            <p>
+              Turn on Enhanced Task Completion in the agent's Generative AI settings so
+              the agent can plan across placeholder discovery, clarifying questions, and
+              final file generation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>ETC capabilities demonstrated</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Preserve brand fidelity</h3>
+            <p>Shapes, images, logos, headers, footers, fonts, and layout stay untouched while editable text is replaced with structured placeholders.</p>
+          </div>
+          <div class="value-card">
+            <h3>Ask only when needed</h3>
+            <p>The agent decides which placeholders require clarifying questions and which can be filled from context, files, or tool calls.</p>
+          </div>
+          <div class="value-card">
+            <h3>Chain file tools</h3>
+            <p>Templatizing and filling are separate steps, letting the agent pass a placeholder map forward without regenerating the whole document.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>Variants</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Cowork + Skills</h3>
+            <p>Run the same pipeline as a Cowork skill if you prefer that surface. The host changes, but the template-preserving flow is identical.</p>
+          </div>
+          <div class="value-card">
+            <h3>Word documents</h3>
+            <p>Use the same flow for <code>.docx</code> files to preserve headers, footers, logos, tables, and body formatting.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>Credit</h2>
+        <p class="scenario__body">Contributed by Betty Le (Microsoft, Cloud Solution Architect).</p>
+      </section>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .scenario { padding: var(--space-3xl) 0; }
+  .back { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 500; color: var(--c-text-muted); margin-bottom: var(--space-xl); }
+  .back:hover { color: var(--c-primary); }
+  .scenario__header { max-width: 680px; }
+  .scenario__header h1 { margin-top: var(--space-md); }
+  .scenario__lead { margin-top: var(--space-lg); font-size: 1.05rem; color: var(--c-text-secondary); line-height: 1.7; }
+  .scenario__section { margin-top: var(--space-3xl); }
+  .scenario__section h2 { margin-bottom: var(--space-lg); }
+  .scenario__body { max-width: 760px; color: var(--c-text-secondary); line-height: 1.7; }
+
+  .convo { margin-top: var(--space-3xl); }
+  .convo h2 { margin-bottom: var(--space-sm); }
+  .convo__intro { color: var(--c-text-secondary); margin-bottom: var(--space-xl); font-size: 0.92rem; }
+  .timeline { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .timeline li { display: grid; grid-template-columns: 40px 1fr; gap: var(--space-md); padding: var(--space-md) 0; }
+  .tl-marker { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.78rem; font-weight: 700; }
+  .tl-user .tl-marker { background: var(--c-primary); color: white; }
+  .tl-agent .tl-marker { background: var(--c-surface-raised); border: 2px solid var(--c-border); color: var(--c-text-muted); }
+  .tl-content { min-width: 0; }
+  .tl-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .tl-user .tl-label { color: var(--c-primary); }
+  .tl-agent .tl-label { color: var(--c-text-muted); }
+  .tl-user .try-prompt { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); padding: var(--space-md); }
+  .tl-user .try-prompt__text { font-size: 0.92rem; color: var(--c-text); line-height: 1.6; border: none; padding: 0; margin: 0; }
+  .tl-steps { font-size: 0.88rem; color: var(--c-text-secondary); line-height: 1.65; padding: var(--space-md); background: var(--c-surface-raised); border-radius: var(--radius-md); border: 1px solid var(--c-border-subtle); }
+  .tl-steps p { margin-top: 8px; }
+  .tl-tool { display: flex; align-items: baseline; gap: 8px; padding: 3px 0; }
+  .tl-tool-name { font-family: var(--font-mono); font-size: 0.78em; font-weight: 600; color: var(--c-primary); background: var(--c-primary-light); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+
+  .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-lg); }
+  .value-card { padding: var(--space-lg); background: var(--c-surface-raised); border: 1px solid var(--c-border-subtle); border-radius: var(--radius-md); }
+  .value-card h3 { font-size: 0.95rem; margin-bottom: var(--space-xs); }
+  .value-card p { font-size: 0.85rem; color: var(--c-text-secondary); line-height: 1.6; }
+</style>
