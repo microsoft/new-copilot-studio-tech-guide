@@ -10,9 +10,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 // ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║  Warehouse MCP Connector (inline)                                           ║
+// ║  Policy RAG MCP Connector (inline, MOCK)                                    ║
 // ║                                                                            ║
-// ║  5 tools with static mock data — no external server needed.                ║
+// ║  A pretend "knowledge base" for the BlastBox Omega Store Policy Agent.      ║
+// ║  Modern Copilot Studio agents can't take uploaded files, so the tier        ║
+// ║  policy booklets live here as static passages and a mock keyword search.   ║
+// ║                                                                            ║
+// ║  No embeddings, no external store — just canned text + naive scoring.       ║
 // ║  Based on Power MCP Template v2.1 by Troy Taylor.                          ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -24,14 +28,14 @@ public class Script : ScriptBase
     {
         ServerInfo = new McpServerInfo
         {
-            Name = "warehouse-fulfillment",
+            Name = "blastpass-policy-rag",
             Version = "1.0.0",
-            Title = "Warehouse & Fulfillment",
-            Description = "Warehouse inventory and fulfillment tools for checking stock, tracking fulfillment pipeline stages, finding product alternatives, and looking up restock dates."
+            Title = "BlastPass Policy Knowledge",
+            Description = "Mock policy knowledge base for BlastBox Omega. Search the BlastPass membership, returns, and loyalty policies, or fetch the exact refund rule for a tier. Use this to confirm a member's tier and whether a prorated refund is allowed before running the refund math."
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use check_stock to look up inventory for a product SKU. If out of stock, use get_restock_date for restock info and find_alternatives for similar products. Use get_fulfillment_status with an order_id to check where an order is in the warehouse pipeline. Use check_game_compatibility to find which BlastBox Omega model a game requires. Use get_inventory_aging to see how long a product's stock has been sitting and whether more is inbound, to inform markdown/clearance decisions."
+        Instructions = "Call search_policy with the associate's question (and optionally a tier_code of plus/extra/mega) to retrieve the most relevant policy passages. Call get_tier_refund_policy with a tier_code to get the structured refund rule (cooling-off window, proration method, cancellation fee, non-refundable credit) needed to calculate a prorated refund. Call get_markdown_policy with a markdown_type ('promo' or 'clearance') to get the store's pricing markdown guardrails (max discount, margin floor, clearance/manager-flag rules) for merchandising markdown decisions. This is a mock knowledge base with static text."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -48,194 +52,233 @@ public class Script : ScriptBase
         };
     }
 
-    // ── Static Data ─────────────────────────────────────────────────────
+    // ── Static "Knowledge Base" ─────────────────────────────────────────
+    //
+    // Each passage is a mock policy chunk. tier is plus/extra/mega or "all".
+    // Naive search scores passages by how many query words appear in the
+    // keywords + text. This is intentionally NOT real RAG — just a demo prop.
 
-    private static readonly JArray Stock = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA"",""name"":""BlastBox Omega Console"",""category"":""console"",""price"":399.99,""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-20"",""availableForShipping"":false},
-        {""sku"":""SKU-OMEGA-MEGA"",""name"":""BlastBox Omega MEGA Edition"",""category"":""console"",""price"":499.99,""quantity"":5,""warehouse"":""Seattle-WA1"",""aisle"":""E-21"",""availableForShipping"":true},
-        {""sku"":""SKU-APEX5"",""name"":""Apex NoiseGuard 5 Headphones"",""category"":""electronics"",""quantity"":3,""warehouse"":""Seattle-WA1"",""aisle"":""E-14"",""availableForShipping"":true},
-        {""sku"":""SKU-USBC3"",""name"":""USB-C Charging Cable (3-pack)"",""category"":""electronics"",""quantity"":142,""warehouse"":""Seattle-WA1"",""aisle"":""A-02"",""availableForShipping"":true},
-        {""sku"":""SKU-LUMI"",""name"":""LumiRead E-Reader (16GB)"",""category"":""electronics"",""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-08"",""availableForShipping"":false},
-        {""sku"":""SKU-PULSE"",""name"":""PulseWave Pro Earbuds"",""category"":""electronics"",""quantity"":17,""warehouse"":""Seattle-WA1"",""aisle"":""E-12"",""availableForShipping"":true},
-        {""sku"":""SKU-VORTEX"",""name"":""Vortex Gaming Console OLED"",""category"":""electronics"",""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-22"",""availableForShipping"":false},
-        {""sku"":""SKU-REALM"",""name"":""Realm of Legends: The Lost Crown"",""category"":""electronics"",""quantity"":24,""warehouse"":""Chicago-IL1"",""aisle"":""G-05"",""availableForShipping"":true},
-        {""sku"":""SKU-APEX4"",""name"":""Apex NoiseGuard 4 Headphones (Previous Gen)"",""category"":""electronics"",""quantity"":8,""warehouse"":""Seattle-WA1"",""aisle"":""E-14"",""availableForShipping"":true},
-        {""sku"":""SKU-CLAR7"",""name"":""Clarity NC700 Headphones"",""category"":""electronics"",""quantity"":6,""warehouse"":""Seattle-WA1"",""aisle"":""E-15"",""availableForShipping"":true},
-        {""sku"":""SKU-PWMAX"",""name"":""PulseWave Max Headphones - Space Gray"",""category"":""electronics"",""quantity"":2,""warehouse"":""Seattle-WA1"",""aisle"":""E-13"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE"",""name"":""TrailMark Fleece Hoodie - Black (L)"",""category"":""clothing"",""quantity"":4,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE-XL"",""name"":""TrailMark Fleece Hoodie - Black (XL)"",""category"":""clothing"",""quantity"":7,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE-GRY"",""name"":""TrailMark Fleece Hoodie - Grey (L)"",""category"":""clothing"",""quantity"":2,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-JOGGER"",""name"":""TrailMark Sport Joggers - Grey (L)"",""category"":""clothing"",""quantity"":11,""warehouse"":""Dallas-TX1"",""aisle"":""C-09"",""availableForShipping"":true},
-        {""sku"":""SKU-STAR2"",""name"":""Starfall: Part Two (4K Blu-ray)"",""category"":""media"",""quantity"":9,""warehouse"":""Chicago-IL1"",""aisle"":""M-03"",""availableForShipping"":true},
-        {""sku"":""SKU-COMFT"",""name"":""ComfortEdge Pro - Matte Black"",""category"":""furniture"",""quantity"":1,""warehouse"":""Seattle-WA1"",""aisle"":""F-01"",""availableForShipping"":true},
-        {""sku"":""SKU-COMFT-W"",""name"":""ComfortEdge Pro - White"",""category"":""furniture"",""quantity"":3,""warehouse"":""Seattle-WA1"",""aisle"":""F-01"",""availableForShipping"":true},
-        {""sku"":""SKU-DESKMAT"",""name"":""Felt Desk Mat - Dark Grey (90x40cm)"",""category"":""furniture"",""quantity"":30,""warehouse"":""Seattle-WA1"",""aisle"":""F-04"",""availableForShipping"":true}
-    ]");
-
-    private static readonly JObject Fulfillment = JObject.Parse(@"{
-        ""ORD-10422"":{""order_id"":""ORD-10422"",""warehouse"":""Chicago-IL1"",""assigned_worker"":""Mike Torres"",""current_stage"":""received"",""estimated_ship_date"":""2026-04-23"",""notes"":""LumiRead E-Reader — awaiting restock. Item reserved from incoming shipment."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-15T09:30:00Z""}]},
-        ""ORD-10460"":{""order_id"":""ORD-10460"",""warehouse"":""Chicago-IL1"",""assigned_worker"":""Lisa Park"",""current_stage"":""picked"",""estimated_ship_date"":""2026-04-21"",""notes"":""Vortex Console on backorder, Realm of Legends picked, holding for bundle ship."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-18T10:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-19T14:20:00Z""}]},
-        ""ORD-10421"":{""order_id"":""ORD-10421"",""warehouse"":""Seattle-WA1"",""assigned_worker"":""Carlos Mendez"",""current_stage"":""handed_to_carrier"",""estimated_ship_date"":""2026-04-13"",""notes"":""Shipped via SwiftShip. Two items in single box."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-11T08:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-11T11:30:00Z""},{""stage"":""packed"",""completed_at"":""2026-04-12T09:15:00Z""},{""stage"":""labeled"",""completed_at"":""2026-04-12T10:00:00Z""},{""stage"":""handed_to_carrier"",""completed_at"":""2026-04-13T08:45:00Z""}]},
-        ""ORD-10455"":{""order_id"":""ORD-10455"",""warehouse"":""Dallas-TX1"",""assigned_worker"":""Rachel Kim"",""current_stage"":""handed_to_carrier"",""estimated_ship_date"":""2026-04-14"",""notes"":""Shipped via PrimeFreight. Hoodie + joggers in one package."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-12T11:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-13T09:00:00Z""},{""stage"":""packed"",""completed_at"":""2026-04-13T14:30:00Z""},{""stage"":""labeled"",""completed_at"":""2026-04-14T08:00:00Z""},{""stage"":""handed_to_carrier"",""completed_at"":""2026-04-14T15:00:00Z""}]}
-    }");
-
-    private static readonly JArray Restock = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA"",""name"":""BlastBox Omega Console"",""current_quantity"":0,""next_shipment_date"":""2026-06-11"",""expected_quantity"":40,""supplier"":""BlastBox Manufacturing"",""notes"":""Standard replenishment — next batch arrives in about 4 days. MEGA Edition is in stock now as an upgrade alternative.""},
-        {""sku"":""SKU-LUMI"",""name"":""LumiRead E-Reader (16GB)"",""current_quantity"":0,""next_shipment_date"":""2026-04-22"",""expected_quantity"":50,""supplier"":""LumiRead Distribution Co."",""notes"":""Delayed from original April 18 date. Supplier confirmed new ETA.""},
-        {""sku"":""SKU-VORTEX"",""name"":""Vortex Gaming Console OLED"",""current_quantity"":0,""next_shipment_date"":""2026-04-28"",""expected_quantity"":30,""supplier"":""Vortex Games Inc."",""notes"":""High demand — limited allocation. Next batch after this is mid-May.""},
-        {""sku"":""SKU-APEX5"",""name"":""Apex NoiseGuard 5 Headphones"",""current_quantity"":3,""next_shipment_date"":""2026-05-05"",""expected_quantity"":20,""supplier"":""Apex Audio Corp."",""notes"":""Regular replenishment cycle. Current stock sufficient for 1-2 weeks.""},
-        {""sku"":""SKU-COMFT"",""name"":""ComfortEdge Pro - Matte Black"",""current_quantity"":1,""next_shipment_date"":""2026-04-30"",""expected_quantity"":10,""supplier"":""ComfortEdge Furniture Co."",""notes"":""Low stock alert triggered. Express shipment arranged.""}
-    ]");
-
-    private static readonly JArray Games = JArray.Parse(@"[
-        {""title"":""MEGA Lizards from Outer Space"",""required_model"":""BlastBox Omega MEGA Edition"",""required_sku"":""SKU-OMEGA-MEGA"",""runs_on_base"":false,""note"":""AAA title — requires the MEGA Edition GPU. Will NOT run on the base BlastBox Omega.""},
-        {""title"":""Realm of Legends: The Lost Crown"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model, including the base console.""},
-        {""title"":""Galaxy Smash"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model.""}
-    ]");
-
-    // Inventory aging / inbound status for merchandising markdown decisions.
-    private static readonly JArray Aging = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA-MEGA"",""name"":""BlastBox Omega MEGA Edition"",""weeks_in_stock"":3,""received_date"":""2026-05-11"",""inbound_po"":true,""next_inbound_date"":""2026-06-15"",""aging_bucket"":""fresh"",""note"":""Hot seller. Replenishment PO inbound.""},
-        {""sku"":""SKU-MEGALIZARDS"",""name"":""MEGA Lizards from Outer Space"",""weeks_in_stock"":4,""received_date"":""2026-05-04"",""inbound_po"":true,""next_inbound_date"":""2026-06-12"",""aging_bucket"":""fresh"",""note"":""AAA title driving MEGA Edition attach. Reorder inbound.""},
-        {""sku"":""SKU-PULSE-CTRL"",""name"":""PulseGrip Pro Controller"",""weeks_in_stock"":5,""received_date"":""2026-04-27"",""inbound_po"":true,""next_inbound_date"":""2026-06-20"",""aging_bucket"":""fresh"",""note"":""Steady accessory attach.""},
-        {""sku"":""SKU-OMEGA-CORE"",""name"":""BlastBox Omega Core (1st-gen)"",""weeks_in_stock"":16,""received_date"":""2026-02-16"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""aging"",""note"":""Being phased out by the MEGA Edition. No further inbound — candidate for discontinuation/clearance.""},
-        {""sku"":""SKU-RETRO-CADET"",""name"":""BlastBox Cadet Bundle"",""weeks_in_stock"":22,""received_date"":""2026-01-05"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""stale"",""note"":""Last-gen bundle. No inbound. Strong markdown candidate.""},
-        {""sku"":""SKU-GALAXY-SMASH"",""name"":""Galaxy Smash"",""weeks_in_stock"":14,""received_date"":""2026-03-02"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""aging"",""note"":""Overstocked at launch. No inbound. Markdown candidate.""},
-        {""sku"":""SKU-VR-GOGGLES"",""name"":""OmegaVision VR Headset"",""weeks_in_stock"":18,""received_date"":""2026-02-02"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""stale"",""note"":""Slow launch. No inbound. Strong markdown/clearance candidate.""}
+    private static readonly JArray Passages = JArray.Parse(@"[
+        {
+            ""id"":""mem-plus-refund"",
+            ""doc"":""BlastPass Plus Membership Terms"",
+            ""section"":""Cancellations & Refunds"",
+            ""tier"":""plus"",
+            ""keywords"":""plus tier1 refund cancel cancellation prorate prorated proration cooling-off cooling off window months remaining price 79.99 fee"",
+            ""text"":""BlastPass Plus ($79.99/yr). Cooling-off: cancel within 14 days of activation with under 2 hours streamed for a FULL refund. Otherwise a prorated refund is available for the whole UNUSED months left on the 12-month term (monthly value = 79.99/12 = $6.6658/mo). Plus has NO cancellation fee and no non-refundable credit. Prorated refunds ARE allowed for Plus.""
+        },
+        {
+            ""id"":""mem-extra-refund"",
+            ""doc"":""BlastPass Plus Extra Membership Terms"",
+            ""section"":""Cancellations & Refunds"",
+            ""tier"":""extra"",
+            ""keywords"":""extra plus extra tier2 refund cancel cancellation prorate prorated proration cooling-off window months remaining price 129.99 fee 10 vault"",
+            ""text"":""BlastPass Plus Extra ($129.99/yr). Cooling-off: cancel within 14 days of activation with under 2 hours streamed for a FULL refund. Otherwise a prorated refund is available for the whole UNUSED months left on the 12-month term (monthly value = 129.99/12 = $10.8325/mo), MINUS a $10 cancellation fee (never below $0). No non-refundable credit. Prorated refunds ARE allowed for Plus Extra.""
+        },
+        {
+            ""id"":""mem-mega-refund"",
+            ""doc"":""BlastPass Plus Extra MEGA!!! Membership Terms"",
+            ""section"":""Cancellations & Refunds"",
+            ""tier"":""mega"",
+            ""keywords"":""mega plus extra mega tier3 refund cancel cancellation prorate prorated proration cooling-off window months remaining price 199.99 fee 25 welcome credit 20 non-refundable loot crate"",
+            ""text"":""BlastPass Plus Extra MEGA!!! ($199.99/yr). Cooling-off: cancel within 14 days of activation with under 2 hours streamed for a FULL refund. Otherwise a prorated refund is available for the whole UNUSED months left on the 12-month term (monthly value = 199.99/12 = $16.6658/mo), MINUS a $25 cancellation fee AND MINUS the one-time $20 MEGA Welcome Credit, which is non-refundable (never below $0). Prorated refunds ARE allowed for MEGA, but remember to subtract BOTH the $25 fee and the $20 credit.""
+        },
+        {
+            ""id"":""mem-perks"",
+            ""doc"":""BlastPass Membership Terms"",
+            ""section"":""Tiers & Perks"",
+            ""tier"":""all"",
+            ""keywords"":""tier tiers perks benefits vault mystery cartridge cloud save blastbuddies co-op which tier difference compare"",
+            ""text"":""Tiers: Plus ($79.99) — 4-player co-op, 1 Mystery Cartridge/mo, 25GB cloud saves. Plus Extra ($129.99) — Extra Vault (200+ titles), 100GB saves, 2 cartridges/mo, early demos. Plus Extra MEGA!!! ($199.99) — MEGA Vault (600+ titles incl. day-one exclusives), unlimited saves, 4 cartridges/mo + quarterly Loot Crate, MEGA Lounge, plus a one-time $20 Welcome Credit.""
+        },
+        {
+            ""id"":""returns-windows"",
+            ""doc"":""Store Returns & Exchanges Policy"",
+            ""section"":""Return Windows"",
+            ""tier"":""all"",
+            ""keywords"":""return returns exchange window days console accessory game sealed opened receipt eligible eligibility"",
+            ""text"":""Return windows (with receipt): Consoles & hardware — 30 days, like-new. Accessories (controllers, headsets) — 30 days. Sealed physical games — 30 days. Opened physical games — 14 days, exchange only for the same title if defective. Digital/redeemed codes — non-returnable once revealed. Day-one MEGA exclusives — NON-RETURNABLE, all sales final.""
+        },
+        {
+            ""id"":""returns-restocking"",
+            ""doc"":""Store Returns & Exchanges Policy"",
+            ""section"":""Restocking Fees & Store Credit"",
+            ""tier"":""all"",
+            ""keywords"":""restocking fee store credit refund opened bundle settlement defective warranty percent bonus"",
+            ""text"":""Restocking fee: 15% on opened consoles/hardware returned in like-new condition; waived if the item is defective. Defective hardware within 30 days is a free warranty swap, not a return. Refunds go to the original tender; choosing STORE CREDIT instead adds a 10% goodwill bonus on the eligible merchandise total (the bonus does NOT apply to membership-proration refunds or to fees).""
+        },
+        {
+            ""id"":""loyalty-blastpoints"",
+            ""doc"":""BlastPoints Loyalty Program Terms"",
+            ""section"":""Earning, Promos & Expiry"",
+            ""tier"":""all"",
+            ""keywords"":""blastpoints loyalty points earn redeem expiry expire promo multiplier triple weekend tier bonus reconcile balance"",
+            ""text"":""BlastPoints: earn 10 points per $1 on merchandise. Tier bonus: Extra members +20%, MEGA members +50% on earned points. Promo events (e.g. Triple BLAST Weekend) multiply BASE earn by 3x before the tier bonus. Points from returned items are clawed back. Points expire 90 days after they are earned if the account is inactive. Redemption: 1,000 points = $5 store credit.""
+        }
     ]");
 
     // ── Tool Registration ───────────────────────────────────────────────
 
     private void RegisterCapabilities(McpRequestHandler handler)
     {
-        // 1. check_stock
-        handler.AddTool("check_stock",
-            "Check warehouse inventory for a product by SKU. Returns quantity on hand, warehouse location, aisle, and whether the item is available for shipping. If quantity is 0, use get_restock_date for restock info.",
-            schemaConfig: s => s.String("sku", "Product SKU (e.g. 'SKU-APEX5'). Use SKUs from order line items.", required: true),
+        // 1. search_policy — mock keyword search over the static passages
+        handler.AddTool("search_policy",
+            "Search the BlastBox Omega policy knowledge base (membership, returns, and loyalty terms) and return the most relevant policy passages. Use this to confirm a member's tier, check whether a prorated refund is allowed, look up return windows, restocking fees, or loyalty rules.",
+            schemaConfig: s => s
+                .String("query", "What you want to know, in natural language (e.g. 'is a prorated refund allowed for Plus Extra?' or 'return window for an opened console').", required: true)
+                .String("tier_code", "Optional tier filter: 'plus', 'extra', or 'mega'. Omit to search all policies.", required: false),
             handler: async (args, ct) =>
             {
-                var sku = args.Value<string>("sku") ?? "";
-                foreach (var item in Stock)
+                var query = (args.Value<string>("query") ?? "").Trim();
+                var tier = (args.Value<string>("tier_code") ?? "").Trim().ToLowerInvariant();
+                var terms = Tokenize(query);
+
+                var scored = new List<JObject>();
+                foreach (var p in Passages)
                 {
-                    if (item["sku"]?.ToString() == sku)
+                    var pTier = p["tier"]?.ToString() ?? "all";
+                    if (tier.Length > 0 && pTier != "all" && pTier != tier)
+                        continue;
+
+                    var hay = ((p["keywords"]?.ToString() ?? "") + " " + (p["text"]?.ToString() ?? "")).ToLowerInvariant();
+                    int score = 0;
+                    foreach (var t in terms)
+                        if (hay.Contains(t)) score++;
+                    if (tier.Length > 0 && pTier == tier) score += 2; // tier match boost
+
+                    if (score > 0)
                     {
-                        var qty = item["quantity"]?.Value<int>() ?? 0;
-                        return new JObject
+                        scored.Add(new JObject
                         {
-                            ["sku"] = item["sku"],
-                            ["name"] = item["name"],
-                            ["category"] = item["category"],
-                            ["price"] = item["price"],
-                            ["quantity_on_hand"] = qty,
-                            ["warehouse"] = item["warehouse"],
-                            ["aisle"] = item["aisle"],
-                            ["available_for_shipping"] = item["availableForShipping"],
-                            ["status"] = qty == 0 ? "OUT_OF_STOCK" : qty <= 3 ? "LOW_STOCK" : "IN_STOCK"
-                        };
-                    }
-                }
-                throw new ArgumentException($"SKU \"{sku}\" not found in warehouse inventory.");
-            });
-
-        // 2. get_fulfillment_status
-        handler.AddTool("get_fulfillment_status",
-            "Get the fulfillment pipeline status for an order. Shows which warehouse stage the order is at (received → picked → packed → labeled → handed_to_carrier), assigned worker, and estimated ship date.",
-            schemaConfig: s => s.String("order_id", "Order ID (e.g. 'ORD-10422') from the order management system", required: true),
-            handler: async (args, ct) =>
-            {
-                var orderId = args.Value<string>("order_id") ?? "";
-                if (Fulfillment[orderId] != null)
-                    return JObject.Parse(Fulfillment[orderId].ToString());
-                throw new ArgumentException($"No fulfillment record found for order \"{orderId}\". The order may not have entered the warehouse yet.");
-            });
-
-        // 3. find_alternatives
-        handler.AddTool("find_alternatives",
-            "Find alternative products similar to a given SKU. Returns items in the same category that are in stock. Useful when a customer wants a different size, color, or comparable product, or when an item is out of stock.",
-            schemaConfig: s => s.String("sku", "Product SKU to find alternatives for (e.g. 'SKU-HOODIE')", required: true),
-            handler: async (args, ct) =>
-            {
-                var sku = args.Value<string>("sku") ?? "";
-                JToken original = null;
-                foreach (var item in Stock)
-                {
-                    if (item["sku"]?.ToString() == sku) { original = item; break; }
-                }
-                if (original == null)
-                    throw new ArgumentException($"SKU \"{sku}\" not found in inventory.");
-
-                var category = original["category"]?.ToString();
-                var alternatives = new JArray();
-                foreach (var item in Stock)
-                {
-                    if (item["category"]?.ToString() == category && item["sku"]?.ToString() != sku && (item["quantity"]?.Value<int>() ?? 0) > 0)
-                    {
-                        alternatives.Add(new JObject
-                        {
-                            ["sku"] = item["sku"],
-                            ["name"] = item["name"],
-                            ["price"] = item["price"],
-                            ["quantity_available"] = item["quantity"],
-                            ["warehouse"] = item["warehouse"],
-                            ["available_for_shipping"] = item["availableForShipping"]
+                            ["id"] = p["id"],
+                            ["document"] = p["doc"],
+                            ["section"] = p["section"],
+                            ["tier"] = pTier,
+                            ["text"] = p["text"],
+                            ["score"] = score
                         });
                     }
                 }
 
-                return new JObject
+                var top = scored.OrderByDescending(x => (int)x["score"]).Take(3).ToList();
+                if (top.Count == 0)
                 {
-                    ["original"] = new JObject { ["sku"] = original["sku"], ["name"] = original["name"], ["category"] = category },
-                    ["alternatives"] = alternatives
-                };
+                    return new JObject
+                    {
+                        ["query"] = query,
+                        ["matches"] = new JArray(),
+                        ["note"] = "No matching policy passage. Try mentioning the tier (Plus, Plus Extra, MEGA) or a topic like 'refund', 'return window', or 'BlastPoints'."
+                    };
+                }
+
+                var results = new JArray();
+                foreach (var m in top) results.Add(m);
+                return new JObject { ["query"] = query, ["matches"] = results };
             });
 
-        // 4. get_restock_date
-        handler.AddTool("get_restock_date",
-            "Get the next restock date and supplier info for a product. Use this when check_stock shows an item is out of stock or low stock. Returns expected delivery date, quantity, and supplier details.",
-            schemaConfig: s => s.String("sku", "Product SKU (e.g. 'SKU-LUMI'). Typically used after check_stock shows low/no stock.", required: true),
+        // 2. get_tier_refund_policy — structured refund rule for a tier
+        handler.AddTool("get_tier_refund_policy",
+            "Return the exact, structured membership refund rule for a BlastPass tier: the cooling-off window, the proration method, the cancellation fee, and any non-refundable credit. Use this once the tier is known so the refund can be calculated precisely.",
+            schemaConfig: s => s
+                .String("tier_code", "The tier: 'plus' (BlastPass Plus), 'extra' (BlastPass Plus Extra), or 'mega' (BlastPass Plus Extra MEGA!!!).", required: true),
             handler: async (args, ct) =>
             {
-                var sku = args.Value<string>("sku") ?? "";
-                foreach (var item in Restock)
+                var tier = (args.Value<string>("tier_code") ?? "").Trim().ToLowerInvariant();
+                switch (tier)
                 {
-                    if (item["sku"]?.ToString() == sku)
-                        return JObject.Parse(item.ToString());
+                    case "plus":
+                        return RefundRule("BlastPass Plus", 79.99, 0.00, 0.00);
+                    case "extra":
+                        return RefundRule("BlastPass Plus Extra", 129.99, 10.00, 0.00);
+                    case "mega":
+                        return RefundRule("BlastPass Plus Extra MEGA!!!", 199.99, 25.00, 20.00);
+                    default:
+                        throw new ArgumentException("Unknown tier_code \"" + tier + "\". Use 'plus', 'extra', or 'mega'.");
                 }
-                return new JObject { ["message"] = $"No restock schedule found for SKU \"{sku}\". The item may be regularly stocked or discontinued." };
             });
 
-        // 5. check_game_compatibility
-        handler.AddTool("check_game_compatibility",
-            "Check which BlastBox Omega console model a game requires. Use when a customer asks whether a game will run on their console, or when deciding between the base console and the MEGA Edition. Returns the required model/SKU and whether it runs on the base console.",
-            schemaConfig: s => s.String("game_title", "The game title (e.g. 'MEGA Lizards from Outer Space'). Case-insensitive, partial match allowed.", required: true),
+        // 3. get_markdown_policy
+        handler.AddTool("get_markdown_policy",
+            "Return the store's pricing markdown guardrails. Pass markdown_type='ask' FIRST to get the clarifying question the manager must answer (promo vs clearance). Once known, pass markdown_type='promo' (temporary promotion: capped discount, margin floor, no clearance) or 'clearance' (discontinuation: no cap/floor, requires a manager flag). Pass the returned guardrails into the markdown-optimizer; never hardcode them.",
+            schemaConfig: s => s
+                .String("markdown_type", "The markdown type: 'promo' (temporary promotion), 'clearance' (discontinuation), or 'ask' to receive the clarifying question to put to the manager.", required: true),
             handler: async (args, ct) =>
             {
-                var q = (args.Value<string>("game_title") ?? "").Trim().ToLowerInvariant();
-                foreach (var g in Games)
+                var type = (args.Value<string>("markdown_type") ?? "").Trim().ToLowerInvariant();
+                switch (type)
                 {
-                    var title = (g["title"]?.ToString() ?? "").ToLowerInvariant();
-                    if (title == q || (q.Length > 0 && title.Contains(q)))
-                        return JObject.Parse(g.ToString());
+                    case "":
+                    case "ask":
+                        return new JObject
+                        {
+                            ["needs_clarification"] = true,
+                            ["question"] = "Are these markdowns a temporary end-of-quarter PROMOTION, or a CLEARANCE because we're discontinuing the items? Promotions are capped and must stay above the margin floor; clearance has no floor but needs manager approval.",
+                            ["options"] = new JArray("promo", "clearance"),
+                            ["rule"] = "The markdown type determines the discount cap and margin floor, so confirm it with the manager before recommending any discounts."
+                        };
+                    case "promo":
+                        return new JObject
+                        {
+                            ["markdown_type"] = "promo",
+                            ["max_discount_pct"] = 30,
+                            ["margin_floor_pct"] = 15,
+                            ["min_useful_promo_discount_pct"] = 10,
+                            ["clearance_allowed"] = false,
+                            ["requires_manager_flag"] = false,
+                            ["rule"] = "Temporary promotion: discount each item by up to 30% off its current price, but never below a 15% gross margin. If the deepest discount allowed by the margin floor is under min_useful_promo_discount_pct (10%), the item cannot be meaningfully promoted and should be flagged for clearance instead."
+                        };
+                    case "clearance":
+                        return new JObject
+                        {
+                            ["markdown_type"] = "clearance",
+                            ["max_discount_pct"] = null,
+                            ["margin_floor_pct"] = null,
+                            ["min_useful_promo_discount_pct"] = null,
+                            ["clearance_allowed"] = true,
+                            ["requires_manager_flag"] = true,
+                            ["rule"] = "Clearance / discontinuation: no discount cap and no margin floor (may sell below cost to clear), but every clearance markdown requires explicit manager approval (manager flag)."
+                        };
+                    default:
+                        return new JObject
+                        {
+                            ["needs_clarification"] = true,
+                            ["question"] = "I didn't recognize that markdown type. Is this a temporary PROMOTION or a CLEARANCE (discontinuation)?",
+                            ["options"] = new JArray("promo", "clearance")
+                        };
                 }
-                return new JObject { ["message"] = $"No compatibility record found for game \"{args.Value<string>("game_title")}\"." };
             });
+    }
 
-        // 6. get_inventory_aging
-        handler.AddTool("get_inventory_aging",
-            "Return inventory aging and inbound-replenishment status for a product SKU: how many weeks the stock has been sitting, its received date, whether there is an inbound purchase order, and an aging bucket (fresh / aging / stale). Use this to judge whether a slow-selling item is a markdown or clearance candidate. Omit sku to return aging for all tracked products.",
-            schemaConfig: s => s.String("sku", "Optional. Product SKU (e.g. 'SKU-VR-GOGGLES'). Omit to return all tracked products."),
-            handler: async (args, ct) =>
-            {
-                var sku = (args.Value<string>("sku") ?? "").Trim();
-                if (sku.Length == 0)
-                    return new JObject { ["count"] = Aging.Count, ["items"] = JArray.Parse(Aging.ToString()) };
-                foreach (var item in Aging)
-                {
-                    if (string.Equals(item["sku"]?.ToString(), sku, StringComparison.OrdinalIgnoreCase))
-                        return JObject.Parse(item.ToString());
-                }
-                return new JObject { ["message"] = $"No aging record found for SKU \"{sku}\"." };
-            });
+    private static JObject RefundRule(string name, double annual, double fee, double credit)
+    {
+        return new JObject
+        {
+            ["tier"] = name,
+            ["annual_price"] = annual,
+            ["monthly_value"] = Math.Round(annual / 12.0, 4),
+            ["term_months"] = 12,
+            ["cooling_off_days"] = 14,
+            ["cooling_off_max_hours_streamed"] = 2,
+            ["cooling_off_rule"] = "If cancelled within 14 days of activation AND under 2 hours streamed, issue a FULL refund of the annual price (no fee).",
+            ["proration_rule"] = "Otherwise refund = whole UNUSED months remaining x (annual_price / 12), then subtract the cancellation fee and any non-refundable credit; never below $0.",
+            ["cancellation_fee"] = fee,
+            ["nonrefundable_credit"] = credit,
+            ["prorated_refund_allowed"] = true
+        };
+    }
+
+    // Naive tokenizer: lowercase, split on non-alphanumeric, drop short/stop words.
+    private static List<string> Tokenize(string s)
+    {
+        var stop = new HashSet<string> { "the","a","an","is","are","for","to","of","and","or","my","i","do","does","can","what","whats","how","on","in","it","be","with","please" };
+        var sb = new StringBuilder();
+        foreach (var ch in (s ?? "").ToLowerInvariant())
+            sb.Append(char.IsLetterOrDigit(ch) ? ch : ' ');
+        var tokens = new List<string>();
+        foreach (var w in sb.ToString().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            if (w.Length >= 3 && !stop.Contains(w) && !tokens.Contains(w))
+                tokens.Add(w);
+        return tokens;
     }
 
 }

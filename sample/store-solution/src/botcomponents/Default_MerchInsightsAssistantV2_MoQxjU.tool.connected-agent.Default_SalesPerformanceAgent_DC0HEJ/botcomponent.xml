@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_MerchInsightsAssistantV2_MoQxjU.tool.connected-agent.Default_SalesPerformanceAgent_DC0HEJ">
+  <componenttype>9</componenttype>
+  <description>Sales data agent.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Sales &amp; Performance Agent</name>
+  <parentbotid>
+    <schemaname>Default_MerchInsightsAssistantV2_MoQxjU</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

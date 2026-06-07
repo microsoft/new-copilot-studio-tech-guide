@@ -1,0 +1,14 @@
+<botcomponent schemaname="craede95_skill_md_af36a7c8105d">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">SKILL.md</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>SKILL.md</name>
+  <parentbotcomponentid>
+    <schemaname>Default_draft_ef3Vqn.skill.distance-calculator</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>Default_draft_ef3Vqn</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

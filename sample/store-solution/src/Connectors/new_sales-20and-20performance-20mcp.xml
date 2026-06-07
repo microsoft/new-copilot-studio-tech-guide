@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <connectorid>3ec39206-5762-f111-ab0b-0022480a52c7</connectorid>
+  <description>Raw, queryable sales and catalog data for a retail store. Tools: query_sales (weekly unit/revenue rows) and get_catalog (price, unit cost, stock on hand). No pre-baked analytics — callers construct queries and derive metrics. Runs entirely inside the connector — no external MCP server needed.</description>
+  <displayname>Sales and Performance MCP</displayname>
+  <iconbrandcolor>#007ee5</iconbrandcolor>
+  <name>new_sales-20and-20performance-20mcp</name>
+  <connectortype>1</connectortype>
+  <scriptoperations>[]</scriptoperations>
+  <openapidefinition>/Connector/new_sales-20and-20performance-20mcp_openapidefinition.json</openapidefinition>
+  <connectionparameters>/Connector/new_sales-20and-20performance-20mcp_connectionparameters.json</connectionparameters>
+  <policytemplateinstances>/Connector/new_sales-20and-20performance-20mcp_policytemplateinstances.json</policytemplateinstances>
+  <customcodeblobcontent>/Connector/new_sales-20and-20performance-20mcp_customcodeblobcontent.csx</customcodeblobcontent>
+</Connector>

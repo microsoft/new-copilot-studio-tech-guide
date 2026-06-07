@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_draft_ef3Vqn.skill.distance-calculator">
+  <componenttype>9</componenttype>
+  <description>Calculate the great-circle distance between two locations. Use when the user wants to know how far apart two cities, towns, or places are. The skill asks for two locations, looks up their geographic coordinates via web search, then computes the distance with a Python script.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>distance-calculator</name>
+  <parentbotid>
+    <schemaname>Default_draft_ef3Vqn</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

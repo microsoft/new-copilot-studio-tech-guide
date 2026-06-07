@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_draft_IsBewO.skill.skill1">
+  <componenttype>9</componenttype>
+  <description>skill1</description>
+  <iscustomizable>0</iscustomizable>
+  <name>skill1</name>
+  <parentbotid>
+    <schemaname>Default_draft_IsBewO</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,0 +1,4 @@
+kind: McpTool
+connectorId: /providers/Microsoft.PowerApps/apis/shared_policy-20rag-20mcp-5fee08b8354fad177a-5f8dc9e3504a9e5333
+connectionReference: Default_StorePolicyAgent_s9s-u8.cr.shared_policy-20rag-.97e4f711133d4fb0815fcfb07f281f54
+operationId: InvokeMCP

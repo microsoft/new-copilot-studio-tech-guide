@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_draft_IsBewO.skill.prorated-refund-calculator">
+  <componenttype>9</componenttype>
+  <description>Calculate the exact prorated refund when a customer cancels a BlastPass membership for the BlastBox Omega console. Use after the Store Policy Agent confirms a prorated refund is allowed for the member's tier and the Membership MCP has returned the membership details (months remaining, annual price, fees). The skill writes and runs a short Python snippet to compute the precise refund and shows a line-by-line breakdown.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>prorated-refund-calculator</name>
+  <parentbotid>
+    <schemaname>Default_draft_IsBewO</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

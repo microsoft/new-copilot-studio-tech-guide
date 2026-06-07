@@ -10,9 +10,11 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 // ╔══════════════════════════════════════════════════════════════════════════════╗
-// ║  Warehouse MCP Connector (inline)                                           ║
+// ║  Sales & Performance MCP Connector (inline)                                 ║
 // ║                                                                            ║
-// ║  5 tools with static mock data — no external server needed.                ║
+// ║  RAW, queryable retail data only — NO pre-baked analytics.                 ║
+// ║  The agent constructs its own queries and derives velocity, weeks-of-cover, ║
+// ║  and margin itself. Two tools: query_sales, get_catalog.                    ║
 // ║  Based on Power MCP Template v2.1 by Troy Taylor.                          ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -24,14 +26,14 @@ public class Script : ScriptBase
     {
         ServerInfo = new McpServerInfo
         {
-            Name = "warehouse-fulfillment",
+            Name = "sales-performance",
             Version = "1.0.0",
-            Title = "Warehouse & Fulfillment",
-            Description = "Warehouse inventory and fulfillment tools for checking stock, tracking fulfillment pipeline stages, finding product alternatives, and looking up restock dates."
+            Title = "Sales and Performance",
+            Description = "Raw, queryable sales and catalog data for a retail store. Returns weekly unit/revenue rows and product catalog facts (price, unit cost, stock on hand). Contains NO pre-computed analytics — the caller constructs queries and derives velocity, weeks-of-cover, and margin."
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use check_stock to look up inventory for a product SKU. If out of stock, use get_restock_date for restock info and find_alternatives for similar products. Use get_fulfillment_status with an order_id to check where an order is in the warehouse pipeline. Use check_game_compatibility to find which BlastBox Omega model a game requires. Use get_inventory_aging to see how long a product's stock has been sitting and whether more is inbound, to inform markdown/clearance decisions."
+        Instructions = "Use query_sales(start_week, end_week, sku?, category?) to pull RAW weekly rows of units sold and revenue for a date window; weeks are week-ending dates from 2026-04-12 to 2026-05-31. Use get_catalog(category?, sku?) for price, unit_cost, and stock_on_hand. This server returns raw data only — construct your own queries and compute velocity (units/weeks), weeks-of-cover (stock/velocity), and margin ((price-cost)/price) yourself."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -50,195 +52,126 @@ public class Script : ScriptBase
 
     // ── Static Data ─────────────────────────────────────────────────────
 
-    private static readonly JArray Stock = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA"",""name"":""BlastBox Omega Console"",""category"":""console"",""price"":399.99,""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-20"",""availableForShipping"":false},
-        {""sku"":""SKU-OMEGA-MEGA"",""name"":""BlastBox Omega MEGA Edition"",""category"":""console"",""price"":499.99,""quantity"":5,""warehouse"":""Seattle-WA1"",""aisle"":""E-21"",""availableForShipping"":true},
-        {""sku"":""SKU-APEX5"",""name"":""Apex NoiseGuard 5 Headphones"",""category"":""electronics"",""quantity"":3,""warehouse"":""Seattle-WA1"",""aisle"":""E-14"",""availableForShipping"":true},
-        {""sku"":""SKU-USBC3"",""name"":""USB-C Charging Cable (3-pack)"",""category"":""electronics"",""quantity"":142,""warehouse"":""Seattle-WA1"",""aisle"":""A-02"",""availableForShipping"":true},
-        {""sku"":""SKU-LUMI"",""name"":""LumiRead E-Reader (16GB)"",""category"":""electronics"",""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-08"",""availableForShipping"":false},
-        {""sku"":""SKU-PULSE"",""name"":""PulseWave Pro Earbuds"",""category"":""electronics"",""quantity"":17,""warehouse"":""Seattle-WA1"",""aisle"":""E-12"",""availableForShipping"":true},
-        {""sku"":""SKU-VORTEX"",""name"":""Vortex Gaming Console OLED"",""category"":""electronics"",""quantity"":0,""warehouse"":""Chicago-IL1"",""aisle"":""E-22"",""availableForShipping"":false},
-        {""sku"":""SKU-REALM"",""name"":""Realm of Legends: The Lost Crown"",""category"":""electronics"",""quantity"":24,""warehouse"":""Chicago-IL1"",""aisle"":""G-05"",""availableForShipping"":true},
-        {""sku"":""SKU-APEX4"",""name"":""Apex NoiseGuard 4 Headphones (Previous Gen)"",""category"":""electronics"",""quantity"":8,""warehouse"":""Seattle-WA1"",""aisle"":""E-14"",""availableForShipping"":true},
-        {""sku"":""SKU-CLAR7"",""name"":""Clarity NC700 Headphones"",""category"":""electronics"",""quantity"":6,""warehouse"":""Seattle-WA1"",""aisle"":""E-15"",""availableForShipping"":true},
-        {""sku"":""SKU-PWMAX"",""name"":""PulseWave Max Headphones - Space Gray"",""category"":""electronics"",""quantity"":2,""warehouse"":""Seattle-WA1"",""aisle"":""E-13"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE"",""name"":""TrailMark Fleece Hoodie - Black (L)"",""category"":""clothing"",""quantity"":4,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE-XL"",""name"":""TrailMark Fleece Hoodie - Black (XL)"",""category"":""clothing"",""quantity"":7,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-HOODIE-GRY"",""name"":""TrailMark Fleece Hoodie - Grey (L)"",""category"":""clothing"",""quantity"":2,""warehouse"":""Dallas-TX1"",""aisle"":""C-07"",""availableForShipping"":true},
-        {""sku"":""SKU-JOGGER"",""name"":""TrailMark Sport Joggers - Grey (L)"",""category"":""clothing"",""quantity"":11,""warehouse"":""Dallas-TX1"",""aisle"":""C-09"",""availableForShipping"":true},
-        {""sku"":""SKU-STAR2"",""name"":""Starfall: Part Two (4K Blu-ray)"",""category"":""media"",""quantity"":9,""warehouse"":""Chicago-IL1"",""aisle"":""M-03"",""availableForShipping"":true},
-        {""sku"":""SKU-COMFT"",""name"":""ComfortEdge Pro - Matte Black"",""category"":""furniture"",""quantity"":1,""warehouse"":""Seattle-WA1"",""aisle"":""F-01"",""availableForShipping"":true},
-        {""sku"":""SKU-COMFT-W"",""name"":""ComfortEdge Pro - White"",""category"":""furniture"",""quantity"":3,""warehouse"":""Seattle-WA1"",""aisle"":""F-01"",""availableForShipping"":true},
-        {""sku"":""SKU-DESKMAT"",""name"":""Felt Desk Mat - Dark Grey (90x40cm)"",""category"":""furniture"",""quantity"":30,""warehouse"":""Seattle-WA1"",""aisle"":""F-04"",""availableForShipping"":true}
+    // Week-ending dates (ISO, lexically sortable). 8 trailing weeks.
+    private static readonly string[] Weeks = new[]
+    {
+        "2026-04-12","2026-04-19","2026-04-26","2026-05-03",
+        "2026-05-10","2026-05-17","2026-05-24","2026-05-31"
+    };
+
+    private static readonly JArray Catalog = JArray.Parse(@"[
+        {""sku"":""SKU-OMEGA-MEGA"",""name"":""BlastBox Omega MEGA Edition"",""category"":""console"",""price"":499.99,""unit_cost"":300.00,""stock_on_hand"":60},
+        {""sku"":""SKU-MEGALIZARDS"",""name"":""MEGA Lizards from Outer Space"",""category"":""game"",""price"":69.99,""unit_cost"":25.00,""stock_on_hand"":90},
+        {""sku"":""SKU-PULSE-CTRL"",""name"":""PulseGrip Pro Controller"",""category"":""accessory"",""price"":59.99,""unit_cost"":22.00,""stock_on_hand"":120},
+        {""sku"":""SKU-OMEGA-CORE"",""name"":""BlastBox Omega Core (1st-gen)"",""category"":""console"",""price"":399.99,""unit_cost"":320.00,""stock_on_hand"":75},
+        {""sku"":""SKU-RETRO-CADET"",""name"":""BlastBox Cadet Bundle"",""category"":""console"",""price"":149.99,""unit_cost"":110.00,""stock_on_hand"":60},
+        {""sku"":""SKU-GALAXY-SMASH"",""name"":""Galaxy Smash"",""category"":""game"",""price"":49.99,""unit_cost"":18.00,""stock_on_hand"":140},
+        {""sku"":""SKU-VR-GOGGLES"",""name"":""OmegaVision VR Headset"",""category"":""accessory"",""price"":199.99,""unit_cost"":70.00,""stock_on_hand"":48}
     ]");
 
-    private static readonly JObject Fulfillment = JObject.Parse(@"{
-        ""ORD-10422"":{""order_id"":""ORD-10422"",""warehouse"":""Chicago-IL1"",""assigned_worker"":""Mike Torres"",""current_stage"":""received"",""estimated_ship_date"":""2026-04-23"",""notes"":""LumiRead E-Reader — awaiting restock. Item reserved from incoming shipment."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-15T09:30:00Z""}]},
-        ""ORD-10460"":{""order_id"":""ORD-10460"",""warehouse"":""Chicago-IL1"",""assigned_worker"":""Lisa Park"",""current_stage"":""picked"",""estimated_ship_date"":""2026-04-21"",""notes"":""Vortex Console on backorder, Realm of Legends picked, holding for bundle ship."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-18T10:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-19T14:20:00Z""}]},
-        ""ORD-10421"":{""order_id"":""ORD-10421"",""warehouse"":""Seattle-WA1"",""assigned_worker"":""Carlos Mendez"",""current_stage"":""handed_to_carrier"",""estimated_ship_date"":""2026-04-13"",""notes"":""Shipped via SwiftShip. Two items in single box."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-11T08:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-11T11:30:00Z""},{""stage"":""packed"",""completed_at"":""2026-04-12T09:15:00Z""},{""stage"":""labeled"",""completed_at"":""2026-04-12T10:00:00Z""},{""stage"":""handed_to_carrier"",""completed_at"":""2026-04-13T08:45:00Z""}]},
-        ""ORD-10455"":{""order_id"":""ORD-10455"",""warehouse"":""Dallas-TX1"",""assigned_worker"":""Rachel Kim"",""current_stage"":""handed_to_carrier"",""estimated_ship_date"":""2026-04-14"",""notes"":""Shipped via PrimeFreight. Hoodie + joggers in one package."",""pipeline"":[{""stage"":""received"",""completed_at"":""2026-04-12T11:00:00Z""},{""stage"":""picked"",""completed_at"":""2026-04-13T09:00:00Z""},{""stage"":""packed"",""completed_at"":""2026-04-13T14:30:00Z""},{""stage"":""labeled"",""completed_at"":""2026-04-14T08:00:00Z""},{""stage"":""handed_to_carrier"",""completed_at"":""2026-04-14T15:00:00Z""}]}
+    // Weekly units sold per SKU, aligned to Weeks[] (8 values each).
+    private static readonly JObject WeeklyUnits = JObject.Parse(@"{
+        ""SKU-OMEGA-MEGA"":[38,42,40,36,44,40,39,41],
+        ""SKU-MEGALIZARDS"":[60,72,68,64,70,66,71,69],
+        ""SKU-PULSE-CTRL"":[48,52,50,49,53,51,54,53],
+        ""SKU-OMEGA-CORE"":[9,8,7,6,6,5,4,3],
+        ""SKU-RETRO-CADET"":[2,1,1,1,2,1,1,0],
+        ""SKU-GALAXY-SMASH"":[4,3,2,3,2,3,2,3],
+        ""SKU-VR-GOGGLES"":[1,1,0,1,1,0,1,1]
     }");
-
-    private static readonly JArray Restock = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA"",""name"":""BlastBox Omega Console"",""current_quantity"":0,""next_shipment_date"":""2026-06-11"",""expected_quantity"":40,""supplier"":""BlastBox Manufacturing"",""notes"":""Standard replenishment — next batch arrives in about 4 days. MEGA Edition is in stock now as an upgrade alternative.""},
-        {""sku"":""SKU-LUMI"",""name"":""LumiRead E-Reader (16GB)"",""current_quantity"":0,""next_shipment_date"":""2026-04-22"",""expected_quantity"":50,""supplier"":""LumiRead Distribution Co."",""notes"":""Delayed from original April 18 date. Supplier confirmed new ETA.""},
-        {""sku"":""SKU-VORTEX"",""name"":""Vortex Gaming Console OLED"",""current_quantity"":0,""next_shipment_date"":""2026-04-28"",""expected_quantity"":30,""supplier"":""Vortex Games Inc."",""notes"":""High demand — limited allocation. Next batch after this is mid-May.""},
-        {""sku"":""SKU-APEX5"",""name"":""Apex NoiseGuard 5 Headphones"",""current_quantity"":3,""next_shipment_date"":""2026-05-05"",""expected_quantity"":20,""supplier"":""Apex Audio Corp."",""notes"":""Regular replenishment cycle. Current stock sufficient for 1-2 weeks.""},
-        {""sku"":""SKU-COMFT"",""name"":""ComfortEdge Pro - Matte Black"",""current_quantity"":1,""next_shipment_date"":""2026-04-30"",""expected_quantity"":10,""supplier"":""ComfortEdge Furniture Co."",""notes"":""Low stock alert triggered. Express shipment arranged.""}
-    ]");
-
-    private static readonly JArray Games = JArray.Parse(@"[
-        {""title"":""MEGA Lizards from Outer Space"",""required_model"":""BlastBox Omega MEGA Edition"",""required_sku"":""SKU-OMEGA-MEGA"",""runs_on_base"":false,""note"":""AAA title — requires the MEGA Edition GPU. Will NOT run on the base BlastBox Omega.""},
-        {""title"":""Realm of Legends: The Lost Crown"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model, including the base console.""},
-        {""title"":""Galaxy Smash"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model.""}
-    ]");
-
-    // Inventory aging / inbound status for merchandising markdown decisions.
-    private static readonly JArray Aging = JArray.Parse(@"[
-        {""sku"":""SKU-OMEGA-MEGA"",""name"":""BlastBox Omega MEGA Edition"",""weeks_in_stock"":3,""received_date"":""2026-05-11"",""inbound_po"":true,""next_inbound_date"":""2026-06-15"",""aging_bucket"":""fresh"",""note"":""Hot seller. Replenishment PO inbound.""},
-        {""sku"":""SKU-MEGALIZARDS"",""name"":""MEGA Lizards from Outer Space"",""weeks_in_stock"":4,""received_date"":""2026-05-04"",""inbound_po"":true,""next_inbound_date"":""2026-06-12"",""aging_bucket"":""fresh"",""note"":""AAA title driving MEGA Edition attach. Reorder inbound.""},
-        {""sku"":""SKU-PULSE-CTRL"",""name"":""PulseGrip Pro Controller"",""weeks_in_stock"":5,""received_date"":""2026-04-27"",""inbound_po"":true,""next_inbound_date"":""2026-06-20"",""aging_bucket"":""fresh"",""note"":""Steady accessory attach.""},
-        {""sku"":""SKU-OMEGA-CORE"",""name"":""BlastBox Omega Core (1st-gen)"",""weeks_in_stock"":16,""received_date"":""2026-02-16"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""aging"",""note"":""Being phased out by the MEGA Edition. No further inbound — candidate for discontinuation/clearance.""},
-        {""sku"":""SKU-RETRO-CADET"",""name"":""BlastBox Cadet Bundle"",""weeks_in_stock"":22,""received_date"":""2026-01-05"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""stale"",""note"":""Last-gen bundle. No inbound. Strong markdown candidate.""},
-        {""sku"":""SKU-GALAXY-SMASH"",""name"":""Galaxy Smash"",""weeks_in_stock"":14,""received_date"":""2026-03-02"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""aging"",""note"":""Overstocked at launch. No inbound. Markdown candidate.""},
-        {""sku"":""SKU-VR-GOGGLES"",""name"":""OmegaVision VR Headset"",""weeks_in_stock"":18,""received_date"":""2026-02-02"",""inbound_po"":false,""next_inbound_date"":null,""aging_bucket"":""stale"",""note"":""Slow launch. No inbound. Strong markdown/clearance candidate.""}
-    ]");
 
     // ── Tool Registration ───────────────────────────────────────────────
 
     private void RegisterCapabilities(McpRequestHandler handler)
     {
-        // 1. check_stock
-        handler.AddTool("check_stock",
-            "Check warehouse inventory for a product by SKU. Returns quantity on hand, warehouse location, aisle, and whether the item is available for shipping. If quantity is 0, use get_restock_date for restock info.",
-            schemaConfig: s => s.String("sku", "Product SKU (e.g. 'SKU-APEX5'). Use SKUs from order line items.", required: true),
+        // 1. query_sales
+        handler.AddTool("query_sales",
+            "Return RAW weekly sales rows (units sold and revenue) for a date window. Each row has sku, name, category, week, units, and revenue fields. Weeks are week-ending dates between 2026-04-12 and 2026-05-31. Optionally filter by a single sku or a category. This is raw data - compute velocity, weeks-of-cover, and margin yourself.",
+            schemaConfig: s => s
+                .String("start_week", "Inclusive start week-ending date (YYYY-MM-DD). Omit for the earliest available week (2026-04-12).")
+                .String("end_week", "Inclusive end week-ending date (YYYY-MM-DD). Omit for the latest available week (2026-05-31).")
+                .String("sku", "Optional. Restrict to a single product SKU (e.g. 'SKU-VR-GOGGLES').")
+                .String("category", "Optional. Restrict to a category: 'console', 'game', or 'accessory'."),
             handler: async (args, ct) =>
             {
-                var sku = args.Value<string>("sku") ?? "";
-                foreach (var item in Stock)
+                var start = (args.Value<string>("start_week") ?? "").Trim();
+                if (start.Length == 0) start = Weeks[0];
+                var end = (args.Value<string>("end_week") ?? "").Trim();
+                if (end.Length == 0) end = Weeks[Weeks.Length - 1];
+                var skuFilter = (args.Value<string>("sku") ?? "").Trim();
+                var catFilter = (args.Value<string>("category") ?? "").Trim().ToLowerInvariant();
+
+                int startIdx = 0;
+                int endIdx = Weeks.Length - 1;
+                for (int i = 0; i < Weeks.Length; i++)
                 {
-                    if (item["sku"]?.ToString() == sku)
+                    if (Weeks[i] == start) startIdx = i;
+                    if (Weeks[i] == end) endIdx = i;
+                }
+
+                var rows = new JArray();
+                foreach (var item in Catalog)
+                {
+                    var sku = item["sku"]?.ToString() ?? "";
+                    var cat = (item["category"]?.ToString() ?? "").ToLowerInvariant();
+                    var price = item["price"]?.Value<double>() ?? 0.0;
+                    if (skuFilter.Length > 0 && !string.Equals(sku, skuFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (catFilter.Length > 0 && cat != catFilter) continue;
+
+                    var units = WeeklyUnits[sku] as JArray;
+                    if (units == null) continue;
+                    for (int w = startIdx; w <= endIdx; w++)
                     {
-                        var qty = item["quantity"]?.Value<int>() ?? 0;
-                        return new JObject
+                        var week = Weeks[w];
+                        var u = units[w].Value<int>();
+                        var revenue = ((long)(u * price * 100.0 + 0.5)) / 100.0;
+                        rows.Add(new JObject
                         {
-                            ["sku"] = item["sku"],
+                            ["sku"] = sku,
                             ["name"] = item["name"],
                             ["category"] = item["category"],
-                            ["price"] = item["price"],
-                            ["quantity_on_hand"] = qty,
-                            ["warehouse"] = item["warehouse"],
-                            ["aisle"] = item["aisle"],
-                            ["available_for_shipping"] = item["availableForShipping"],
-                            ["status"] = qty == 0 ? "OUT_OF_STOCK" : qty <= 3 ? "LOW_STOCK" : "IN_STOCK"
-                        };
-                    }
-                }
-                throw new ArgumentException($"SKU \"{sku}\" not found in warehouse inventory.");
-            });
-
-        // 2. get_fulfillment_status
-        handler.AddTool("get_fulfillment_status",
-            "Get the fulfillment pipeline status for an order. Shows which warehouse stage the order is at (received → picked → packed → labeled → handed_to_carrier), assigned worker, and estimated ship date.",
-            schemaConfig: s => s.String("order_id", "Order ID (e.g. 'ORD-10422') from the order management system", required: true),
-            handler: async (args, ct) =>
-            {
-                var orderId = args.Value<string>("order_id") ?? "";
-                if (Fulfillment[orderId] != null)
-                    return JObject.Parse(Fulfillment[orderId].ToString());
-                throw new ArgumentException($"No fulfillment record found for order \"{orderId}\". The order may not have entered the warehouse yet.");
-            });
-
-        // 3. find_alternatives
-        handler.AddTool("find_alternatives",
-            "Find alternative products similar to a given SKU. Returns items in the same category that are in stock. Useful when a customer wants a different size, color, or comparable product, or when an item is out of stock.",
-            schemaConfig: s => s.String("sku", "Product SKU to find alternatives for (e.g. 'SKU-HOODIE')", required: true),
-            handler: async (args, ct) =>
-            {
-                var sku = args.Value<string>("sku") ?? "";
-                JToken original = null;
-                foreach (var item in Stock)
-                {
-                    if (item["sku"]?.ToString() == sku) { original = item; break; }
-                }
-                if (original == null)
-                    throw new ArgumentException($"SKU \"{sku}\" not found in inventory.");
-
-                var category = original["category"]?.ToString();
-                var alternatives = new JArray();
-                foreach (var item in Stock)
-                {
-                    if (item["category"]?.ToString() == category && item["sku"]?.ToString() != sku && (item["quantity"]?.Value<int>() ?? 0) > 0)
-                    {
-                        alternatives.Add(new JObject
-                        {
-                            ["sku"] = item["sku"],
-                            ["name"] = item["name"],
-                            ["price"] = item["price"],
-                            ["quantity_available"] = item["quantity"],
-                            ["warehouse"] = item["warehouse"],
-                            ["available_for_shipping"] = item["availableForShipping"]
+                            ["week"] = week,
+                            ["units"] = u,
+                            ["revenue"] = revenue
                         });
                     }
                 }
 
                 return new JObject
                 {
-                    ["original"] = new JObject { ["sku"] = original["sku"], ["name"] = original["name"], ["category"] = category },
-                    ["alternatives"] = alternatives
+                    ["start_week"] = start,
+                    ["end_week"] = end,
+                    ["row_count"] = rows.Count,
+                    ["rows"] = rows
                 };
             });
 
-        // 4. get_restock_date
-        handler.AddTool("get_restock_date",
-            "Get the next restock date and supplier info for a product. Use this when check_stock shows an item is out of stock or low stock. Returns expected delivery date, quantity, and supplier details.",
-            schemaConfig: s => s.String("sku", "Product SKU (e.g. 'SKU-LUMI'). Typically used after check_stock shows low/no stock.", required: true),
+        // 2. get_catalog
+        handler.AddTool("get_catalog",
+            "Return catalog facts for products: sku, name, category, price, unit_cost, and stock_on_hand. Optionally filter by category or a single sku. Use price and unit_cost to derive margin, and stock_on_hand with your derived velocity to derive weeks-of-cover.",
+            schemaConfig: s => s
+                .String("category", "Optional. Restrict to a category: 'console', 'game', or 'accessory'.")
+                .String("sku", "Optional. Restrict to a single product SKU."),
             handler: async (args, ct) =>
             {
-                var sku = args.Value<string>("sku") ?? "";
-                foreach (var item in Restock)
-                {
-                    if (item["sku"]?.ToString() == sku)
-                        return JObject.Parse(item.ToString());
-                }
-                return new JObject { ["message"] = $"No restock schedule found for SKU \"{sku}\". The item may be regularly stocked or discontinued." };
-            });
+                var skuFilter = (args.Value<string>("sku") ?? "").Trim();
+                var catFilter = (args.Value<string>("category") ?? "").Trim().ToLowerInvariant();
 
-        // 5. check_game_compatibility
-        handler.AddTool("check_game_compatibility",
-            "Check which BlastBox Omega console model a game requires. Use when a customer asks whether a game will run on their console, or when deciding between the base console and the MEGA Edition. Returns the required model/SKU and whether it runs on the base console.",
-            schemaConfig: s => s.String("game_title", "The game title (e.g. 'MEGA Lizards from Outer Space'). Case-insensitive, partial match allowed.", required: true),
-            handler: async (args, ct) =>
-            {
-                var q = (args.Value<string>("game_title") ?? "").Trim().ToLowerInvariant();
-                foreach (var g in Games)
+                var items = new JArray();
+                foreach (var item in Catalog)
                 {
-                    var title = (g["title"]?.ToString() ?? "").ToLowerInvariant();
-                    if (title == q || (q.Length > 0 && title.Contains(q)))
-                        return JObject.Parse(g.ToString());
+                    var sku = item["sku"]?.ToString() ?? "";
+                    var cat = (item["category"]?.ToString() ?? "").ToLowerInvariant();
+                    if (skuFilter.Length > 0 && !string.Equals(sku, skuFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (catFilter.Length > 0 && cat != catFilter) continue;
+                    items.Add(JObject.Parse(item.ToString()));
                 }
-                return new JObject { ["message"] = $"No compatibility record found for game \"{args.Value<string>("game_title")}\"." };
-            });
-
-        // 6. get_inventory_aging
-        handler.AddTool("get_inventory_aging",
-            "Return inventory aging and inbound-replenishment status for a product SKU: how many weeks the stock has been sitting, its received date, whether there is an inbound purchase order, and an aging bucket (fresh / aging / stale). Use this to judge whether a slow-selling item is a markdown or clearance candidate. Omit sku to return aging for all tracked products.",
-            schemaConfig: s => s.String("sku", "Optional. Product SKU (e.g. 'SKU-VR-GOGGLES'). Omit to return all tracked products."),
-            handler: async (args, ct) =>
-            {
-                var sku = (args.Value<string>("sku") ?? "").Trim();
-                if (sku.Length == 0)
-                    return new JObject { ["count"] = Aging.Count, ["items"] = JArray.Parse(Aging.ToString()) };
-                foreach (var item in Aging)
-                {
-                    if (string.Equals(item["sku"]?.ToString(), sku, StringComparison.OrdinalIgnoreCase))
-                        return JObject.Parse(item.ToString());
-                }
-                return new JObject { ["message"] = $"No aging record found for SKU \"{sku}\"." };
+                return new JObject { ["count"] = items.Count, ["items"] = items };
             });
     }
 
 }
+
 
 // ║  SECTION 2: MCP FRAMEWORK                                                  ║
 // ║                                                                            ║

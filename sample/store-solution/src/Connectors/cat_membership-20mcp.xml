@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <connectorid>b23175df-aff2-4ffc-9f87-185e58cdcfc9</connectorid>
+  <description>BlastPass console membership lookup and cancellation. Tools: get_membership (mega-blast-customer-id -&gt; tier, price, months remaining), cancel_membership. Runs entirely inside the connector — no external MCP server needed.</description>
+  <displayname>Membership MCP</displayname>
+  <iconbrandcolor>#007ee5</iconbrandcolor>
+  <name>cat_membership-20mcp</name>
+  <connectortype>1</connectortype>
+  <scriptoperations>[]</scriptoperations>
+  <openapidefinition>/Connector/cat_membership-20mcp_openapidefinition.json</openapidefinition>
+  <connectionparameters>/Connector/cat_membership-20mcp_connectionparameters.json</connectionparameters>
+  <policytemplateinstances>/Connector/cat_membership-20mcp_policytemplateinstances.json</policytemplateinstances>
+  <customcodeblobcontent>/Connector/cat_membership-20mcp_customcodeblobcontent.csx</customcodeblobcontent>
+  <iconblob>/Connector/cat_membership-20mcp_iconblob.Png</iconblob>
+</Connector>

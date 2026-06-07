@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <connectorid>334ba87d-2236-4e17-8be6-58c1dcc093ec</connectorid>
+  <description>BlastPass Policy Knowledge — a mock policy knowledge base for BlastBox Omega. Tools: search_policy (natural-language search over membership/returns/loyalty terms, optional tier filter) and get_tier_refund_policy (structured refund rule per tier). Runs entirely inside the connector — no external MCP server needed.</description>
+  <displayname>Policy RAG MCP</displayname>
+  <iconbrandcolor>#007ee5</iconbrandcolor>
+  <name>cat_policy-20rag-20mcp</name>
+  <connectortype>1</connectortype>
+  <scriptoperations>[]</scriptoperations>
+  <openapidefinition>/Connector/cat_policy-20rag-20mcp_openapidefinition.json</openapidefinition>
+  <connectionparameters>/Connector/cat_policy-20rag-20mcp_connectionparameters.json</connectionparameters>
+  <policytemplateinstances>/Connector/cat_policy-20rag-20mcp_policytemplateinstances.json</policytemplateinstances>
+  <customcodeblobcontent>/Connector/cat_policy-20rag-20mcp_customcodeblobcontent.csx</customcodeblobcontent>
+  <iconblob>/Connector/cat_policy-20rag-20mcp_iconblob.Png</iconblob>
+</Connector>

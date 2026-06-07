@@ -1,0 +1,14 @@
+<botcomponent schemaname="craede95_distance_py_628d3dfb72a7">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">distance.py</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>distance.py</name>
+  <parentbotcomponentid>
+    <schemaname>Default_draft_ef3Vqn.skill.distance-calculator</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>Default_draft_ef3Vqn</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

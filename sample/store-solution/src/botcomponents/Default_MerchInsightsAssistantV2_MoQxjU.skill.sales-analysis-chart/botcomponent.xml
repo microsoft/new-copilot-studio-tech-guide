@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_MerchInsightsAssistantV2_MoQxjU.skill.sales-analysis-chart">
+  <componenttype>9</componenttype>
+  <description>Turn RAW weekly sales rows and catalog facts into merchandising analytics and visual charts. Use when a store manager wants to see top sellers and slow-moving / dead stock over a period. The skill computes velocity, weeks-of-cover, and margin itself (the Sales &amp; Performance MCP returns raw data only), then generates and runs Python (matplotlib) to render PNG bar charts for top sellers and slow movers. It does NOT decide discounts — hand the derived slow-mover list to the markdown-optimizer skill.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>sales-analysis-chart</name>
+  <parentbotid>
+    <schemaname>Default_MerchInsightsAssistantV2_MoQxjU</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

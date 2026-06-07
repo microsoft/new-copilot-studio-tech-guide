@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_StorePolicyAgent_s9s-u8.tool.PolicyRAGMCP-PolicyRAGMCPServer">
+  <componenttype>9</componenttype>
+  <description>MCP server for BlastBox Omega policy knowledge. Tools: search_policy, get_tier_refund_policy.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Policy RAG MCP — Policy RAG MCP Server</name>
+  <parentbotid>
+    <schemaname>Default_StorePolicyAgent_s9s-u8</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

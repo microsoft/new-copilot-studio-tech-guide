@@ -1,0 +1,4 @@
+kind: ConnectedAgentTool
+botSchemaName: Default_SalesPerformanceAgent_DC0HEJ
+historyType:
+  kind: ConversationHistory

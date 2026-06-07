@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_MerchInsightsAssistantV2_MoQxjU.skill.merch-report-pdf">
+  <componenttype>9</componenttype>
+  <description>Assemble the end-of-quarter markdown review into a one-page, shareable PDF for the regional team. Use last, after sales-analysis-chart has produced the PNG charts and markdown-optimizer has produced the recommended discounts. The skill generates and runs Python (reportlab) that embeds the charts, a recommendation table, and notes into a PDF. It does not decide anything — it only renders already-confirmed results.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>merch-report-pdf</name>
+  <parentbotid>
+    <schemaname>Default_MerchInsightsAssistantV2_MoQxjU</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>
