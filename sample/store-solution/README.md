@@ -81,28 +81,29 @@ Each is an inline MCP server (no secrets, no auth) — just click **Create**.
 
 ---
 
-## 3. Re‑add the three connected‑agent MCP tools
+## 3. Add the MCP tools to the agents
 
-Two MCP tools import already wired (**Membership MCP** on the Returns parent and
-**Policy RAG MCP** on the Store Policy Agent — just give them the connections
-from step 2). Three MCP tools on the connected agents need to be added once after
-import. **The connectors themselves are already imported**, so this is a quick
-tool‑add, not a connector rebuild:
+**The connectors themselves are already imported**, so this is a quick tool‑add,
+not a connector rebuild. Add each MCP tool to its agent once after import:
 
 | Agent | Add this tool |
 | --- | --- |
+| **Returns & Service Assistant** | **Membership MCP** Server |
+| **Store Policy Agent** | **Policy RAG MCP v2** Server |
 | **Inventory & Fulfillment Agent** | **Warehouse MCP** Server |
 | **Sales & Performance Agent** | **Sales & Performance MCP** Server |
-| **Store Policy Agent** | **Policy RAG MCP v2** Server |
 
 For each: open the agent → **Tools → + Add a tool → Model Context Protocol** →
 search the connector name and press **Enter** → pick the **`<Name> MCP Server`**
-tile → select/create the **No‑auth** connection → **Add** → **Save**.
+tile → select/create the **No‑auth** connection from step 2 → **Add** → **Save**.
 
-> Why this step exists: these three connectors are inline MCP servers whose
-> connection references don't round‑trip through an unmanaged solution, so the
-> tool wiring is re‑established in‑product. The agents' instructions already
-> describe the tools, so they light up as soon as the tool is added.
+> Why this step exists: a native Copilot Studio MCP tool stores an
+> **environment‑specific connector id** inside the agent. Solution import remaps
+> the connection *reference* but not that connector id, so a freshly imported tool
+> still points at the source environment and the agent won't see it at runtime.
+> Re‑adding the tool in the designer writes the correct local connector id and
+> binds the connection in one step. The agents' instructions already describe the
+> tools, so they light up as soon as the tool is added.
 
 ---
 
@@ -166,8 +167,11 @@ produces **`merch_review.pdf`** with charts and a recommendation table.
 - **A connected‑agent or skill chip is empty after import.** Open the parent
   agent, re‑add the connected agent / skill, **Save**, then **Publish**. Copilot
   Studio sometimes needs the parent re‑saved once the children are published.
-- **An MCP tool shows a connection error.** Open the tool, pick (or create) the
-  **No‑auth** connection from step 2, **Save**, then **Publish**.
+- **An MCP tool shows a connection error, or the agent doesn't call a tool it
+  should.** Re‑add the tool from step 3 (open the agent → **Tools → + Add a
+  tool**, pick the **`<Name> MCP Server`** tile, select the **No‑auth**
+  connection), **Save**, then **Publish**. Re‑adding rewrites the
+  environment‑specific connector id that solution import can't remap.
 - **A tool's runtime tool‑list looks short.** Click **Refresh connector** on the
   tool, **Save**, and **Publish**.
 
