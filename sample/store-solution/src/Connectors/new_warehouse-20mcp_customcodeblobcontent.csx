@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  Warehouse MCP Connector (inline)                                           ║
 // ║                                                                            ║
-// ║  5 tools with static mock data — no external server needed.                ║
+// ║  7 tools with static mock data — no external server needed.                ║
 // ║  Based on Power MCP Template v2.1 by Troy Taylor.                          ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -31,7 +31,7 @@ public class Script : ScriptBase
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use check_stock to look up inventory for a product SKU. If out of stock, use get_restock_date for restock info and find_alternatives for similar products. Use get_fulfillment_status with an order_id to check where an order is in the warehouse pipeline. Use check_game_compatibility to find which BlastBox Omega model a game requires. Use get_inventory_aging to see how long a product's stock has been sitting and whether more is inbound, to inform markdown/clearance decisions."
+        Instructions = "Use check_stock to look up inventory for a product SKU. If out of stock, use get_restock_date for restock info and find_alternatives for similar products. Use get_fulfillment_status with an order_id to check where an order is in the warehouse pipeline. Use check_game_compatibility to find which BlastBox Omega model a game requires. Use get_inventory_aging to see how long a product's stock has been sitting and whether more is inbound, to inform markdown/clearance decisions. Use get_console_exclusives to list the MEGA-only AAA titles (with an associate upsell pitch) when helping a customer decide between the base console and the MEGA Edition."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -89,9 +89,31 @@ public class Script : ScriptBase
 
     private static readonly JArray Games = JArray.Parse(@"[
         {""title"":""MEGA Lizards from Outer Space"",""required_model"":""BlastBox Omega MEGA Edition"",""required_sku"":""SKU-OMEGA-MEGA"",""runs_on_base"":false,""note"":""AAA title — requires the MEGA Edition GPU. Will NOT run on the base BlastBox Omega.""},
+        {""title"":""Galactic Tax Evader VII: Audit Protocol"",""required_model"":""BlastBox Omega MEGA Edition"",""required_sku"":""SKU-OMEGA-MEGA"",""runs_on_base"":false,""note"":""AAA open-world heist sim — the real-time audit physics only run on the MEGA Edition co-processor.""},
+        {""title"":""Mecha-Granny: Knitpocalypse"",""required_model"":""BlastBox Omega MEGA Edition"",""required_sku"":""SKU-OMEGA-MEGA"",""runs_on_base"":false,""note"":""AAA action roguelite — the 4K yarn engine requires the MEGA Edition. Will NOT run on the base console.""},
         {""title"":""Realm of Legends: The Lost Crown"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model, including the base console.""},
         {""title"":""Galaxy Smash"",""required_model"":""BlastBox Omega Console"",""required_sku"":""SKU-OMEGA"",""runs_on_base"":true,""note"":""Runs on any BlastBox Omega model.""}
     ]");
+
+    // Exclusive AAA titles per console model, with a ready-to-say associate upsell pitch.
+    private static readonly JObject Exclusives = JObject.Parse(@"{
+        ""SKU-OMEGA-MEGA"":{
+            ""model"":""BlastBox Omega MEGA Edition"",
+            ""sku"":""SKU-OMEGA-MEGA"",
+            ""tagline"":""Three AAA exclusives the base console literally can't load."",
+            ""titles"":[
+                {""title"":""MEGA Lizards from Outer Space"",""genre"":""Co-op chaos shooter"",""pitch"":""Picture two hundred neon space-lizards on screen at once and a co-op buddy screaming next to you. It's the #1 couch-chaos shooter of the year — and it physically will not run on the base console.""},
+                {""title"":""Galactic Tax Evader VII: Audit Protocol"",""genre"":""Open-world heist sim"",""pitch"":""You're an interstellar accountant on the run, dodging audits in real time across a living open galaxy. Critics call it 'Grand Theft Spreadsheet.' MEGA-exclusive, because the audit physics melt anything smaller.""},
+                {""title"":""Mecha-Granny: Knitpocalypse"",""genre"":""Action roguelite"",""pitch"":""A sweet old lady in a battle-mech knits the apocalypse back together, one 4K scarf at a time. It's hilarious, it's brutal, and the yarn engine only spins up on MEGA.""}
+            ]
+        },
+        ""SKU-OMEGA"":{
+            ""model"":""BlastBox Omega Console"",
+            ""sku"":""SKU-OMEGA"",
+            ""tagline"":""Plays the full shared BlastBox library, but none of the MEGA-only AAA exclusives."",
+            ""titles"":[]
+        }
+    }");
 
     // Inventory aging / inbound status for merchandising markdown decisions.
     private static readonly JArray Aging = JArray.Parse(@"[
@@ -235,6 +257,22 @@ public class Script : ScriptBase
                         return JObject.Parse(item.ToString());
                 }
                 return new JObject { ["message"] = $"No aging record found for SKU \"{sku}\"." };
+            });
+
+        // 7. get_console_exclusives
+        handler.AddTool("get_console_exclusives",
+            "Return the AAA game titles that run ONLY on a given BlastBox Omega console model, each with a ready-to-say associate upsell pitch. Use this to help an associate upsell a customer to the MEGA Edition: it surfaces the marquee titles the base console cannot run plus a short, attractive blurb to read to the customer. Accepts a SKU (e.g. 'SKU-OMEGA-MEGA') or a model name (e.g. 'mega', 'base').",
+            schemaConfig: s => s.String("model", "Console SKU or model name. Use 'SKU-OMEGA-MEGA' or 'mega' for the MEGA Edition; 'SKU-OMEGA' or 'base' for the base console.", required: true),
+            handler: async (args, ct) =>
+            {
+                var q = (args.Value<string>("model") ?? "").Trim().ToLowerInvariant();
+                string key = null;
+                if (q.Contains("mega")) key = "SKU-OMEGA-MEGA";
+                else if (q == "base" || q == "sku-omega" || q.Contains("base")) key = "SKU-OMEGA";
+                else if (q == "sku-omega-mega") key = "SKU-OMEGA-MEGA";
+                if (key != null && Exclusives[key] != null)
+                    return JObject.Parse(Exclusives[key].ToString());
+                return new JObject { ["message"] = $"No console-exclusive list found for model \"{args.Value<string>("model")}\". Try 'mega' or 'base'." };
             });
     }
 

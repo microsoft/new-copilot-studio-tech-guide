@@ -14,8 +14,8 @@
 | **Store Policy Agent** | Connected agent | **Policy RAG MCP** (`search_policy`, `get_tier_refund_policy`) + 3 BlastPass policy PDFs as knowledge. Always confirms the membership tier first. |
 | **Inventory & Fulfillment Agent** | Connected agent | **Warehouse MCP** (`check_stock`, `get_fulfillment_status`, `find_alternatives`, `get_restock_date`). |
 | **Order Management MCP** | MCP (on parent) | `search_orders`, `get_order`, `get_shipment`, `request_return`, `get_return_status`. |
-| **Membership MCP** | MCP (on parent) | `get_membership`, `cancel_membership`. |
-| **Skills (parent, generated-Python)** | Skills | `membership-card-pdf`, `prorated-refund-calculator`, `bundle-settlement-calculator`, `points-reconciliation`, `return-eligibility-evaluator`. |
+| **Membership MCP** | MCP (on parent) | `get_membership`, `cancel_membership`, `reissue_card`. |
+| **Skills (parent, generated-Python)** | Skills | `membership-card-png`, `membership-card-pdf`, `prorated-refund-calculator`, `bundle-settlement-calculator`, `points-reconciliation`, `return-eligibility-evaluator`. |
 | **File generation** | Output | Printable BlastPass membership card, Return/RMA slip, itemized settlement statement, loyalty statement. |
 
 ### The lore (all invented / mock)
@@ -31,40 +31,57 @@
 
 ---
 
-## Scenario 0 — The BlastPass Card Reprint  🟢 (warm-up)
+## Scenario 0 — Self-Serve BlastPass Card Reissue  🟢 (warm-up)
 
-*A member lost their BlastPass card and just wants a new one printed.*
+*A signed-in member lost their BlastPass card and self-serves a replacement from
+the MegaBlast member portal.*
 
-**Showcases:** the **simplest** end-to-end shape — **one MCP + one skill + a file**.
-No connected agents, no policy, no math, single turn. This is the gentle opener for
-the demo flow before things get more involved.
+**Showcases:** the **simplest** end-to-end shape — **one MCP + one skill + a file** —
+rebuilt for conversational clarity: identity is verified **before** any state
+changes, and exactly **one capability is spotlighted per turn**. No connected
+agents, no policy, no math. Member voice (no associate), two clean turns.
 
-**Cast:** Parent · Membership MCP · `membership-card-pdf` · membership card PDF.
+**Cast:** Parent (BlastPass Concierge) · Membership MCP (`get_membership`,
+`reissue_card`) · `membership-card-png` · digital membership card PNG.
+
+> Full transcript: [`evals/self-serve-card-reissue.md`](evals/self-serve-card-reissue.md).
 
 ### Flow
 
-1. **Associate:** "A customer lost their BlastPass card — can you print a new one
-   for member `MEGA-BLAST-2048`?"
-2. **Parent → Membership MCP:** `get_membership("MEGA-BLAST-2048")` → Sam Sparkle,
-   **Plus Extra MEGA!!!** tier, console serial `OMEGA-9B1C-2048`, activated
-   2026-05-30, term ends 2027-05-30.
-3. **Parent runs `membership-card-pdf`** — generates and runs Python (`reportlab`)
-   that renders a CR80 membership card: member name, tier badge (MEGA = orange),
-   member ID, console serial, member-since / valid-through dates, a decorative
-   barcode, and the tier perks line.
-4. **Parent → Associate:** "Done — here's **`blastpass_card.pdf`** for Sam Sparkle
-   (Plus Extra MEGA!!!, `MEGA-BLAST-2048`). Want me to email it or just print it?"
+1. **Member (signed in):** "I lost my BlastPass card — can you send me a new one?
+   My member ID is `MEGA-BLAST-1024`."
+2. **Parent → Membership MCP:** `get_membership("MEGA-BLAST-1024")` → Jordan Pixel,
+   **Plus Extra**, console serial `OMEGA-7F3A-1024`, card on file
+   `BLAST-7F3A-1024`. The agent does **not** change anything yet.
+3. **Parent → Member (verification gate):** asks for the **last 4 of the console
+   serial** to confirm identity before touching the card. *(End of Turn 1.)*
+4. **Member:** "1024." → **Parent** confirms it matches `OMEGA-7F3A-**1024**`.
+5. **Parent → Membership MCP:** `reissue_card("MEGA-BLAST-1024", reason: "lost")`
+   → deactivates `BLAST-7F3A-1024`, mints a new `card_serial`, keeps the membership
+   **active**, queues the physical card for mail (ETA +7 days), returns a reissue
+   confirmation number.
+6. **Parent runs `membership-card-png`** — generates and runs Python (`matplotlib`)
+   that renders a CR80 digital card using the `get_membership` details + the
+   **`new_card_serial`** from `reissue_card`: member name, tier badge
+   (Plus Extra = purple), member ID, console serial, dates, a barcode keyed to the
+   new serial, and the perks line.
+7. **Parent → Member:** "You're verified — here's **`blastpass_card.png`** to save
+   now. Your old card is deactivated; the physical replacement ships by mail." *(End
+   of Turn 2.)*
 
 ### Why it's the right opener
 
-- **One of every pillar that scales:** a single MCP call feeds a single skill that
-  emits a file — the same shape the harder scenarios repeat and stack.
-- **Zero branching** keeps it fast and legible, so the audience learns the moving
-  parts (MCP → skill → file) before Scenario 1+ adds connected agents and math.
-- The card's accent color and perks line are driven entirely by the MCP's
-  `tier_code`, so it visibly reacts to real data, not a static template.
+- **One of every pillar that scales:** a single MCP lookup → an identity check → a
+  single state-changing MCP call → one skill that emits a file — the same shape the
+  harder scenarios repeat and stack.
+- **Clarity-first pacing:** Turn 1 only verifies; Turn 2 only resolves. Nothing is
+  mutated before the member is confirmed, so the audience learns the moving parts
+  (MCP → verify → MCP → skill → file) one beat at a time.
+- The card's accent color, perks line, and barcode are driven entirely by the MCP's
+  `tier_code` and the freshly minted `new_card_serial`, so it visibly reacts to real
+  data, not a static template.
 
-### Expected output: **`blastpass_card.pdf`** (tier-colored card for the looked-up member)
+### Expected output: **`blastpass_card.png`** (tier-colored digital card showing the **new** serial)
 
 ---
 
@@ -247,8 +264,8 @@ exchange/transfer slip file.
 | **Connected agents** | — | Policy | Policy + Inventory | Policy | Policy + Inventory |
 | **Multiple MCP servers** | Membership | Policy + Membership | Order + Policy + Warehouse + Membership | Policy + Membership + Order | Policy + Warehouse + Order |
 | **Skill runs Python at runtime** | membership-card | prorated-refund | bundle-settlement (+ prorated-refund) | points-reconciliation | return-eligibility |
-| **File generation** | membership card | RMA slip | settlement statement | loyalty statement | exchange/transfer slip |
-| **Complex multi-turn request** | single-turn warm-up | tier relay | full bundle + membership + payout choice | promo + clawback + expiry | warranty swap + stock branching |
+| **File generation** | digital membership card (PNG) | RMA slip | settlement statement | loyalty statement | exchange/transfer slip |
+| **Complex multi-turn request** | 2-turn verify→reissue warm-up | tier relay | full bundle + membership + payout choice | promo + clawback + expiry | warranty swap + stock branching |
 
 ---
 
