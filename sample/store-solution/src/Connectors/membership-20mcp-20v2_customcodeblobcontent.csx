@@ -32,11 +32,11 @@ public class Script : ScriptBase
             Name = "blastpass-membership",
             Version = "1.0.0",
             Title = "BlastPass Membership",
-            Description = "Look up a BlastPass console membership by its mega-blast-customer-id, cancel memberships, and reissue lost/stolen/damaged membership cards. Returns the membership tier, activation date, hours streamed, the card_serial on file, and how many whole months remain on the 12-month term — the inputs needed to calculate a prorated cancellation refund or print a replacement card."
+            Description = "Look up a BlastPass console membership by its mega-blast-customer-id, cancel memberships, and reissue lost/stolen/damaged membership cards. Returns the membership tier, activation date, hours streamed, current blast_points balance, the card_serial on file, and how many whole months remain on the 12-month term — the inputs needed to calculate a prorated cancellation refund, reconcile loyalty points, or print a replacement card."
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use get_membership with a mega-blast-customer-id (e.g. 'MEGA-BLAST-1024') to retrieve the member's BlastPass tier, annual price, activation date, hours streamed, card_serial, and months_remaining on the term. Pass months_remaining and the price to the prorated-refund calculation. Use cancel_membership once a refund figure is agreed to close the membership and get a confirmation number. Use reissue_card for a self-serve lost/stolen/damaged card replacement: it deactivates the old card_serial and issues a new one while leaving the membership active — feed the returned new_card_serial into the membership-card-png skill to give the member a digital card to save while the physical one ships."
+        Instructions = "Use get_membership with a mega-blast-customer-id (e.g. 'MEGA-BLAST-1024') to retrieve the member's BlastPass tier, annual price, activation date, hours streamed, card_serial, current blast_points balance, and months_remaining on the term. Pass months_remaining and the price to the prorated-refund calculation, and the returned blast_points to the points-reconciliation calculation — never ask the associate for the points balance, it is on the membership record. Use cancel_membership once a refund figure is agreed to close the membership and get a confirmation number. Use reissue_card for a self-serve lost/stolen/damaged card replacement: it deactivates the old card_serial and issues a new one while leaving the membership active — feed the returned new_card_serial into the membership-card-png skill to give the member a digital card to save while the physical one ships."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -75,6 +75,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-02-26"",
             ""months_remaining"":8,
             ""hours_streamed"":47.5,
+            ""blast_points"":4200,
             ""console_serial"":""OMEGA-7F3A-1024"",
             ""card_serial"":""BLAST-7F3A-1024""
         },
@@ -91,6 +92,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-05-30"",
             ""months_remaining"":11,
             ""hours_streamed"":1.2,
+            ""blast_points"":15600,
             ""console_serial"":""OMEGA-9B1C-2048"",
             ""card_serial"":""BLAST-9B1C-2048""
         },
@@ -107,6 +109,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2026-12-10"",
             ""months_remaining"":6,
             ""hours_streamed"":88.0,
+            ""blast_points"":9050,
             ""console_serial"":""OMEGA-2D4E-4096"",
             ""card_serial"":""BLAST-2D4E-4096""
         },
@@ -123,6 +126,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-01-05"",
             ""months_remaining"":5,
             ""hours_streamed"":210.0,
+            ""blast_points"":33700,
             ""console_serial"":""OMEGA-5A6F-8192"",
             ""card_serial"":""BLAST-5A6F-8192""
         }
@@ -134,7 +138,7 @@ public class Script : ScriptBase
     {
         // 1. get_membership
         handler.AddTool("get_membership",
-            "Look up a BlastPass membership by its mega-blast-customer-id. Returns the membership tier, annual price, activation date, hours streamed, cancellation fee, any non-refundable credit, and months_remaining (the whole unused months left on the 12-month term). Feed months_remaining and annual_price into the prorated-refund calculation.",
+            "Look up a BlastPass membership by its mega-blast-customer-id. Returns the membership tier, annual price, activation date, hours streamed, cancellation fee, any non-refundable credit, months_remaining (the whole unused months left on the 12-month term), and the member's current blast_points balance. Feed months_remaining and annual_price into the prorated-refund calculation, and blast_points into the points-reconciliation calculation.",
             schemaConfig: s => s.String("customer_id", "The mega-blast-customer-id (e.g. 'MEGA-BLAST-1024'). Case-insensitive.", required: true),
             handler: async (args, ct) =>
             {
@@ -162,6 +166,7 @@ public class Script : ScriptBase
                             ["days_since_activation"] = daysSince,
                             ["months_remaining"] = m["months_remaining"],
                             ["hours_streamed"] = m["hours_streamed"],
+                            ["blast_points"] = m["blast_points"],
                             ["within_cooling_off"] = coolingOff,
                             ["console_serial"] = m["console_serial"],
                             ["card_serial"] = m["card_serial"]
