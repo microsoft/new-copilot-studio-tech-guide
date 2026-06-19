@@ -1,30 +1,27 @@
 # Flagship Scenario — "The Block Party Trade-Up"
 
 > **The kitchen-sink associate demo.** One customer, one visit, every pillar of the
-> Modern Agent Experience firing together: **two parent MCPs**, **three connected
-> agents — each with its own MCP underneath**, **four runtime-Python skills (Python as
-> a bundled resource, never inline)**, the **new `get_console_exclusives` upsell tool**,
-> and **two generated files** (a settlement **PDF** and a sales **PNG** chart).
+> Modern Agent Experience firing together: **two parent MCPs**, **two connected
+> agents — each with its own MCP underneath**, **three runtime-Python skills**, the
+> **new `get_console_exclusives` upsell tool**, and a **generated settlement PDF**.
 >
 > A customer who runs a neighbourhood retro-gaming league walks up to the returns &
-> service desk with a dead console and a shopping list. The **Returns & Service
-> Assistant** (associate-facing) orchestrates the whole thing: rules the defect, prices
-> the trade-up, upsells the MEGA-only AAA titles, sanity-checks the upsell against real
-> sales data, reconciles the customer's BlastPoints, and prints the settlement.
+> service desk with a dead console and a shopping list. The **Store Associate
+> Assistant** orchestrates the whole thing: rules the defect, prices the trade-up,
+> closes the undecided customer with the MEGA-only AAA titles, reconciles his
+> BlastPoints, and prints the settlement.
 
 ## Cast on stage
 
 | Component | Kind | MCP / tools | Role in this run |
 | --- | --- | --- | --- |
-| **Returns & Service Assistant** | Parent agent | **Membership MCP** (`get_membership`, `cancel_membership`), **Order Management MCP** (`get_order`, `request_return`) | Talks to the associate; owns the skills; relays Q&A between the connected agents and the associate. |
+| **Store Associate Assistant** | Parent agent | **Membership MCP** (`get_membership`, `cancel_membership`), **Order Management MCP** (`get_order`, `request_return`) | Talks to the associate; owns the skills; relays Q&A between the connected agents and the associate. |
 | **Store Policy Agent** | Connected agent | **Policy RAG MCP** (`search_policy`, `get_tier_refund_policy`) | Rules defective-vs-accidental; supplies the proration rule. Asks the defect-cause question first. |
 | **Inventory & Fulfillment Agent** | Connected agent | **Warehouse MCP** (`check_stock`, `find_alternatives`, `get_restock_date`, `check_game_compatibility`, **`get_console_exclusives`** ← new) | Stock + transfer picture, game→model compatibility, and the **upsell** titles. |
-| **Sales & Performance Agent** | Connected agent | **Sales & Performance MCP** (`query_sales`, `get_catalog`) | Confirms the MEGA Edition is the right thing to push (velocity, margin, weeks-of-cover). |
-| **prorated-refund-calculator** | Skill (Python resource: `blastpass_refund.py`) | — | Membership proration refund. |
-| **sales-analysis-chart** | Skill (Python resource: `sales_chart.py`) | — | Derives velocity / weeks-of-cover / margin and renders the buy-side charts. |
-| **points-reconciliation** | Skill (Python resource: `points_reconciliation.py`) | — | BlastPoints earn / promo / expiry. |
-| **slip-pdf-generator** | Skill (Python resource) | — | Markdown slip → settlement **PDF** (reportlab). |
-| **File generation** | Output | — | `blastbox_slip.pdf` (settlement) + `top_sellers.png` / `slow_movers.png` (sales). |
+| **prorated-refund-calculator** | Skill (Python) | — | Membership proration refund. |
+| **points-reconciliation** | Skill (Python) | — | BlastPoints earn / promo / expiry. |
+| **slip-pdf-generator** | Skill (Python) | — | Markdown slip → settlement **PDF** (reportlab). |
+| **File generation** | Output | — | `blastbox_slip.pdf` (settlement). |
 
 ### Fixtures (all mock)
 
@@ -84,7 +81,7 @@
 
 ---
 
-## Turn 2 — Ruling + stock + the upsell
+## Turn 2 — Ruling + stock + the refund math
 
 ### 🧑‍💼 Associate
 
@@ -97,12 +94,10 @@
 2. → **Inventory & Fulfillment Agent** → Warehouse MCP · `check_stock` (base = **0
    local**), `get_restock_date` (~4 days), `find_alternatives` (**MEGA Edition, $499.99,
    5 in stock, Seattle-WA1**).
-3. → **Inventory & Fulfillment Agent** · **`get_console_exclusives("mega")`** — returns
-   the three MEGA-only AAA titles **with a ready-to-say pitch each** (the **upsell**).
-4. → **prorated-refund-calculator** skill — runs **`blastpass_refund.py`** →
+3. → **prorated-refund-calculator** skill — runs Python →
    `$129.99 ÷ 12 = $10.8325; × 8 = $86.66; − $10 =` **$76.66**.
 
-### 🤖 Returns & Service Assistant
+### 🤖 Store Associate Assistant
 
 > Confirmed — **manufacturing defect inside 30 days → free warranty swap, no restocking
 > fee.** 👍
@@ -110,61 +105,56 @@
 > - The **base console is out of stock** here (restock ~4 days).
 > - The **MEGA Edition is in stock now** at **$499.99** (base was $399.99).
 >
-> Worth a word to the customer for the block party — the MEGA Edition unlocks three
-> titles the base console **can't run at all**:
->
-> 1. **MEGA Lizards from Outer Space** — *"200 neon space-lizards on screen at once with
->    a co-op buddy screaming next to you; won't run on the base console."*
-> 2. **Galactic Tax Evader VII: Audit Protocol** — *"You're an interstellar accountant
->    dodging audits in real time — critics call it 'Grand Theft Spreadsheet.'"*
-> 3. **Mecha-Granny: Knitpocalypse** — *"A battle-mech granny knitting the apocalypse
->    back together in 4K. The yarn engine only spins up on MEGA."*
->
 > On the membership: Plus Extra, 8 unused months, $10 fee → prorated refund **$76.66**.
 >
 > So he can **wait ~4 days** for a like-for-like swap, **upgrade to MEGA now**, or take
-> a **refund**. If he upgrades, I can put the $76.66 toward it. Which way?
+> a **refund**. If he upgrades, I can put the $76.66 toward it. Which way is he leaning?
 
-> **Pillars:** second connected agent (Inventory) with its own MCP; the **new
-> `get_console_exclusives` upsell tool**; first **Python-resource skill** run.
+> **Pillars:** second connected agent (Inventory) with its own MCP; first **Python skill**
+> run (the prorated refund).
 
 ---
 
-## Turn 3 — "Is the MEGA push actually worth it?" (Sales & Performance Agent)
+## Turn 3 — "He can't decide" → the exclusives close it
 
 ### 🧑‍💼 Associate
 
-> He's tempted by the MEGA. Before I push it — and before I reorder for the block-party
-> rush — is the MEGA Edition actually our strongest play right now, or am I about to
-> over-order? Show me the numbers.
+> He's torn — he likes the idea of the MEGA Edition but he's not sure it's worth the
+> extra hundred bucks over just waiting the four days for the base console to come back
+> in stock. Give me something I can tell him to help him decide.
 
 ### ⚙️ Orchestration
 
-1. → **Sales & Performance Agent** → Sales & Performance MCP · `query_sales(2026-04-12,
-   2026-05-31)` (raw weekly units/revenue) + `get_catalog()` (price, unit_cost,
-   stock_on_hand). The MCP returns **raw data only**.
-2. → **sales-analysis-chart** skill — saves those results to `rows.json` / `catalog.json`
-   and runs **`sales_chart.py`**, which derives velocity, **weeks-of-cover**, and margin
-   itself and renders **`top_sellers.png`** + **`slow_movers.png`**.
-3. *(optional)* → **Inventory & Fulfillment Agent** · `get_inventory_aging()` to enrich
-   the slow-mover read (no inbound + high weeks-of-cover = clearance signal).
+1. → **Inventory & Fulfillment Agent** → Warehouse MCP · `get_console_exclusives("mega")`
+   — returns the three MEGA-only AAA titles, each with a ready-to-say associate pitch.
+2. **Reasoning:** *"The block party is this weekend — waiting four days means he misses
+   it entirely. The deciding factor isn't the $100, it's the three games that physically
+   won't run on the base console."*
 
-### 🤖 Returns & Service Assistant
+### 🤖 Store Associate Assistant
 
-> Pulled the last 8 weeks. 📈
+> Easy one to make for him. Two things settle it:
 >
-> - **Top seller: BlastBox Omega MEGA Edition** — fastest unit velocity in the console
->   category and a healthy margin; **weeks-of-cover is low**, so reordering ahead of the
->   block party is justified, not over-ordering.
-> - **Slow mover: the last-gen Cadet bundle** — sitting well past the 8-week cover line
->   with no inbound PO; that's the clearance candidate, not the MEGA.
+> 1. **Timing** — the base console is ~4 days out, and his block party is **this
+>    weekend**. The MEGA Edition is in stock *now*, so it's the only option that gets him
+>    a working console in time.
+> 2. **The games** — the MEGA Edition unlocks three AAA titles the base console **can't
+>    load at all**:
+>    - **MEGA Lizards from Outer Space** — *"200 neon space-lizards on screen at once
+>      with a co-op buddy screaming next to you; the year's #1 couch-chaos shooter, and
+>      it physically won't run on the base console."*
+>    - **Galactic Tax Evader VII: Audit Protocol** — *"You're an interstellar accountant
+>      dodging audits in real time across a living galaxy — critics call it 'Grand Theft
+>      Spreadsheet.'"*
+>    - **Mecha-Granny: Knitpocalypse** — *"A battle-mech granny knitting the apocalypse
+>      back together in 4K. Hilarious, brutal, and the yarn engine only spins up on MEGA."*
 >
-> Charts attached — **`top_sellers.png`** and **`slow_movers.png`**. Net: pushing the
-> MEGA Edition is the right call, and a modest MEGA reorder is safe.
+> For a block-party host running a gaming league, those three exclusives plus same-day
+> availability are the whole pitch — and remember the $76.66 membership refund can go
+> straight toward the upgrade, so the real gap is small.
 
-> **Pillars:** third connected agent (Sales) with its own MCP doing real branching
-> analysis; a **Python-resource skill** that turns raw MCP rows into derived metrics and
-> a **PNG file**.
+> **Pillar:** the **new `get_console_exclusives` upsell tool** doing the persuasion work —
+> a connected agent surfacing demo-built content to close an undecided customer.
 
 ---
 
@@ -184,12 +174,12 @@
 2. → **Order Management MCP** · `request_return` (defective console, warranty exchange).
 3. → **Membership MCP** · `cancel_membership("MEGA-BLAST-1024", 76.66)` — cancels
    BlastPass; refund issued as **store credit**.
-4. → **points-reconciliation** skill — runs **`points_reconciliation.py`**:
+4. → **points-reconciliation** skill — runs Python:
    prior 4,200; earn $499.99 × 3× (Triple BLAST) × 1.2 (Plus Extra) = **18,000**;
    expired **−800** → **21,400 pts → 21 × $5 = $105.00** store credit.
 5. → **slip-pdf-generator** skill — runs reportlab → **`blastbox_slip.pdf`**.
 
-### 🤖 Returns & Service Assistant
+### 🤖 Store Associate Assistant
 
 > All done — here's the breakdown:
 >
@@ -215,26 +205,26 @@
 
 | Pillar | Where it fires |
 | --- | --- |
-| **Connected agents (each with its own MCP)** | Store Policy Agent · Policy RAG MCP (T1–T2); Inventory & Fulfillment Agent · Warehouse MCP (T2, T4); Sales & Performance Agent · Sales & Performance MCP (T3) |
-| **Multiple MCP servers** | Membership + Order Management (parent) · Policy RAG · Warehouse · Sales & Performance — **five MCPs** |
+| **Connected agents (each with its own MCP)** | Store Policy Agent · Policy RAG MCP (T1–T2); Inventory & Fulfillment Agent · Warehouse MCP (T2–T4) |
+| **Multiple MCP servers** | Membership + Order Management (parent) · Policy RAG · Warehouse — **four MCPs** |
 | **Connected-agent → parent → user round-trip** | Defect-cause question (T1) |
-| **Skill runs Python — as a bundled resource, not inline** | `blastpass_refund.py` (T2), `sales_chart.py` (T3), `points_reconciliation.py` (T4), `slip-pdf-generator` (T4) |
-| **New tool built for this demo** | `get_console_exclusives` on the Warehouse MCP (T2) |
-| **File generation** | `top_sellers.png` / `slow_movers.png` (T3) + `blastbox_slip.pdf` (T4) |
-| **Complex, multi-turn request** | 4 turns: rule → upsell → data-backed buy decision → settle + loyalty + file |
+| **Skill runs Python** | prorated refund (T2), points reconciliation (T4), slip PDF (T4) |
+| **New tool built for this demo** | `get_console_exclusives` on the Warehouse MCP (T3) |
+| **File generation** | `blastbox_slip.pdf` (T4) |
+| **Complex, multi-turn request** | 4 turns: rule → price → close the undecided customer → settle + loyalty + file |
 
 ## Why it's the flagship
 
-- **Three connected agents, three MCPs under them** — Policy *rules*, Inventory *stocks
-  and upsells*, Sales *justifies the push with real velocity/margin* — plus two parent
-  MCPs. The orchestration genuinely fans out and comes back.
-- **The upsell is data-driven twice over:** `get_console_exclusives` gives the associate
-  the words, and the Sales & Performance Agent + `sales_chart.py` prove the MEGA Edition
-  is the right thing to push (and the Cadet bundle is the thing to clear).
-- **Every skill keeps Python as a resource file** — the agent passes MCP results to a
-  bundled, validated script; it never hand-rolls arithmetic or inlines a script.
-- **It ends with artifacts a real associate keeps:** a settlement PDF and two buy-side
-  charts — and a loyalty twist that lets the customer walk out owing nothing.
+- **Two connected agents, two MCPs under them** — Policy *rules*, Inventory *stocks and
+  upsells* — plus two parent MCPs. The orchestration genuinely fans out and comes back.
+- **The upsell closes a real decision:** when the customer can't choose between waiting
+  for the restock and upgrading, `get_console_exclusives` gives the associate the exact
+  words — three AAA titles that physically won't run on the base console — and same-day
+  availability for a block party that's *this weekend*.
+- **Every skill runs Python for the math** — the agent passes MCP results to a skill that
+  computes the exact figures; it never hand-rolls arithmetic.
+- **It ends with an artifact a real associate keeps:** a settlement PDF — and a loyalty
+  twist that lets the customer walk out owing nothing.
 
 ## Notes
 
@@ -245,6 +235,6 @@
 - This is the **associate-facing** agent (separate from the self-serve BlastPass
   Concierge). It reuses the backed-up associate skills/connected agents in
   `agents-cli/_associate-skill-library/` plus the new `get_console_exclusives` tool.
-- Build order: (1) add `get_console_exclusives` to the Warehouse MCP, (2) attach the four
-  Python-resource skills to the parent, (3) wire the three connected agents with their
-  MCPs, (4) run the 4-turn transcript in Preview and capture actuals.
+- Build order: (1) add `get_console_exclusives` to the Warehouse MCP, (2) attach the three
+  Python skills to the parent, (3) wire the two connected agents with their MCPs, (4) run
+  the 4-turn transcript in Preview and capture actuals.
