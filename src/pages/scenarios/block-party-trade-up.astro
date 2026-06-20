@@ -1,0 +1,170 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/scenario.css';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Block Party Trade-Up | BlastBox Omega">
+  <article class="scenario">
+    <div class="container">
+      <a href={base} class="back">&larr; All scenarios</a>
+
+      <header class="scenario__header">
+        <span class="badge badge--purple">Flagship &middot; Store Associate Assistant</span>
+        <h1>Block Party Trade-Up</h1>
+        <p class="scenario__lead">
+          The kitchen-sink associate demo: every pillar firing together. <strong>Two parent
+          MCPs, two connected agents &mdash; each with its own MCP &mdash; three runtime-Python
+          skills, an upsell tool, and a generated settlement PDF</strong>. A league host walks
+          up with a dead console and a shopping list; the agent rules the defect, prices the
+          trade-up, closes the undecided customer, reconciles loyalty points, and prints the slip.
+        </p>
+        <div class="scenario__cast">
+          <span class="pill">Store Associate Assistant</span>
+          <span class="pill">Store Policy Agent</span>
+          <span class="pill">Inventory &amp; Fulfillment Agent</span>
+          <span class="pill">4 MCPs</span>
+          <span class="pill">3 Python skills</span>
+          <span class="pill">PDF out</span>
+        </div>
+      </header>
+
+      <section class="convo">
+        <h2>The conversation</h2>
+        <p class="convo__intro">Customer: Jordan Pixel, member <code>MEGA-BLAST-1024</code>, BlastPass Plus Extra. Base BlastBox Omega is out of stock locally; the MEGA Edition is in stock at $499.99.</p>
+
+        <ol class="timeline">
+          <li class="tl-user">
+            <div class="tl-marker">1</div>
+            <div class="tl-content">
+              <div class="tl-label">Associate</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Customer's running a gaming-league block party this weekend and his main console just died about 10 days after he bought it &mdash; he's got the receipt. He wants a replacement if one's in stock, otherwise a refund, and while he's here he wants to cancel his BlastPass, member ID MEGA-BLAST-1024. Walk me through all of it.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent &rarr; connected agents &rarr; Associate</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent &middot; search_policy</span> "defective console warranty vs accidental damage"</div>
+                <p>The Policy Agent's rule is to <strong>establish the defect cause first</strong>, so it returns a <em>question</em>, not a ruling.</p>
+                <div class="tl-tool"><span class="tl-tool-name">get_membership</span> reads MEGA-BLAST-1024 (Plus Extra, 8 months unused, $10 fee)</div>
+                <p>"One thing decides how the console is treated: a <strong>manufacturing defect</strong> &rarr; free warranty swap, no restocking fee, vs. <strong>accidental / physical / liquid damage</strong> &rarr; standard return, possible fee. <strong>Which is it?</strong>"</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">2</div>
+            <div class="tl-content">
+              <div class="tl-label">Associate</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Manufacturing fault &mdash; just won't power on, no physical or liquid damage.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent</span> confirms defective within 30 days = free warranty swap, no restocking fee</div>
+                <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; Warehouse MCP</span> check_stock (base = 0 local), get_restock_date (~4 days), find_alternatives (MEGA Edition, $499.99, 5 in stock)</div>
+                <div class="tl-skill"><span class="tl-skill-name">prorated-refund-calculator</span> runs Python &rarr; $129.99 ÷ 12 × 8 &minus; $10 = <strong>$76.66</strong></div>
+                <p>"Confirmed &mdash; manufacturing defect inside 30 days &rarr; free warranty swap. Base console is out of stock (restock ~4 days); MEGA Edition is in stock now at $499.99. Membership prorated refund: <strong>$76.66</strong>. He can wait ~4 days, upgrade to MEGA now, or take a refund. Which way is he leaning?"</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">3</div>
+            <div class="tl-content">
+              <div class="tl-label">Associate</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">He's torn &mdash; he likes the MEGA Edition but isn't sure it's worth the extra hundred over just waiting four days for the base console. Give me something I can tell him.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; get_console_exclusives</span> "mega" &rarr; three MEGA-only AAA titles</div>
+                <p><em>"The block party is this weekend &mdash; waiting four days means he misses it. The deciding factor isn't the $100, it's the three games that physically won't run on the base console."</em></p>
+                <p>"Two things settle it: <strong>timing</strong> &mdash; the MEGA Edition is the only option that gets him a working console before the weekend &mdash; and <strong>the games</strong>: <em>MEGA Lizards from Outer Space</em>, <em>Galactic Tax Evader VII</em>, and <em>Mecha-Granny: Knitpocalypse</em>, none of which load on the base console. Plus the $76.66 refund goes straight toward the upgrade, so the real gap is small."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">4</div>
+            <div class="tl-content">
+              <div class="tl-label">Associate</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Do it: warranty-swap him into the MEGA Edition, cancel the BlastPass and apply the $76.66 as store credit toward the upgrade, and tell me what he owes. Also &mdash; after Triple BLAST Weekend, what are his BlastPoints worth? Then print me the slip as a PDF.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent &rarr; Associate</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">check_game_compatibility</span> confirms all three titles require the MEGA Edition</div>
+                <div class="tl-tool"><span class="tl-tool-name">Order Management MCP &middot; request_return</span> defective console, warranty exchange</div>
+                <div class="tl-tool"><span class="tl-tool-name">Membership MCP &middot; cancel_membership</span> refund issued as store credit</div>
+                <div class="tl-skill"><span class="tl-skill-name">points-reconciliation</span> runs Python &rarr; 4,200 + 18,000 earned &minus; 800 expired = <strong>21,400 pts &rarr; $105.00</strong></div>
+                <div class="tl-skill"><span class="tl-skill-name">slip-pdf-generator</span> runs reportlab &rarr; settlement PDF</div>
+                <div class="tl-file">&#129534; hands back <strong>blastbox_slip.pdf</strong></div>
+                <p>"Defective console credited at $399.99, no fee. MEGA Edition $499.99 &rarr; upgrade difference $100.00. BlastPass cancelled &rarr; $76.66 store credit. <strong>Net due: $23.34.</strong> BlastPoints after the weekend: <strong>21,400</strong> (worth $105.00) &mdash; he can redeem $23.34 to walk out owing $0."</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="result">
+          <span class="result__icon">&#129534;</span>
+          <div>
+            <div class="result__label">Settlement</div>
+            <div class="result__value">$100 upgrade &minus; $76.66 credit = net due $23.34 &middot; 21,400 pts &rarr; $105 &middot; blastbox_slip.pdf</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>Why it's the flagship</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Two connected agents, two MCPs under them</h3>
+            <p>Policy <em>rules</em> the defect, Inventory <em>stocks and upsells</em> &mdash; plus two parent MCPs. The orchestration genuinely fans out to specialists and comes back.</p>
+          </div>
+          <div class="value-card">
+            <h3>The upsell closes a real decision</h3>
+            <p>When the customer can't choose, <code>get_console_exclusives</code> hands the associate the exact words &mdash; three AAA titles that won't run on the base console &mdash; plus same-day availability for a weekend event.</p>
+          </div>
+          <div class="value-card">
+            <h3>Every number comes from Python</h3>
+            <p>The agent passes MCP results to skills that compute the exact figures &mdash; prorated refund, loyalty points, settlement PDF &mdash; it never hand-rolls the arithmetic.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>What gets generated</h2>
+        <div class="files">
+          <div class="filecard">
+            <span class="filecard__icon">&#129534;</span>
+            <div>
+              <strong>blastbox_slip.pdf</strong>
+              <span>reportlab &middot; settlement slip &middot; swap + cancellation + math</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </article>
+</Base>

@@ -9,20 +9,24 @@ A showcase site and deployable sample for **Enhanced Task Completion** in Micros
 | Folder | Description |
 |---|---|
 | `src/` | Astro site — landing page, scenario walkthroughs, and documentation |
-| `sample/` | Deployable sample — two agents, two inline MCP connectors, one solution zip |
+| `sample/` | Deployable sample — the Copilot Studio solution (`sample/solution/`) plus archived earlier iterations (`sample/archive/`) |
 
 ## Deploying the sample
 
-The sample includes two Copilot Studio agents that chain 9 tools across two MCP connectors for an e-commerce customer service scenario. Everything runs inside the Power Platform — the connectors use inline C# scripts, so no external servers are needed.
+The sample is a portable Copilot Studio solution with **four agents** (a flagship Store
+Associate Assistant and a self-serve Returns & Service Assistant, plus two connected
+agents) and **four inline MCP connectors** (Membership, Order Management, Policy RAG, and
+Warehouse). Everything runs inside the Power Platform — the connectors use inline custom
+code, so no external servers are needed.
 
 ```
 sample/
-  solution/          Solution zip — import into any Power Platform environment
-  connectors/        Inline MCP connector source (C# scripts + swagger)
-  chat-ui-lite/      Optional web chat UI with inline reasoning + tool call rendering
+  solution/          Solution zip + unpacked source + import README
+  archive/           Earlier iterations (connectors, store-solution, chat UI, exports)
 ```
 
-See [`sample/README.md`](./sample/README.md) for step-by-step setup.
+See [`sample/solution/README.md`](./sample/solution/README.md) for step-by-step setup,
+including the two demo scenarios (Self-Serve Card Reissue and Block Party Trade-Up).
 
 ## Site development
 

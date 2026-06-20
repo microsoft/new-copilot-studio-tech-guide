@@ -1,0 +1,12 @@
+kind: TaskDialog
+modelDisplayName: Policy RAG MCP v2 Server
+modelDescription: "MCP server for BlastBox Omega policy knowledge. Tools: search_policy, get_tier_refund_policy, get_markdown_policy."
+action:
+  kind: InvokeExternalAgentTaskAction
+  connectionReference: Default_StorePolicyAgent_s9s-u8.shared_new-5fpolicy-20rag-20mcp-20v2-5fee08b8354fad177a.1d7ba24296314fd18b7ce9d4fb97d766
+  connectionProperties:
+    mode: Invoker
+
+  operationDetails:
+    kind: ModelContextProtocolMetadata
+    operationId: InvokeMCP

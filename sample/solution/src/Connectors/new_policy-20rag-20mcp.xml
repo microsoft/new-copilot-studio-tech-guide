@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <connectorid>2449e305-4c62-f111-ab0b-0022480a52c7</connectorid>
+  <description></description>
+  <displayname>Policy RAG MCP</displayname>
+  <iconbrandcolor>#007ee5</iconbrandcolor>
+  <name>new_policy-20rag-20mcp</name>
+  <connectortype>1</connectortype>
+  <scriptoperations>[]</scriptoperations>
+  <openapidefinition>/Connector/new_policy-20rag-20mcp_openapidefinition.json</openapidefinition>
+  <connectionparameters>/Connector/new_policy-20rag-20mcp_connectionparameters.json</connectionparameters>
+  <policytemplateinstances>/Connector/new_policy-20rag-20mcp_policytemplateinstances.json</policytemplateinstances>
+  <customcodeblobcontent>/Connector/new_policy-20rag-20mcp_customcodeblobcontent.csx</customcodeblobcontent>
+</Connector>

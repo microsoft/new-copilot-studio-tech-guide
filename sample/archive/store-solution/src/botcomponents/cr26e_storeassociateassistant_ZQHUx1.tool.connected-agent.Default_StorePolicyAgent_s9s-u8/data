@@ -1,0 +1,4 @@
+kind: ConnectedAgentTool
+botSchemaName: Default_StorePolicyAgent_s9s-u8
+historyType:
+  kind: ConversationHistory

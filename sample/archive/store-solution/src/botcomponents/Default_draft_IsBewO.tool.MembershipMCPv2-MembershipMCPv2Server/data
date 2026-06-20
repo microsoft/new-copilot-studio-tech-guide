@@ -1,0 +1,5 @@
+kind: McpTool
+authMode: Invoker
+connectionReference: Default_draft_IsBewO.cr.shared_cat-5fmembe.cd48113e28c44025952903ba1e42cd0b
+connectorId: /providers/Microsoft.PowerApps/apis/shared_cat-5fmembership-20mcp-5fee08b8354fad177a
+operationId: InvokeMCP

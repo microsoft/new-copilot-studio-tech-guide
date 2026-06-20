@@ -88,7 +88,16 @@ const settings = new ConnectionSettings({
   agentIdentifier: config.agentSchema,
 });
 
-const scopes = [CopilotStudioClient.scopeFromSettings(settings)];
+// NOTE: CopilotStudioClient.scopeFromSettings() returns the ".default" scope
+// (https://api.powerplatform.com/.default). ".default" only yields permissions
+// that are ALREADY consented for the app registration, so if
+// CopilotStudio.Copilots.Invoke was never granted to this client app the
+// resulting token is missing it and every conversation call returns HTTP 403
+// (InsufficientDelegatedPermissions) — which the SDK silently retries forever,
+// so the chat appears to hang with no response. Requesting the explicit Invoke
+// scope instead triggers MSAL incremental consent and mints a token that
+// actually contains the permission.
+const scopes = ["https://api.powerplatform.com/CopilotStudio.Copilots.Invoke"];
 
 async function getToken() {
   const accounts = msal.getAllAccounts();
@@ -363,21 +372,28 @@ async function sendMessage(text, file = null) {
       }];
     }
 
-    // Use streaming API to get typing events with ETC metadata in real-time
+    // Use streaming API to get typing events with ETC metadata in real-time.
+    // NOTE: modern agents return the conversation id in the `x-ms-conversationid`
+    // response header, NOT in an activity body, so `activity.conversation?.id` is
+    // always null. The SDK captures it internally as `client.conversationId`.
+    // We must read it from there and must NOT pass an explicit (null) id into
+    // sendActivityStreaming, otherwise we wipe the SDK's stored id and the turn
+    // is sent against no conversation.
     let activityStream;
     if (conversationId) {
       activityStream = c.sendActivityStreaming(activity, conversationId);
     } else {
-      // Start conversation first
+      // Start conversation first; the SDK stores the id from the response header.
       for await (const a of c.startConversationStreaming(true)) {
-        if (a.conversation?.id) conversationId = a.conversation.id;
+        conversationId = c.conversationId || a.conversation?.id || conversationId;
       }
-      activityStream = c.sendActivityStreaming(activity, conversationId);
+      // Let the SDK default to its stored conversationId.
+      activityStream = c.sendActivityStreaming(activity);
     }
 
     for await (const activity of activityStream) {
-      if (!conversationId && activity.conversation?.id) {
-        conversationId = activity.conversation.id;
+      if (!conversationId) {
+        conversationId = c.conversationId || activity.conversation?.id || conversationId;
       }
 
       console.log("[activity]", activity.type, JSON.stringify({

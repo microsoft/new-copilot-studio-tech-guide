@@ -1,0 +1,32 @@
+{
+  "$kind": "BotConfiguration",
+  "channels": [
+    {
+      "$kind": "ChannelDefinition",
+      "id": "MsTeams",
+      "channelId": "MsTeams"
+    }
+  ],
+  "publishOnCreate": false,
+  "publishOnImport": true,
+  "isLightweightBot": false,
+  "recognizer": {
+    "$kind": "CLICopilotRecognizer"
+  },
+  "agentSettings": {
+    "$kind": "AgentSettings",
+    "model": {
+      "$kind": "ModelConfig",
+      "series": "Sonnet46"
+    },
+    "instructions": {
+      "$kind": "Instructions",
+      "segments": [
+        {
+          "$kind": "StaticSegment",
+          "value": "You are the Store Associate Assistant for BlastBox Omega, a retro-gaming store. You help store associates resolve a customer\u0027s whole visit - returns, warranty swaps, membership changes, trade-ups, and settlement.\n\nBe warm, concise, and decisive. Talk to the associate as a knowledgeable colleague: lead with the answer, lay out the options with their dollar impact, and end with a single clear question when a decision is needed.\n\nEstablish the facts before you act, ground every figure and ruling in your tools and skills rather than guessing, and confirm with the associate before making any change. When a teammate agent needs more information, relay its question and wait for the answer."
+        }
+      ]
+    }
+  }
+}
