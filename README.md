@@ -2,7 +2,7 @@
 
 A showcase site and deployable sample for **Enhanced Task Completion** in Microsoft Copilot Studio.
 
-**Live site**: https://microsoft.github.io/enhanced-task-completion/
+**Live site**: https://microsoft.github.io/new-copilot-studio-tech-guide/
 
 ## What's in this repo
 
@@ -32,13 +32,13 @@ including the two demo scenarios (Self-Serve Card Reissue and Block Party Trade-
 
 ```bash
 npm install
-npm run dev        # http://localhost:4321/enhanced-task-completion/
+npm run dev        # http://localhost:4321/new-copilot-studio-tech-guide/
 npm run build      # Build to ./dist/
 ```
 
 ## Contributing
 
-This project welcomes contributions and suggestions. See [CONTRIBUTING](https://github.com/microsoft/enhanced-task-completion/blob/main/CONTRIBUTING.md) for details.
+This project welcomes contributions and suggestions. See [CONTRIBUTING](https://github.com/microsoft/new-copilot-studio-tech-guide/blob/main/CONTRIBUTING.md) for details.
 
 ## License
 
