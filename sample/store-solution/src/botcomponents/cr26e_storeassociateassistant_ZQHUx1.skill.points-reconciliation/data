@@ -1,0 +1,101 @@
+kind: InlineAgentSkill
+content: |+
+  ---
+  name: points-reconciliation
+  description: Reconcile a customer's BlastPoints loyalty balance after a visit (purchases, returns/clawback, promo multipliers, tier bonus, expiry) and convert the net balance to store credit. Use when an associate asks what a member's BlastPoints are worth, or after a return that should claw back earned points. The skill generates and runs a short Python snippet that applies the rules exactly and prints a points ledger plus the redeemable store-credit value.
+  ---
+  <!-- bic:source=upload -->
+  # BlastPoints Loyalty Reconciliation (BlastBox Omega)
+
+  This skill reconciles a member's **BlastPoints** after a visit that involves any
+  mix of earning, returns (clawback), promo events, and expiry, and converts the
+  net balance to store credit. The points math must be exact, so you **generate and
+  run a short Python snippet** - never estimate points by hand.
+
+  ## When to use
+
+  Use this skill when an associate asks things like:
+  - "How many BlastPoints does this member have after today?"
+  - "They returned a console - claw back the points they earned on it."
+  - "What's that worth in store credit?"
+
+  Confirm the member's **tier** with the Membership MCP / Store Policy Agent first,
+  and confirm any **promo multiplier** in effect with the Store Policy Agent.
+
+  ## The points rules (single source of truth)
+
+  1. **Base earn:** 10 points per $1 of merchandise.
+  2. **Promo multiplier:** promo events (e.g. **Triple BLAST Weekend** = 3x)
+     multiply the **base** earn **before** the tier bonus is applied.
+  3. **Tier bonus on earned points:** Plus **+0%**, Plus Extra **+20%**, MEGA **+50%**.
+  4. **Clawback:** returned items remove points using the **same** formula (the
+     promo multiplier and tier bonus that applied to the original purchase).
+  5. **Expiry:** points older than 90 days while the account was inactive are
+     removed (provided as a number).
+  6. **Redemption:** **1,000 points = $5.00** store credit, in whole 1,000-point
+     blocks. The net balance never goes below 0.
+
+  ## Workflow
+
+  ### 1. Gather the inputs
+
+  Get the **tier** (`plus` / `extra` / `mega`), the **prior balance**, the list of
+  **purchases** (`amount`, `promo_multiplier`), the list of **returns** to claw back
+  (`amount`, `promo_multiplier`), and any **expired points**.
+
+  ### 2. Generate and run this Python
+
+  ```python
+  TIER_BONUS = {"plus": 0.0, "extra": 0.20, "mega": 0.50}
+
+  def earn(amount, promo, bonus):
+      return int(round(10.0 * amount * promo * (1.0 + bonus)))
+
+  # --- inputs (from the Membership MCP, Policy RAG MCP, and the associate) ---
+  tier = "extra"
+  prior_balance = 4200
+  purchases = [
+      {"amount": 499.99, "promo_multiplier": 3.0},   # Triple BLAST Weekend
+  ]
+  returns = []
+  expired_points = 800
+
+  bonus = TIER_BONUS[tier]
+  lines, earned, clawback = [], 0, 0
+  for p in purchases:
+      pts = earn(p["amount"], p["promo_multiplier"], bonus)
+      earned += pts
+      lines.append(f"Earn ${p['amount']:.2f} x{p['promo_multiplier']:g} promo +{int(bonus*100)}% tier = +{pts}")
+  for r in returns:
+      pts = earn(r["amount"], r["promo_multiplier"], bonus)
+      clawback += pts
+      lines.append(f"Clawback ${r['amount']:.2f} (returned) = -{pts}")
+  if expired_points:
+      lines.append(f"Expired points = -{int(expired_points)}")
+
+  net = max(int(prior_balance + earned - clawback - int(expired_points)), 0)
+  blocks = net // 1000
+  store_credit = blocks * 5.0
+
+  print("\n".join(lines))
+  print(f"Prior balance: {int(prior_balance)}")
+  print(f"Net balance:   {net} BlastPoints")
+  print(f"Redeemable:    {int(blocks)} x 1,000 = ${store_credit:.2f} store credit")
+  ```
+
+  ### 3. Report the result
+
+  - State the **net BlastPoints balance** and the **store-credit value**.
+  - Show the ledger lines (earn / clawback / expired) so the associate can verify.
+  - Offer to apply the redeemable store credit to the current transaction.
+
+  ## Worked example (flagship scenario)
+
+  Plus Extra member, prior balance 4,200, a Triple BLAST Weekend purchase of
+  $499.99 (3x), no clawback (defective warranty swap, not a points return), and 800
+  expired points:
+
+  - Earn: $499.99 x3 x1.2 = **18,000**
+  - Expired: **-800**
+  - Net = 4,200 + 18,000 - 800 = **21,400 BlastPoints**
+  - Redeemable: 21 x 1,000 = **$105.00** store credit

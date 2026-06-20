@@ -1,8 +1,0 @@
-<botcomponent_connectionreferenceset>
-  <botcomponent_connectionreference botcomponentid.schemaname="Default_draft_IsBewO.tool.MembershipMCP-MembershipMCPServer" connectionreferenceid.connectionreferencelogicalname="Default_draft_IsBewO.cr.shared_membership-20.9567a2288d83498eb9f0305b20030ce3">
-    <iscustomizable>1</iscustomizable>
-  </botcomponent_connectionreference>
-  <botcomponent_connectionreference botcomponentid.schemaname="Default_StorePolicyAgent_s9s-u8.tool.PolicyRAGMCP-PolicyRAGMCPServer" connectionreferenceid.connectionreferencelogicalname="Default_StorePolicyAgent_s9s-u8.cr.shared_policy-20rag-.97e4f711133d4fb0815fcfb07f281f54">
-    <iscustomizable>1</iscustomizable>
-  </botcomponent_connectionreference>
-</botcomponent_connectionreferenceset>

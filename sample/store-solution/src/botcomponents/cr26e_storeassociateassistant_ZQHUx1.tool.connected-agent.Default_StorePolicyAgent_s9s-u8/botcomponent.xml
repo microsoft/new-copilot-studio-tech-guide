@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.connected-agent.Default_StorePolicyAgent_s9s-u8">
+  <componenttype>9</componenttype>
+  <description>Delegate to the Store Policy Agent for any policy ruling - returns and warranty eligibility, defective-vs-accidental damage, return windows and restocking fees, and BlastPass membership refund/proration rules. Ask it before ruling on a return; it establishes the defect cause first and may return a clarifying question to relay back to the associate.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Store Policy Agent</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

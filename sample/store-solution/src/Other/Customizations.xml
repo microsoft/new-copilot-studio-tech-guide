@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26061.126" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26054.00132">
+<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26062.135" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26062.00142">
   <Entities />
   <Roles />
   <Workflows />
@@ -12,30 +12,6 @@
   <CustomControls />
   <EntityDataProviders />
   <Connectors />
-  <connectionreferences>
-    <connectionreference connectionreferencelogicalname="Default_draft_IsBewO.cr.shared_membership-20.9567a2288d83498eb9f0305b20030ce3">
-      <connectionreferencedisplayname>Default_draft_IsBewO.cr.shared_membership-20.9567a2288d83498eb9f0305b20030ce3</connectionreferencedisplayname>
-      <connectorid>/providers/Microsoft.PowerApps/apis/shared_membership-20mcp-5fee08b8354fad177a-5f8dc9e3504a9e5333</connectorid>
-      <customconnectorid>
-        <connectorid>b23175df-aff2-4ffc-9f87-185e58cdcfc9</connectorid>
-      </customconnectorid>
-      <iscustomizable>0</iscustomizable>
-      <promptingbehavior>0</promptingbehavior>
-      <statecode>0</statecode>
-      <statuscode>1</statuscode>
-    </connectionreference>
-    <connectionreference connectionreferencelogicalname="Default_StorePolicyAgent_s9s-u8.cr.shared_policy-20rag-.97e4f711133d4fb0815fcfb07f281f54">
-      <connectionreferencedisplayname>Default_StorePolicyAgent_s9s-u8.cr.shared_policy-20rag-.97e4f711133d4fb0815fcfb07f281f54</connectionreferencedisplayname>
-      <connectorid>/providers/Microsoft.PowerApps/apis/shared_policy-20rag-20mcp-5fee08b8354fad177a-5f8dc9e3504a9e5333</connectorid>
-      <customconnectorid>
-        <connectorid>334ba87d-2236-4e17-8be6-58c1dcc093ec</connectorid>
-      </customconnectorid>
-      <iscustomizable>0</iscustomizable>
-      <promptingbehavior>0</promptingbehavior>
-      <statecode>0</statecode>
-      <statuscode>1</statuscode>
-    </connectionreference>
-  </connectionreferences>
   <Languages>
     <Language>1033</Language>
   </Languages>

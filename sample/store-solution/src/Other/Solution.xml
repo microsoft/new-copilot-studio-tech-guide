@@ -1,23 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.26061.126" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26061.126" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26054.00132">
+<ImportExportXml version="9.2.26062.135" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26062.135" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26062.00142">
   <SolutionManifest>
-    <UniqueName>StoreModernAgent</UniqueName>
+    <UniqueName>BlastBoxDemo</UniqueName>
     <LocalizedNames>
-      <LocalizedName description="Store Modern Agent" languagecode="1033" />
+      <LocalizedName description="BlastBoxDemo" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.2</Version>
+    <Version>1.0</Version>
     <Managed>0</Managed>
     <Publisher>
-      <UniqueName>CAT</UniqueName>
+      <UniqueName>BlastBoxDemoPublisher</UniqueName>
       <LocalizedNames>
-        <LocalizedName description="CAT" languagecode="1033" />
+        <LocalizedName description="BlastBoxDemoPublisher" languagecode="1033" />
       </LocalizedNames>
-      <Descriptions />
+      <Descriptions>
+        <Description description="BlastBoxDemoPublisher" languagecode="1033" />
+      </Descriptions>
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
-      <CustomizationPrefix>cat</CustomizationPrefix>
-      <CustomizationOptionValuePrefix>76486</CustomizationOptionValuePrefix>
+      <CustomizationPrefix>bbx</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>56058</CustomizationOptionValuePrefix>
       <Addresses>
         <Address>
           <AddressNumber>1</AddressNumber>
@@ -82,10 +84,8 @@
       <RootComponent type="372" id="{334ba87d-2236-4e17-8be6-58c1dcc093ec}" schemaName="cat_policy-20rag-20mcp" behavior="0" />
       <RootComponent type="372" id="{e4e7e713-5c3f-f111-bec6-70a8a59a4421}" schemaName="new_order-20management-20mcp" behavior="0" />
       <RootComponent type="372" id="{32399478-9062-f111-ab0b-0022480a52c7}" schemaName="new_policy-20rag-20mcp-20v2" behavior="0" />
-      <RootComponent type="372" id="{3ec39206-5762-f111-ab0b-0022480a52c7}" schemaName="new_sales-20and-20performance-20mcp" behavior="0" />
       <RootComponent type="372" id="{357a348b-d53f-f111-bec6-70a8a59a4421}" schemaName="new_warehouse-20mcp" behavior="0" />
     </RootComponents>
-    <MissingDependencies>
-    </MissingDependencies>
+    <MissingDependencies />
   </SolutionManifest>
 </ImportExportXml>

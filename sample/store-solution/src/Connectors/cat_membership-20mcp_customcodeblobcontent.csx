@@ -32,11 +32,11 @@ public class Script : ScriptBase
             Name = "blastpass-membership",
             Version = "1.0.0",
             Title = "BlastPass Membership",
-            Description = "Look up a BlastPass console membership by its mega-blast-customer-id, cancel memberships, and reissue lost/stolen/damaged membership cards. Returns the membership tier, activation date, hours streamed, the card_serial on file, and how many whole months remain on the 12-month term — the inputs needed to calculate a prorated cancellation refund or print a replacement card."
+            Description = "Look up a BlastPass console membership by its mega-blast-customer-id and cancel memberships. Returns the membership tier, activation date, hours streamed, and how many whole months remain on the 12-month term — the inputs needed to calculate a prorated cancellation refund."
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use get_membership with a mega-blast-customer-id (e.g. 'MEGA-BLAST-1024') to retrieve the member's BlastPass tier, annual price, activation date, hours streamed, card_serial, and months_remaining on the term. Pass months_remaining and the price to the prorated-refund calculation. Use cancel_membership once a refund figure is agreed to close the membership and get a confirmation number. Use reissue_card for a self-serve lost/stolen/damaged card replacement: it deactivates the old card_serial and issues a new one while leaving the membership active — feed the returned new_card_serial into the membership-card-png skill to give the member a digital card to save while the physical one ships."
+        Instructions = "Use get_membership with a mega-blast-customer-id (e.g. 'MEGA-BLAST-1024') to retrieve the member's BlastPass tier, annual price, activation date, hours streamed, and months_remaining on the term. Pass months_remaining and the price to the prorated-refund calculation. Use cancel_membership once a refund figure is agreed to close the membership and get a confirmation number."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -75,8 +75,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-02-26"",
             ""months_remaining"":8,
             ""hours_streamed"":47.5,
-            ""console_serial"":""OMEGA-7F3A-1024"",
-            ""card_serial"":""BLAST-7F3A-1024""
+            ""console_serial"":""OMEGA-7F3A-1024""
         },
         {
             ""customer_id"":""MEGA-BLAST-2048"",
@@ -91,8 +90,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-05-30"",
             ""months_remaining"":11,
             ""hours_streamed"":1.2,
-            ""console_serial"":""OMEGA-9B1C-2048"",
-            ""card_serial"":""BLAST-9B1C-2048""
+            ""console_serial"":""OMEGA-9B1C-2048""
         },
         {
             ""customer_id"":""MEGA-BLAST-4096"",
@@ -107,8 +105,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2026-12-10"",
             ""months_remaining"":6,
             ""hours_streamed"":88.0,
-            ""console_serial"":""OMEGA-2D4E-4096"",
-            ""card_serial"":""BLAST-2D4E-4096""
+            ""console_serial"":""OMEGA-2D4E-4096""
         },
         {
             ""customer_id"":""MEGA-BLAST-8192"",
@@ -123,8 +120,7 @@ public class Script : ScriptBase
             ""term_end_date"":""2027-01-05"",
             ""months_remaining"":5,
             ""hours_streamed"":210.0,
-            ""console_serial"":""OMEGA-5A6F-8192"",
-            ""card_serial"":""BLAST-5A6F-8192""
+            ""console_serial"":""OMEGA-5A6F-8192""
         }
     ]");
 
@@ -163,8 +159,7 @@ public class Script : ScriptBase
                             ["months_remaining"] = m["months_remaining"],
                             ["hours_streamed"] = m["hours_streamed"],
                             ["within_cooling_off"] = coolingOff,
-                            ["console_serial"] = m["console_serial"],
-                            ["card_serial"] = m["card_serial"]
+                            ["console_serial"] = m["console_serial"]
                         };
                     }
                 }
@@ -201,59 +196,6 @@ public class Script : ScriptBase
                     }
                 }
                 throw new ArgumentException($"No BlastPass membership found for customer id \"{id}\". Cannot cancel.");
-            });
-
-        // 3. reissue_card
-        handler.AddTool("reissue_card",
-            "Deactivate a member's current physical BlastPass card and issue a replacement, WITHOUT cancelling or changing the membership itself. Use this for a self-serve lost / stolen / damaged card request: it invalidates the old card_serial, mints a brand-new card_serial, keeps the membership active, and queues the new physical card for mailing. Returns the previous (now void) card_serial, the new card_serial to print on a digital card, a reissue confirmation number, and the mailing ETA for the physical card. The membership tier, term, and BlastPoints are untouched.",
-            schemaConfig: s => s
-                .String("customer_id", "The mega-blast-customer-id whose card is being replaced (e.g. 'MEGA-BLAST-1024').", required: true)
-                .String("reason", "Why the card is being reissued: 'lost', 'stolen', or 'damaged'. Defaults to 'lost'.", required: false),
-            handler: async (args, ct) =>
-            {
-                var id = (args.Value<string>("customer_id") ?? "").Trim();
-                var reason = (args.Value<string>("reason") ?? "lost").Trim().ToLowerInvariant();
-                foreach (var m in Memberships)
-                {
-                    if (string.Equals(m["customer_id"]?.ToString(), id, StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (!string.Equals(m["status"]?.ToString(), "active", StringComparison.OrdinalIgnoreCase))
-                            throw new ArgumentException($"BlastPass membership for {m["member_name"]} is {m["status"]}, so a card cannot be reissued.");
-
-                        var prevCard = m["card_serial"]?.ToString() ?? "";
-                        // Mint a new card_serial: keep the trailing member segment, refresh the middle block.
-                        var tail = id.Replace("MEGA-BLAST-", "");
-                        var seed = (prevCard + DateTime.UtcNow.Ticks).GetHashCode();
-                        var block = ((seed & 0x7FFFFFFF) % 0x10000).ToString("X4");
-                        var newCard = $"BLAST-{block}-{tail}";
-                        // Persist so a follow-up get_membership reflects the new card.
-                        m["card_serial"] = newCard;
-
-                        var confirmation = "BPX-CARD-" + tail + "-" + DateTime.UtcNow.ToString("yyyyMMdd");
-                        var shipDays = 7;
-                        var eta = DateTime.UtcNow.Date.AddDays(shipDays);
-                        var last4 = prevCard.Length >= 4 ? prevCard.Substring(prevCard.Length - 4) : prevCard;
-                        return new JObject
-                        {
-                            ["customer_id"] = m["customer_id"],
-                            ["member_name"] = m["member_name"],
-                            ["tier"] = m["tier"],
-                            ["tier_code"] = m["tier_code"],
-                            ["reason"] = reason,
-                            ["previous_card_serial"] = prevCard,
-                            ["previous_card_status"] = "deactivated",
-                            ["new_card_serial"] = newCard,
-                            ["reissue_confirmation"] = confirmation,
-                            ["membership_status"] = m["status"],
-                            ["digital_card_ready"] = true,
-                            ["ship_method"] = "Standard mail",
-                            ["ship_eta_days"] = shipDays,
-                            ["estimated_delivery"] = eta.ToString("yyyy-MM-dd"),
-                            ["message"] = $"Your old card ending {last4} is now deactivated and can no longer be used. A new {m["tier"]} card ({newCard}) has been issued — a printed copy is on its way by standard mail (arriving ~{eta:yyyy-MM-dd}). You can save the digital card now and use it in-store and at checkout right away."
-                        };
-                    }
-                }
-                throw new ArgumentException($"No BlastPass membership found for customer id \"{id}\". Cannot reissue a card.");
             });
     }
 
