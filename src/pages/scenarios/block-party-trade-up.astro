@@ -14,14 +14,12 @@ const base = import.meta.env.BASE_URL;
         <span class="badge badge--purple">Flagship &middot; Store Associate Assistant</span>
         <h1>Block Party Trade-Up</h1>
         <p class="scenario__lead">
-          A store associate is helping a customer whose console gave out about 10 days after
-          purchase, right before a gaming-league block party he's hosting this weekend. Working
-          through the <strong>Store Associate Assistant</strong>, the associate needs to settle
-          the defective console, find a fix that gets the customer playing before the weekend,
-          cancel his BlastPass, and reconcile his loyalty points &mdash; then hand over a printed
-          settlement slip. The agent rules the defect as a warranty case, prices a trade-up to
-          the in-stock MEGA Edition, makes the case to an undecided customer, applies the
-          membership refund as store credit, and prints the final slip as a PDF.
+          It's the weekend of a gaming-league block party, and one of the hosts has a problem:
+          the console he bought just ten days ago has given out on him, right when he needs it
+          most. He comes into the store with his receipt, unsure whether he wants a replacement,
+          a refund, or an upgrade, and while he's there he'd like to cancel his BlastPass too.
+          The associate turns to the <strong>Store Associate Assistant</strong> to untangle all
+          of it in a single conversation.
         </p>
         <div class="scenario__cast">
           <span class="pill">Store Associate Assistant</span>
@@ -43,7 +41,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Associate</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Customer's running a gaming-league block party this weekend and his main console just gave out about 10 days after he bought it &mdash; he's got the receipt. He wants a replacement if one's in stock, otherwise a refund, and while he's here he wants to cancel his BlastPass, member ID MEGA-BLAST-1024. Walk me through all of it.</blockquote>
+                <blockquote class="try-prompt__text">Customer's running a gaming-league block party this weekend and his main console just gave out about 10 days after he bought it, and he's got the receipt. He wants a replacement if one's in stock, otherwise a refund, and while he's here he wants to cancel his BlastPass, member ID MEGA-BLAST-1024. Walk me through all of it.</blockquote>
               </div>
             </div>
           </li>
@@ -65,7 +63,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Associate</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Manufacturing fault &mdash; just won't power on, no physical or liquid damage.</blockquote>
+                <blockquote class="try-prompt__text">Manufacturing fault, just won't power on, no physical or liquid damage.</blockquote>
               </div>
             </div>
           </li>
@@ -77,7 +75,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent</span> confirms defective within 30 days = free warranty swap, no restocking fee</div>
                 <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; Warehouse MCP</span> check_stock (base = 0 local), get_restock_date (~4 days), find_alternatives (MEGA Edition, $499.99, 5 in stock)</div>
                 <div class="tl-skill"><span class="tl-skill-name">prorated-refund-calculator</span> runs Python &rarr; $129.99 ÷ 12 × 8 &minus; $10 = <strong>$76.66</strong></div>
-                <p>"Confirmed &mdash; manufacturing defect inside 30 days &rarr; free warranty swap. Base console is out of stock (restock ~4 days); MEGA Edition is in stock now at $499.99. Membership prorated refund: <strong>$76.66</strong>. He can wait ~4 days, upgrade to MEGA now, or take a refund. Which way is he leaning?"</p>
+                <p>"Confirmed: manufacturing defect inside 30 days &rarr; free warranty swap. Base console is out of stock (restock ~4 days); MEGA Edition is in stock now at $499.99. Membership prorated refund: <strong>$76.66</strong>. He can wait ~4 days, upgrade to MEGA now, or take a refund. Which way is he leaning?"</p>
               </div>
             </div>
           </li>
@@ -87,7 +85,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Associate</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">He's torn &mdash; he likes the MEGA Edition but isn't sure it's worth the extra hundred over just waiting four days for the base console. Give me something I can tell him.</blockquote>
+                <blockquote class="try-prompt__text">He's torn: he likes the MEGA Edition but isn't sure it's worth the extra hundred over just waiting four days for the base console. Give me something I can tell him.</blockquote>
               </div>
             </div>
           </li>
@@ -97,8 +95,8 @@ const base = import.meta.env.BASE_URL;
               <div class="tl-label">Agent</div>
               <div class="tl-steps">
                 <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; get_console_exclusives</span> "mega" &rarr; three MEGA-only AAA titles</div>
-                <p><em>"The block party is this weekend &mdash; waiting four days means he misses it. The deciding factor isn't the $100, it's the three games that physically won't run on the base console."</em></p>
-                <p>"Two things settle it: <strong>timing</strong> &mdash; the MEGA Edition is the only option that gets him a working console before the weekend &mdash; and <strong>the games</strong>: <em>MEGA Lizards from Outer Space</em>, <em>Galactic Tax Evader VII</em>, and <em>Mecha-Granny: Knitpocalypse</em>, none of which load on the base console. Plus the $76.66 refund goes straight toward the upgrade, so the real gap is small."</p>
+                <p><em>"The block party is this weekend. Waiting four days means he misses it. The deciding factor isn't the $100, it's the three games that physically won't run on the base console."</em></p>
+                <p>"Two things settle it: <strong>timing</strong> (the MEGA Edition is the only option that gets him a working console before the weekend) and <strong>the games</strong>: <em>MEGA Lizards from Outer Space</em>, <em>Galactic Tax Evader VII</em>, and <em>Mecha-Granny: Knitpocalypse</em>, none of which load on the base console. Plus the $76.66 refund goes straight toward the upgrade, so the real gap is small."</p>
               </div>
             </div>
           </li>
@@ -108,7 +106,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Associate</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Do it: warranty-swap him into the MEGA Edition, cancel the BlastPass and apply the $76.66 as store credit toward the upgrade, and tell me what he owes. Also &mdash; after Triple BLAST Weekend, what are his BlastPoints worth? Then print me the slip as a PDF.</blockquote>
+                <blockquote class="try-prompt__text">Do it: warranty-swap him into the MEGA Edition, cancel the BlastPass and apply the $76.66 as store credit toward the upgrade, and tell me what he owes. Also, after Triple BLAST Weekend, what are his BlastPoints worth? Then print me the slip as a PDF.</blockquote>
               </div>
             </div>
           </li>
@@ -123,7 +121,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="tl-skill"><span class="tl-skill-name">points-reconciliation</span> runs Python &rarr; 4,200 + 18,000 earned &minus; 800 expired = <strong>21,400 pts &rarr; $105.00</strong></div>
                 <div class="tl-skill"><span class="tl-skill-name">slip-pdf-generator</span> runs reportlab &rarr; settlement PDF</div>
                 <div class="tl-file"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#129534;</span> hands back <strong>blastbox_slip.pdf</strong></div>
-                <p>"Defective console credited at $399.99, no fee. MEGA Edition $499.99 &rarr; upgrade difference $100.00. BlastPass cancelled &rarr; $76.66 store credit. <strong>Net due: $23.34.</strong> BlastPoints after the weekend: <strong>21,400</strong> (worth $105.00) &mdash; he can redeem $23.34 to walk out owing $0."</p>
+                <p>"Defective console credited at $399.99, no fee. MEGA Edition $499.99 &rarr; upgrade difference $100.00. BlastPass cancelled &rarr; $76.66 store credit. <strong>Net due: $23.34.</strong> BlastPoints after the weekend: <strong>21,400</strong> (worth $105.00). He can redeem $23.34 to walk out owing $0."</p>
               </div>
             </div>
           </li>
@@ -139,19 +137,19 @@ const base = import.meta.env.BASE_URL;
       </section>
 
       <section class="scenario__section">
-        <h2>Why it's the flagship</h2>
+        <h2>What was demonstrated</h2>
         <div class="value-grid">
           <div class="value-card">
             <h3>Two connected agents, two MCPs under them</h3>
-            <p>Policy <em>rules</em> the defect, Inventory <em>stocks and upsells</em> &mdash; plus two parent MCPs. The orchestration genuinely fans out to specialists and comes back.</p>
+            <p>Policy <em>rules</em> the defect, Inventory <em>stocks and upsells</em>, plus two parent MCPs. The orchestration genuinely fans out to specialists and comes back.</p>
           </div>
           <div class="value-card">
             <h3>The upsell closes a real decision</h3>
-            <p>When the customer can't choose, <code>get_console_exclusives</code> hands the associate the exact words &mdash; three AAA titles that won't run on the base console &mdash; plus same-day availability for a weekend event.</p>
+            <p>When the customer can't choose, <code>get_console_exclusives</code> hands the associate the exact words: three AAA titles that won't run on the base console, plus same-day availability for a weekend event.</p>
           </div>
           <div class="value-card">
             <h3>Every number comes from Python</h3>
-            <p>The agent passes MCP results to skills that compute the exact figures &mdash; prorated refund, loyalty points, settlement PDF &mdash; it never hand-rolls the arithmetic.</p>
+            <p>The agent passes MCP results to skills that compute the exact figures (prorated refund, loyalty points, settlement PDF). It never hand-rolls the arithmetic.</p>
           </div>
         </div>
       </section>
