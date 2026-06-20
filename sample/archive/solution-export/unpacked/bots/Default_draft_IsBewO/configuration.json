@@ -1,0 +1,22 @@
+{
+  "$kind": "BotConfiguration",
+  "recognizer": {
+    "$kind": "CLICopilotRecognizer"
+  },
+  "agentSettings": {
+    "$kind": "AgentSettings",
+    "model": {
+      "$kind": "ModelConfig",
+      "series": "Sonnet46"
+    },
+    "instructions": {
+      "$kind": "Instructions",
+      "segments": [
+        {
+          "$kind": "StaticSegment",
+          "value": ""
+        }
+      ]
+    }
+  }
+}

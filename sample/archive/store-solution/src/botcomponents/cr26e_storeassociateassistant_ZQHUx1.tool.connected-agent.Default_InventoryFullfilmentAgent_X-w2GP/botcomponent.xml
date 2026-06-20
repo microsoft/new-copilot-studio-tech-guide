@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.connected-agent.Default_InventoryFullfilmentAgent_X-w2GP">
+  <componenttype>9</componenttype>
+  <description>Delegate to the Inventory &amp; Fulfillment Agent for anything about stock and consoles - whether a SKU is in stock locally, restock/ETA dates, in-stock alternatives or upgrades, which BlastBox Omega model a game requires, and the MEGA-only exclusive titles used to upsell a customer choosing between the base console and the MEGA Edition.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Inventory &amp; Fullfilment Agent</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

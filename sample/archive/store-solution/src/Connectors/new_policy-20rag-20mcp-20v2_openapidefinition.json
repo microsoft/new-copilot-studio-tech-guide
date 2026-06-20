@@ -1,0 +1,37 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Policy RAG MCP v2",
+    "description": "BlastPass Policy Knowledge (v2) for BlastBox Omega. Tools: search_policy, get_tier_refund_policy, get_markdown_policy. Runs entirely inside the connector.",
+    "version": "1.0.0"
+  },
+  "host": "placeholder.azure-apim.net",
+  "basePath": "/mcp",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "summary": "Policy RAG MCP v2 Server",
+        "description": "MCP server for BlastBox Omega policy knowledge. Tools: search_policy, get_tier_refund_policy, get_markdown_policy.",
+        "operationId": "InvokeMCP",
+        "x-ms-agentic-protocol": "mcp-streamable-1.0",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "MCP response"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {},
+  "security": []
+}

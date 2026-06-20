@@ -1,0 +1,4 @@
+kind: ConnectedAgentTool
+botSchemaName: Default_InventoryFullfilmentAgent_X-w2GP
+historyType:
+  kind: ConversationHistory

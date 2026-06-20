@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Connector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <connectorid>5d6180ed-0d6f-418c-8ccb-1360b7c33f88</connectorid>
+  <description>BlastPass console membership lookup, cancellation, and card reissue. Tools: get_membership, cancel_membership, reissue_card. Runs entirely inside the connector — no external MCP server needed.</description>
+  <displayname>Membership MCP v2</displayname>
+  <iconbrandcolor>#007ee5</iconbrandcolor>
+  <name>cat_membership-20mcp-20v2</name>
+  <connectortype>1</connectortype>
+  <scriptoperations>[]</scriptoperations>
+  <openapidefinition>/Connector/cat_membership-20mcp-20v2_openapidefinition.json</openapidefinition>
+  <connectionparameters>/Connector/cat_membership-20mcp-20v2_connectionparameters.json</connectionparameters>
+  <policytemplateinstances>/Connector/cat_membership-20mcp-20v2_policytemplateinstances.json</policytemplateinstances>
+  <customcodeblobcontent>/Connector/cat_membership-20mcp-20v2_customcodeblobcontent.csx</customcodeblobcontent>
+  <iconblob>/Connector/cat_membership-20mcp-20v2_iconblob.Png</iconblob>
+</Connector>

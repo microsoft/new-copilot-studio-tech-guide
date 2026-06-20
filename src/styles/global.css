@@ -1,9 +1,18 @@
 /* ── Fonts ── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;600;700;800;900&display=swap');
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/*
+  Theme system
+  ────────────
+  Default `:root` = the CAT guidance skin (light, Fluent blue, paw mark).
+  `html[data-theme="blastbox"]` overrides the same variable names with the
+  BlastBox Omega skin (dark neon arcade). The theme toggle in the nav flips
+  the `data-theme` attribute and persists the choice in localStorage; with no
+  stored preference the CAT skin is the default.
+*/
 :root {
   /* CAT gradient spectrum */
   --gradient-brand: linear-gradient(90deg,
@@ -13,9 +22,14 @@
     #C26CF3 54%,
     #D83B73 72%,
     #FF8C00 100%);
+  --gradient-brand-soft: linear-gradient(120deg,
+    rgba(0,120,212,0.06),
+    rgba(127,57,251,0.06),
+    rgba(216,59,115,0.06));
 
-  /* Palette — CAT-aligned */
+  /* Palette: CAT-aligned (light) */
   --c-bg: #fafafa;
+  --c-bg-deep: #f0f0f3;
   --c-surface: #ffffff;
   --c-surface-raised: #f5f5f5;
   --c-border: #e1dfdd;
@@ -29,12 +43,32 @@
   --c-purple: #7F39FB;
   --c-pink: #D83B73;
   --c-orange: #FF8C00;
+  --c-green: #16a34a;
+  --c-red: #dc2626;
   --c-dark: #1b1b1b;
   --c-dark-soft: #292929;
+  --c-on-primary: #ffffff;
 
   /* Typography */
   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  /* Effects (CAT = flat / subtle) */
+  --glow-hero: none;
+  --glow-accent: none;
+  --shadow-console: 0 16px 40px rgba(0,0,0,0.10);
+  --nav-bg: rgba(255,255,255,0.82);
+  --body-bg: var(--c-bg);
+  --tint-primary: rgba(0,120,212,0.10);
+  --tint-pink: rgba(216,59,115,0.10);
+  --tint-orange: rgba(255,140,0,0.12);
+  --tint-purple: rgba(127,57,251,0.10);
+  --tint-green: rgba(22,163,74,0.10);
+  --border-primary: rgba(0,120,212,0.25);
+  --border-orange: rgba(255,140,0,0.30);
+  --selection-bg: rgba(127,57,251,0.14);
+  --selection-fg: var(--c-purple);
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -58,6 +92,71 @@
   --card-frame-radius: var(--radius-lg);
 }
 
+/* ── BlastBox Omega skin (immersive) ── */
+html[data-theme="blastbox"] {
+  /* BlastBox Omega: retro-arcade neon spectrum */
+  --gradient-brand: linear-gradient(90deg,
+    #22e0ff 0%,
+    #6a8bff 24%,
+    #9b51e0 48%,
+    #ff2e88 74%,
+    #ff7a18 100%);
+  --gradient-brand-soft: linear-gradient(120deg,
+    rgba(34,224,255,0.16),
+    rgba(155,81,224,0.16),
+    rgba(255,46,136,0.16));
+
+  /* Palette: dark arcade */
+  --c-bg: #0b0918;
+  --c-bg-deep: #070512;
+  --c-surface: #15112b;
+  --c-surface-raised: #1d1740;
+  --c-border: #2c2456;
+  --c-border-subtle: #221c45;
+  --c-text: #f3f0ff;
+  --c-text-secondary: #b9b2e6;
+  --c-text-muted: #837bb0;
+
+  /* Neon accents */
+  --c-primary: #22e0ff;
+  --c-primary-light: rgba(34, 224, 255, 0.12);
+  --c-primary-dark: #5cd0ff;
+  --c-purple: #b06bff;
+  --c-pink: #ff2e88;
+  --c-orange: #ff7a18;
+  --c-green: #41f5a8;
+  --c-red: #ff5470;
+  --c-dark: #070512;
+  --c-dark-soft: #15112b;
+  --c-on-primary: #06121a;
+
+  /* Typography */
+  --font-display: 'Orbitron', 'DM Sans', system-ui, sans-serif;
+
+  /* Effects (BlastBox = neon glow) */
+  --glow-hero: 0 0 30px rgba(34, 224, 255, 0.18);
+  --glow-accent: 0 0 10px rgba(34, 224, 255, 0.7);
+  --shadow-console: 0 24px 60px rgba(0,0,0,0.5), 0 0 50px rgba(155, 81, 224, 0.12);
+  --nav-bg: rgba(11, 9, 24, 0.78);
+  --body-bg:
+    radial-gradient(ellipse 60% 50% at 12% 0%, rgba(34,224,255,0.07), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 8%, rgba(255,46,136,0.07), transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(155,81,224,0.06), transparent 60%),
+    var(--c-bg);
+  --tint-primary: rgba(34,224,255,0.14);
+  --tint-pink: rgba(255,46,136,0.14);
+  --tint-orange: rgba(255,122,24,0.14);
+  --tint-purple: rgba(176,107,255,0.14);
+  --tint-green: rgba(65,245,168,0.10);
+  --border-primary: rgba(34,224,255,0.3);
+  --border-orange: rgba(255,122,24,0.3);
+  --selection-bg: rgba(255, 46, 136, 0.3);
+  --selection-fg: #fff;
+
+  /* Thinner frame reads better on the dark skin */
+  --card-frame-thickness: 1.5px;
+}
+
 html {
   font-family: var(--font-body);
   color: var(--c-text);
@@ -70,6 +169,8 @@ html {
 body {
   line-height: 1.65;
   font-size: 16px;
+  background: var(--body-bg);
+  min-height: 100vh;
 }
 
 a {
@@ -93,7 +194,8 @@ code {
   background: var(--c-surface-raised);
   padding: 0.15em 0.4em;
   border-radius: 4px;
-  border: 1px solid var(--c-border-subtle);
+  border: 1px solid var(--c-border);
+  color: var(--c-primary-dark);
 }
 
 /* ── Utilities ── */
@@ -106,55 +208,118 @@ code {
 .badge {
   display: inline-block;
   font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 4px 12px;
   border-radius: 20px;
+  font-family: var(--font-mono);
 }
 
 .badge--primary {
   background: var(--c-primary-light);
   color: var(--c-primary);
-  border: 1px solid rgba(0, 120, 212, 0.15);
+  border: 1px solid var(--border-primary);
 }
 
 .badge--accent {
-  background: #fef4e8;
-  color: #b45309;
-  border: 1px solid rgba(255, 140, 0, 0.18);
+  background: var(--tint-orange);
+  color: var(--c-orange);
+  border: 1px solid var(--border-orange);
 }
+
+.badge--green {
+  background: var(--tint-green);
+  color: var(--c-green);
+  border: 1px solid color-mix(in srgb, var(--c-green) 30%, transparent);
+}
+.badge--pink {
+  background: var(--tint-pink);
+  color: var(--c-pink);
+  border: 1px solid color-mix(in srgb, var(--c-pink) 30%, transparent);
+}
+.badge--purple {
+background: var(--tint-purple);
+color: var(--c-purple);
+border: 1px solid color-mix(in srgb, var(--c-purple) 30%, transparent);
+}
+
+/* Theme-conditional icons: clean SVG for CAT (default), original emoji for BlastBox */
+.ticon-cat { display: inline-flex; align-items: center; justify-content: center; }
+.ticon-bb { display: none; align-items: center; justify-content: center; line-height: 1; }
+html[data-theme="blastbox"] .ticon-cat { display: none; }
+html[data-theme="blastbox"] .ticon-bb { display: inline-flex; }
+
+/* Theme-conditional text: professional copy for CAT (default), BlastBox branding for BlastBox skin */
+.t-bb { display: none; }
+html[data-theme="blastbox"] .t-cat { display: none; }
+html[data-theme="blastbox"] .t-bb { display: inline; }
 
 .section-label {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--c-purple);
+  color: var(--c-primary);
   margin-bottom: var(--space-sm);
+  font-family: var(--font-mono);
 }
 
 h1, h2, h3, h4 {
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  color: var(--c-text);
 }
 
 h1 { font-size: clamp(2rem, 5vw, 2.75rem); }
-h2 { font-size: clamp(1.4rem, 3vw, 1.85rem); }
+h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); }
 h3 { font-size: 1.15rem; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1px solid transparent;
+}
+.btn--primary {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+.btn--primary:hover {
+  color: var(--c-on-primary);
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--c-primary) 35%, transparent);
+  transform: translateY(-1px);
+}
+.btn--secondary {
+  background: var(--c-surface-raised);
+  color: var(--c-text);
+  border-color: var(--c-border);
+}
+.btn--secondary:hover {
+  color: var(--c-text);
+  border-color: var(--c-primary);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--c-primary) 15%, transparent);
+}
 
 /* ── Selection ── */
 ::selection {
-  background: rgba(127, 57, 251, 0.12);
-  color: var(--c-purple);
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 /* ── Gradient bar decoration ── */
 .gradient-bar {
   height: 3px;
   background: var(--gradient-brand);
-  border-radius: 2px;
 }
 
 /* ── Copy button on prompts ── */
@@ -171,7 +336,7 @@ h3 { font-size: 1.15rem; }
   padding: 4px 10px;
   font-size: 0.7rem;
   font-weight: 600;
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   color: var(--c-text-muted);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -184,6 +349,6 @@ h3 { font-size: 1.15rem; }
   border-color: var(--c-primary);
 }
 .copy-btn.copied {
-  color: #22c55e;
-  border-color: #22c55e;
+  color: var(--c-green);
+  border-color: var(--c-green);
 }

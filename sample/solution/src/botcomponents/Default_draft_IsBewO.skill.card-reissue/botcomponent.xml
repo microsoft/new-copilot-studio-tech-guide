@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_draft_IsBewO.skill.card-reissue">
+  <componenttype>9</componenttype>
+  <description>Replace (reissue) a member's BlastPass card when it is lost, stolen, or damaged. Use whenever the person wants a new/replacement BlastPass card. The skill verifies identity (name + last 4 of the console serial) before deactivating the old card, mints a new one with reissue_card, and hands over a digital card. Do not use this to cancel a membership.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>card-reissue</name>
+  <parentbotid>
+    <schemaname>Default_draft_IsBewO</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

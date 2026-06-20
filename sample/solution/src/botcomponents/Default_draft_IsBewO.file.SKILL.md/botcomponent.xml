@@ -1,0 +1,15 @@
+<botcomponent schemaname="Default_draft_IsBewO.file.SKILL.md">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in SKILL.md</description>
+  <filedata mimetype="application/octet-stream">SKILL.md</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>SKILL.md</name>
+  <parentbotcomponentid>
+    <schemaname>Default_draft_IsBewO.skill.membership-card-png</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>Default_draft_IsBewO</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

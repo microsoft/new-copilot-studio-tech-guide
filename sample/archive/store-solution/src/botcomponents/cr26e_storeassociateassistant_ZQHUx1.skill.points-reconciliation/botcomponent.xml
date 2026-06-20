@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.skill.points-reconciliation">
+  <componenttype>9</componenttype>
+  <description>Reconcile a customer's BlastPoints loyalty balance after a visit (purchases, returns/clawback, promo multipliers, tier bonus, expiry) and convert the net balance to store credit. Use when an associate asks what a member's BlastPoints are worth, or after a return that should claw back earned points. The skill generates and runs a short Python snippet that applies the rules exactly and prints a points ledger plus the redeemable store-credit value.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>points-reconciliation</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,0 +1,7 @@
+mcs.metadata:
+  componentName: Sales & Performance Agent
+  description: Sales data agent.
+kind: ConnectedAgentTool
+botSchemaName: Default_SalesPerformanceAgent_DC0HEJ
+historyType:
+  kind: ConversationHistory

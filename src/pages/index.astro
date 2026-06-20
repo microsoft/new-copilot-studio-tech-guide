@@ -5,93 +5,111 @@ import ScenarioCard from '../components/ScenarioCard.astro';
 const base = import.meta.env.BASE_URL;
 ---
 
-<Base title="Enhanced Task Completion | CAT Guidance">
+<Base title="Copilot Studio: technical guide">
   <!-- Hero -->
   <section class="hero">
-    <div class="hero__bg"></div>
     <div class="container hero__inner">
       <div class="hero__content">
-        <div class="hero__cat-mark">
-          <img src={`${base}images/paw.png`} alt="CAT" class="hero__paw" />
-          <div class="hero__cat-label">
-            <span class="hero__cat-name">Copilot Studio CAT</span>
-            <span class="hero__cat-type">Feature Guide</span>
-          </div>
+        <div class="hero__eyebrow">
+          <span class="hero__eyebrow-dot">&#9670;</span>
+          Copilot Studio &middot; Modern Agent Experience
         </div>
-        <h1 class="hero__title">Enhanced Task<br />Completion</h1>
+        <h1 class="hero__title">
+          <span class="t-cat">The new <span class="hero__title-accent">Copilot Studio</span> experience</span>
+          <span class="t-bb">BlastBox <span class="hero__title-omega">Omega</span></span>
+        </h1>
+        <p class="hero__tagline">
+          <span class="t-cat">A hands-on guide to the new Agents and Workflows in Copilot Studio.</span>
+          <span class="t-bb">The retro-future game store, run by agents.</span>
+        </p>
         <p class="hero__subtitle">
-          This guide helps you get started with Enhanced Task Completion,
-          a new experimental orchestration mode that lets agents reason dynamically, chain tools,
-          delegate to other agents, and recover from failures. Explore the scenarios
-          below, then try the deployable sample.
+          Copilot Studio has been <strong>rebuilt for complex, multi-step work</strong>,
+          moving from a single chatbot to coordinated, multi-agent systems. BlastBox Omega is a
+          complete, runnable reference: a parent agent that delegates to <strong>connected
+          agents</strong>, calls <strong>multiple inline MCP servers</strong>, runs
+          <strong>per-agent skills</strong> that generate and execute Python at runtime, and
+          returns real <strong>generated files</strong>. End-to-end reference scenarios
+          spanning <strong>agents and workflows</strong> in the new Copilot Studio.
         </p>
         <div class="hero__actions">
           <a href="#scenarios" class="btn btn--primary">Explore scenarios</a>
-          <a href="https://github.com/microsoft/Agents/blob/main/docs/enhanced-task-completion.md" class="btn btn--secondary">
-            Read the docs
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          <a href="https://github.com/microsoft/new-copilot-studio-tech-guide/tree/main/sample/solution" class="btn btn--secondary">
+            Get the sample
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
           </a>
         </div>
       </div>
+
       <div class="hero__visual">
-        <div class="hero__card">
-          <div class="hero__card-header">
-            <span class="hero__dot hero__dot--red"></span>
-            <span class="hero__dot hero__dot--yellow"></span>
-            <span class="hero__dot hero__dot--green"></span>
+        <div class="console">
+          <div class="console__header">
+            <span class="console__dot"></span>
+            <span class="console__dot"></span>
+            <span class="console__dot"></span>
+            <span class="console__title">store-associate-assistant</span>
           </div>
-          <div class="hero__card-body">
-            <div class="hero__msg hero__msg--user">I'm Sarah Mitchell. I'd like to return my Apex headphones, they have a crackling sound. Also, where's my LumiRead order?</div>
-            <div class="hero__msg hero__msg--bot">Let me look up your orders!</div>
-            <div class="hero__tool"><span class="hero__tool-icon">&#x1F50D;</span> search_orders</div>
-            <div class="hero__msg hero__msg--bot">Found 3 orders. Pulling details...</div>
-            <div class="hero__tool"><span class="hero__tool-icon">&#x1F4E6;</span> get_order <span class="hero__tool-badge">&times;2</span></div>
-            <div class="hero__tool"><span class="hero__tool-icon">&#x1F504;</span> request_return</div>
-            <div class="hero__tool"><span class="hero__tool-icon">&#x1F69A;</span> get_shipment</div>
-            <div class="hero__msg hero__msg--bot">Return initiated! <strong>RA-50022</strong> &ndash; your $349.99 refund is on the way.</div>
+          <div class="console__body">
+            <div class="msg msg--user">Console gave out 10 days in. Replace or refund, and cancel his BlastPass. Walk me through it.</div>
+            <div class="delegate">&rarr; asking <strong>Store Policy Agent</strong> to rule the defect</div>
+            <div class="tool"><span class="tool__io">MCP</span> search_policy <span class="tool__badge">warranty</span></div>
+            <div class="delegate">&rarr; asking <strong>Inventory &amp; Fulfillment Agent</strong> for stock</div>
+            <div class="tool"><span class="tool__io">MCP</span> check_stock <span class="tool__badge">MEGA in stock</span></div>
+            <div class="skill"><span class="skill__io">SKILL</span> prorated-refund-calculator <span class="skill__py">python</span></div>
+            <div class="msg msg--bot">Warranty swap to MEGA &middot; refund $76.66 applied &middot; <strong>net due $23.34</strong>.</div>
+            <div class="file"><span class="file__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="ticon-bb">&#128196;</span></span> blastbox_slip.pdf <span class="file__meta">generated</span></div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How it works -->
-  <section class="how">
+  <!-- Pillars -->
+  <section class="pillars">
     <div class="container">
-      <p class="section-label">How it works</p>
-      <h2>What your agent can do with ETC</h2>
-      <p class="how__intro">With Enhanced Task Completion enabled, your agent gains new capabilities that let it handle complex, multi-step tasks autonomously.</p>
+      <p class="section-label">What it shows</p>
+      <h2>The building blocks of the new agent experience</h2>
+      <p class="pillars__intro">Every scenario composes the same primitives of the Copilot Studio Modern Agent Experience. The more advanced scenarios simply orchestrate more of them at once.</p>
 
-      <div class="how__grid">
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-primary);">&#x1F9E0;</div>
-          <h3>Ask clarifying questions</h3>
-          <p>Instead of guessing, the agent asks targeted follow-up questions to gather the information it needs before taking action.</p>
+      <div class="pillars__grid">
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-primary);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#129518;</span>
+          </div>
+          <h3>Connected agents</h3>
+          <p>A parent orchestrator delegates to specialist agents (Store Policy, Inventory &amp; Fulfillment) and relays their answers.</p>
         </div>
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-purple);">&#x1F517;</div>
-          <h3>Chain tools intelligently</h3>
-          <p>Recognizes when one tool's output feeds into another, sequences dependent calls, and parallelizes independent ones.</p>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-purple);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128268;</span>
+          </div>
+          <h3>Multiple MCP servers</h3>
+          <p>Membership, Order Management, Policy RAG, and Warehouse all run as inline MCP connectors, with no external services.</p>
         </div>
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-pink);">&#x1F504;</div>
-          <h3>Adapt its plan</h3>
-          <p>Adjusts its approach mid-conversation based on what it learns from tool results, user responses, and changing context.</p>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-pink);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128221;</span>
+          </div>
+          <h3>Per-agent skills</h3>
+          <p>Each agent carries its own skills that <em>generate and run Python at runtime</em>: refunds, settlements, charts, optimizers.</p>
         </div>
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-orange);">&#x1F4AC;</div>
-          <h3>Natural conversation</h3>
-          <p>Interleaves questions, tool calls, and responses fluidly across multiple turns. Keeps the user informed at every step.</p>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-orange);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128190;</span>
+          </div>
+          <h3>File generation</h3>
+          <p>Real outputs the associate can hand over: a membership card, an itemized settlement, a one-page markdown report, all PDFs.</p>
         </div>
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-green, #22c55e);">&#x2705;</div>
-          <h3>Follow instructions closely</h3>
-          <p>Adheres to the instructions you provide, resulting in more consistent and predictable behavior.</p>
-        </div>
-        <div class="how__item">
-          <div class="how__icon" style="color: var(--c-red, #ef4444);">&#x1F6E1;&#xFE0F;</div>
-          <h3>Recover from errors</h3>
-          <p>When a tool call fails, the agent retries with corrected parameters or finds an alternative approach rather than giving up.</p>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-green);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128172;</span>
+          </div>
+          <h3>Adaptive orchestration</h3>
+          <p>State carries across turns: the agent remembers earlier results, asks a clarifying question when the next step is ambiguous, and revises its plan when you change the ask mid-conversation.</p>
         </div>
       </div>
     </div>
@@ -101,91 +119,58 @@ const base = import.meta.env.BASE_URL;
   <section class="scenarios" id="scenarios">
     <div class="container">
       <p class="section-label">Scenarios</p>
-      <h2>See it in action</h2>
-      <p class="scenarios__intro">Each scenario demonstrates a different Enhanced Task Completion capability through a realistic e-commerce customer service example with 9 tools across two MCP servers.</p>
+      <h2>Self-serve &rarr; flagship</h2>
+      <p class="scenarios__intro">Two end-to-end transcripts: a single-turn self-serve card reissue, then the full associate flagship with connected agents, policy-driven math, and a generated settlement.</p>
 
       <div class="scenarios__grid">
         <ScenarioCard
-          title="Multi-tool Orchestration"
-          capability="MCP Tool Chaining"
-          description="The agent dynamically chains search_orders, get_order, request_return, and get_shipment, parallelizing independent calls and narrating each step."
-          href={`${base}scenarios/multi-tool-orchestration`}
-          image={`${base}images/scenario-tools.png`}
+          title="Self-Serve Card Reissue"
+          capability="Self-serve"
+          tier="Returns &amp; Service Assistant"
+          accent="green"
+          icon="card"
+          description="A member lost their BlastPass card. The agent verifies their identity, reissues the card, and renders a fresh tier-colored membership card. Membership MCP + card skill."
+          href={`${base}scenarios/self-serve-card-reissue`}
+          pillars={["Membership MCP", "card skill", "PNG out", "identity check"]}
         />
         <ScenarioCard
-          title="Connected Agents"
-          capability="Agent Delegation"
-          description="The Orders Agent delegates to the Warehouse Agent, which checks stock and finds alternatives. Results are relayed back through the parent agent."
-          href={`${base}scenarios/connected-agents`}
-          image={`${base}images/scenario-agents.png`}
-        />
-        <ScenarioCard
-          title="File Processing"
-          capability="File Analysis & Generation"
-          description="Upload a CSV of order IDs. The agent reads the file, calls tools for each order, populates the missing data, and returns a completed CSV."
-          href={`${base}scenarios/file-processing`}
-          image={`${base}images/scenario-files.png`}
-          badge="Test pane only"
-        />
-        <ScenarioCard
-          title="Conversational Guidance"
-          capability="Slot-Filling"
-          description="The user gives fuzzy info. The agent asks clarifying questions to gather the inputs tools need before acting, mixing conversation with action."
-          href={`${base}scenarios/conversational-guidance`}
-          image={`${base}images/scenario-reasoning.png`}
+          title="Block Party Trade-Up"
+          capability="Store associate"
+          tier="Store Associate Assistant"
+          accent="purple"
+          icon="package"
+          description="A defective console trade-up: rule the warranty, check stock, prorate the refund, apply loyalty points, and settle the balance. Two connected agents, four MCPs, chained skills, settlement PDF."
+          href={`${base}scenarios/block-party-trade-up`}
+          pillars={["4 MCPs", "2 connected agents", "chained skills", "settlement PDF"]}
         />
       </div>
     </div>
   </section>
 
-  <!-- Try it -->
+  <!-- Get started -->
   <section class="cta">
     <div class="container">
       <div class="cta__layout">
         <div class="cta__text">
           <p class="section-label">Get started</p>
-          <h2>Try it yourself</h2>
-          <p class="cta__desc">Import one solution zip, create connections, publish, and start testing. No servers or code needed, everything runs inside the Power Platform.</p>
+          <h2>Stand up the store</h2>
+          <p class="cta__desc">Import the solution, create the MCP connections, add the policy knowledge, publish the agents, then run the scripted prompts. Everything runs inside Power Platform. No servers, no code to host.</p>
           <div class="cta__actions">
-            <a href="https://github.com/microsoft/enhanced-task-completion/tree/main/sample" class="btn btn--primary">
+            <a href="https://github.com/microsoft/new-copilot-studio-tech-guide/tree/main/sample/solution" class="btn btn--primary">
               Get the sample
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="https://github.com/microsoft/enhanced-task-completion" class="btn btn--secondary">
+            <a href="https://github.com/microsoft/new-copilot-studio-tech-guide" class="btn btn--secondary">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
               GitHub repo
             </a>
           </div>
         </div>
         <div class="cta__steps">
-          <div class="cta__step">
-            <span class="cta__step-num">1</span>
-            <div>
-              <strong>Import the solution</strong>
-              <p>Upload the zip file in Power Apps</p>
-            </div>
-          </div>
-          <div class="cta__step">
-            <span class="cta__step-num">2</span>
-            <div>
-              <strong>Create connections</strong>
-              <p>Click Create for each MCP connector</p>
-            </div>
-          </div>
-          <div class="cta__step">
-            <span class="cta__step-num">3</span>
-            <div>
-              <strong>Publish &amp; test</strong>
-              <p>Publish both agents, then try the prompts</p>
-            </div>
-          </div>
-          <div class="cta__step cta__step--optional">
-            <span class="cta__step-num">4</span>
-            <div>
-              <strong>Deploy the chat UI <span class="cta__optional">optional</span></strong>
-              <p>A lightweight web app for demos to non-makers</p>
-            </div>
-          </div>
+          <div class="cta__step"><span class="cta__num">1</span><div><strong>Import the solution</strong><p>Upload the managed zip in Power Apps</p></div></div>
+          <div class="cta__step"><span class="cta__num">2</span><div><strong>Publish all customizations</strong><p>Deploys the inline connector code to APIM</p></div></div>
+          <div class="cta__step"><span class="cta__num">3</span><div><strong>Create MCP connections</strong><p>Click Create for each of the four connectors</p></div></div>
+          <div class="cta__step"><span class="cta__num">4</span><div><strong>Publish &amp; play</strong><p>Publish all four agents, then run the two scenarios</p></div></div>
         </div>
       </div>
     </div>
@@ -194,359 +179,190 @@ const base = import.meta.env.BASE_URL;
 
 <style>
   /* ── Hero ── */
-  .hero {
-    position: relative;
-    overflow: hidden;
-    padding: var(--space-4xl) 0 var(--space-3xl);
-  }
-  .hero__bg {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 70% 50% at 15% 35%, rgba(0,120,212,0.05), transparent),
-      radial-gradient(ellipse 50% 40% at 75% 25%, rgba(127,57,251,0.04), transparent),
-      radial-gradient(ellipse 40% 30% at 90% 60%, rgba(255,140,0,0.03), transparent);
-    z-index: -1;
-  }
+  .hero { position: relative; padding: var(--space-4xl) 0 var(--space-3xl); overflow: hidden; }
   .hero__inner {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.05fr 0.95fr;
     gap: var(--space-3xl);
     align-items: center;
   }
-  .hero__cat-mark {
-    display: flex;
+  .hero__eyebrow {
+    display: inline-flex;
     align-items: center;
-    gap: 14px;
-  }
-  .hero__paw {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(127, 57, 251, 0.12);
-  }
-  .hero__cat-label {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .hero__cat-name {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--c-text);
-    letter-spacing: -0.01em;
-  }
-  .hero__cat-type {
-    font-size: 0.7rem;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--c-purple);
+    color: var(--c-text-secondary);
+    border: 1px solid var(--c-border);
+    background: var(--c-surface);
+    padding: 5px 12px;
+    border-radius: 20px;
   }
+  .hero__eyebrow-dot { color: var(--c-primary); text-shadow: var(--glow-accent); }
   .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.6rem, 6.5vw, 4.4rem);
+    font-weight: 900;
+    letter-spacing: 0.01em;
+    line-height: 1;
     margin-top: var(--space-lg);
-    color: var(--c-dark);
+    text-shadow: var(--glow-hero);
+  }
+  .hero__title-omega {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero__title-accent {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero__tagline {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--c-primary);
+    margin-top: var(--space-md);
+    letter-spacing: 0.01em;
   }
   .hero__subtitle {
     margin-top: var(--space-lg);
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     color: var(--c-text-secondary);
     line-height: 1.7;
-    max-width: 500px;
+    max-width: 38rem;
   }
-  .hero__actions {
-    display: flex;
-    gap: var(--space-md);
-    margin-top: var(--space-xl);
-    flex-wrap: wrap;
-  }
+  .hero__subtitle strong { color: var(--c-text); font-weight: 600; }
+  .hero__actions { display: flex; gap: var(--space-md); margin-top: var(--space-xl); flex-wrap: wrap; }
 
-  /* Buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 22px;
-    font-size: 0.88rem;
-    font-weight: 600;
-    border-radius: var(--radius-md);
-    transition: all 0.2s ease;
-    text-decoration: none;
-  }
-  .btn--primary {
-    background: var(--c-dark);
-    color: white;
-  }
-  .btn--primary:hover {
-    background: var(--c-dark-soft);
-    color: white;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  }
-  .btn--secondary {
-    background: var(--c-surface);
-    color: var(--c-text);
-    border: 1px solid var(--c-border);
-  }
-  .btn--secondary:hover {
-    border-color: var(--c-text-muted);
-    color: var(--c-text);
-  }
-
-  /* Hero visual — fake chat UI */
-  .hero__visual {
-    display: flex;
-    justify-content: center;
-  }
-  .hero__card {
-    width: 100%;
-    max-width: 420px;
+  /* ── Hero console ── */
+  .console {
     background: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-console);
     overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.03);
   }
-  .hero__card-header {
+  .console__header {
     display: flex;
-    gap: 6px;
-    padding: 12px 16px;
-    background: var(--c-surface-raised);
+    align-items: center;
+    gap: 7px;
+    padding: 11px 14px;
+    background: var(--c-bg-deep);
     border-bottom: 1px solid var(--c-border-subtle);
   }
-  .hero__dot {
-    width: 10px; height: 10px; border-radius: 50%;
-  }
-  .hero__dot--red { background: #f87171; }
-  .hero__dot--yellow { background: #fbbf24; }
-  .hero__dot--green { background: #34d399; }
-  .hero__card-body {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 0.8rem;
-    line-height: 1.5;
-  }
-  .hero__msg {
-    padding: 10px 14px;
-    border-radius: 14px;
-    max-width: 90%;
-  }
-  .hero__msg--user {
-    background: var(--c-dark);
-    color: #f1f3f5;
-    align-self: flex-end;
-    border-radius: 14px 14px 4px 14px;
-  }
-  .hero__msg--bot {
-    background: var(--c-surface-raised);
-    border: 1px solid var(--c-border-subtle);
-    align-self: flex-start;
-    border-radius: 14px 14px 14px 4px;
-    color: var(--c-text-secondary);
-  }
-  .hero__tool {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: var(--c-surface-raised);
-    border: 1px solid var(--c-border);
-    border-left: 3px solid var(--c-primary);
-    border-radius: 2px 8px 8px 2px;
+  .console__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c-border); }
+  .console__dot:nth-child(1) { background: #ff5470; }
+  .console__dot:nth-child(2) { background: #ffb020; }
+  .console__dot:nth-child(3) { background: #41f5a8; }
+  .console__title {
+    margin-left: 8px;
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 500;
+    font-size: 0.74rem;
+    color: var(--c-text-muted);
+  }
+  .console__body { padding: var(--space-lg); display: flex; flex-direction: column; gap: 9px; }
+  .msg { font-size: 0.84rem; line-height: 1.5; padding: 9px 12px; border-radius: 10px; max-width: 92%; }
+  .msg--user { align-self: flex-end; background: var(--c-primary-light); border: 1px solid var(--border-primary); color: var(--c-text); }
+  .msg--bot { align-self: flex-start; background: var(--c-surface-raised); border: 1px solid var(--c-border-subtle); color: var(--c-text-secondary); }
+  .delegate { font-size: 0.74rem; color: var(--c-purple); font-family: var(--font-mono); padding-left: 2px; }
+  .delegate strong { color: var(--c-text); }
+  .tool, .skill, .file {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 0.74rem;
+    padding: 6px 10px; border-radius: 8px;
+    border: 1px solid var(--c-border-subtle); background: var(--c-bg-deep);
     color: var(--c-text-secondary);
-    align-self: flex-start;
   }
-  .hero__tool:nth-child(6) { border-left-color: var(--c-purple); }
-  .hero__tool:nth-child(7) { border-left-color: var(--c-pink); }
-  .hero__tool:nth-child(8) { border-left-color: var(--c-orange); }
-  .hero__tool-icon { font-size: 0.85rem; }
-  .hero__tool-badge {
-    background: var(--c-primary-light);
-    color: var(--c-primary);
-    font-size: 0.65rem;
-    padding: 1px 5px;
-    border-radius: 8px;
-    font-weight: 700;
+  .tool__io, .skill__io, .file__icon {
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
+    padding: 2px 6px; border-radius: 5px;
   }
+  .tool__io { background: var(--tint-primary); color: var(--c-primary); }
+  .skill__io { background: var(--tint-pink); color: var(--c-pink); }
+  .tool__badge, .skill__py, .file__meta { margin-left: auto; color: var(--c-text-muted); font-size: 0.68rem; }
+  .skill__py { color: var(--c-pink); }
+  .file { border-color: var(--border-orange); }
+  .file__icon { background: var(--tint-orange); color: var(--c-orange); display: inline-flex; padding: 3px; }
+  .file__icon svg { width: 13px; height: 13px; }
 
-  /* ── How it works ── */
-  .how {
-    padding: var(--space-4xl) 0;
-  }
-  .how h2 {
-    max-width: 500px;
-  }
-  .how__intro {
-    color: var(--c-text-secondary);
-    margin-top: var(--space-md);
-    max-width: 600px;
-  }
-  .how__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--space-xl);
+  /* ── Pillars ── */
+  .pillars { padding: var(--space-2xl) 0; }
+  .pillars__intro { color: var(--c-text-secondary); margin-top: var(--space-sm); max-width: 44rem; }
+  .pillars__grid {
     margin-top: var(--space-2xl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: var(--space-lg);
   }
-  .how__item {
+  .pillar {
     padding: var(--space-lg);
-    border: 1px solid var(--c-border-subtle);
-    border-radius: var(--radius-lg);
     background: var(--c-surface);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid var(--c-border-subtle);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s, transform 0.2s;
   }
-  .how__item:hover {
-    border-color: var(--c-border);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+  .pillar:hover { border-color: var(--c-border); transform: translateY(-2px); }
+  .pillar__icon {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--g);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--g) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--g) 35%, transparent);
+    margin-bottom: var(--space-md);
   }
-  .how__icon {
-    font-size: 1.5rem;
-    margin-bottom: var(--space-sm);
-  }
-  .how__item h3 {
-    font-size: 1rem;
-    margin-bottom: var(--space-xs);
-  }
-  .how__item p {
-    font-size: 0.88rem;
-    color: var(--c-text-secondary);
-    line-height: 1.6;
-  }
+  .pillar__icon svg { width: 22px; height: 22px; }
+  .pillar h3 { font-size: 1rem; margin-bottom: var(--space-xs); }
+  .pillar p { font-size: 0.86rem; color: var(--c-text-secondary); line-height: 1.6; }
+  .pillar em { color: var(--c-text); font-style: normal; font-weight: 600; }
 
   /* ── Scenarios ── */
-  .scenarios {
-    padding: var(--space-4xl) 0;
-    background: var(--c-surface-raised);
-    border-top: 1px solid var(--c-border-subtle);
-    border-bottom: 1px solid var(--c-border-subtle);
-  }
-  .scenarios__intro {
-    color: var(--c-text-secondary);
-    margin-top: var(--space-md);
-    max-width: 650px;
-  }
+  .scenarios { padding: var(--space-2xl) 0; scroll-margin-top: 70px; }
+  .scenarios__intro { color: var(--c-text-secondary); margin-top: var(--space-sm); max-width: 44rem; }
   .scenarios__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-xl);
     margin-top: var(--space-2xl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: var(--space-lg);
   }
 
   /* ── CTA ── */
-  .cta {
-    padding: var(--space-4xl) 0;
-  }
+  .cta { padding: var(--space-2xl) 0; }
   .cta__layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-3xl);
-    align-items: start;
-  }
-  .cta__desc {
-    color: var(--c-text-secondary);
-    margin-top: var(--space-md);
-    line-height: 1.7;
-  }
-  .cta__actions {
-    display: flex;
-    gap: var(--space-md);
-    margin-top: var(--space-xl);
-    flex-wrap: wrap;
-  }
-  .cta__steps {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-  .cta__step {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-md);
-    padding: var(--space-lg);
-    background: var(--c-surface);
-    border: 1px solid var(--c-border-subtle);
-    border-radius: var(--radius-md);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-  .cta__step:hover {
-    border-color: var(--c-border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-  }
-  .cta__step-num {
-    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--c-primary);
-    color: white;
-    font-size: 0.78rem;
-    font-weight: 700;
+    padding: var(--space-2xl);
+    background: var(--gradient-brand-soft), var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-xl);
+  }
+  .cta__desc { margin-top: var(--space-sm); color: var(--c-text-secondary); line-height: 1.7; }
+  .cta__actions { display: flex; gap: var(--space-md); margin-top: var(--space-lg); flex-wrap: wrap; }
+  .cta__steps { display: flex; flex-direction: column; gap: var(--space-md); }
+  .cta__step { display: flex; align-items: flex-start; gap: var(--space-md); }
+  .cta__num {
     flex-shrink: 0;
-  }
-  .cta__step:nth-child(2) .cta__step-num { background: var(--c-purple); }
-  .cta__step:nth-child(3) .cta__step-num { background: var(--c-pink); }
-  .cta__step:nth-child(4) .cta__step-num { background: var(--c-orange); }
-  .cta__step--optional { border-style: dashed; }
-  .cta__optional {
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--c-text-muted);
-    background: var(--c-surface-raised);
-    padding: 1px 6px;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-weight: 800; font-size: 0.82rem;
+    color: var(--c-bg-deep);
+    background: var(--c-primary);
     border-radius: 8px;
-    border: 1px solid var(--c-border-subtle);
-    margin-left: 6px;
-    vertical-align: middle;
   }
-  .cta__step strong {
-    display: block;
-    font-size: 0.92rem;
-    margin-bottom: 2px;
-  }
-  .cta__step p {
-    font-size: 0.82rem;
-    color: var(--c-text-muted);
-    line-height: 1.5;
-  }
+  .cta__step strong { font-size: 0.92rem; }
+  .cta__step p { font-size: 0.82rem; color: var(--c-text-muted); }
 
-  /* ── Responsive ── */
-  @media (max-width: 768px) {
-    .hero__inner {
-      grid-template-columns: 1fr;
-      gap: var(--space-xl);
-    }
-    .hero__visual {
-      display: none;
-    }
-    .hero__title {
-      font-size: 2rem;
-    }
-    .hero__subtitle {
-      font-size: 0.95rem;
-    }
-    .hero__actions {
-      flex-direction: column;
-    }
-    .hero__actions .btn {
-      width: 100%;
-      justify-content: center;
-    }
-    .how__grid {
-      grid-template-columns: 1fr;
-    }
-    .scenarios__grid {
-      grid-template-columns: 1fr;
-    }
-    .cta__layout {
-      grid-template-columns: 1fr;
-    }
+  @media (max-width: 860px) {
+    .hero__inner { grid-template-columns: 1fr; gap: var(--space-2xl); }
+    .hero__visual { order: -1; }
+    .cta__layout { grid-template-columns: 1fr; gap: var(--space-xl); }
   }
 </style>

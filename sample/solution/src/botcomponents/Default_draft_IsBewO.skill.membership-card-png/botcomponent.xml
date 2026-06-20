@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_draft_IsBewO.skill.membership-card-png">
+  <componenttype>9</componenttype>
+  <description>Generate a digital BlastPass membership card as a PNG image by running the bundled card_png.py script. Use when a member reissues a lost, stolen, or damaged card, or any time a BlastPass card needs to be shown on screen. Pass the member details (name, id, tier, tier code, card serial, console serial, dates) as command-line flags to the bundled Python (matplotlib) script, which renders a CR80-sized card to a real PNG. It only draws the card from values you already have.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>membership-card-png</name>
+  <parentbotid>
+    <schemaname>Default_draft_IsBewO</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -6,8 +6,9 @@ interface Props {
   description?: string;
 }
 
-const { title, description = 'Enhanced Task Completion for Microsoft Copilot Studio' } = Astro.props;
+const { title, description = 'A technical guide to the new AI workloads in Copilot Studio Agents and Workflows' } = Astro.props;
 const base = import.meta.env.BASE_URL;
+const repo = 'https://github.com/microsoft/new-copilot-studio-tech-guide';
 ---
 
 <!doctype html>
@@ -18,19 +19,37 @@ const base = import.meta.env.BASE_URL;
     <meta name="description" content={description} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
     <title>{title}</title>
+    <script is:inline>
+      // Apply the saved skin before first paint (avoids a flash). Default = CAT.
+      (function () {
+        try {
+          if (localStorage.getItem('skin') === 'blastbox') {
+            document.documentElement.setAttribute('data-theme', 'blastbox');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div class="gradient-bar"></div>
     <nav class="nav">
       <div class="nav__inner container">
         <a href={base} class="nav__brand">
-          <span>CAT Feature Guides</span>
+          <span class="nav__brand-logo">
+            <img src={`${base}images/paw.png`} alt="" class="nav__brand-paw" width="22" height="22" />
+            <span class="nav__brand-mark">&#9670;</span>
+          </span>
+          <span class="nav__brand-name"><span class="t-cat">Copilot&nbsp;Studio&nbsp;<span class="nav__brand-omega">CAT</span></span><span class="t-bb">BlastBox&nbsp;<span class="nav__brand-omega">Omega</span></span></span>
         </a>
         <div class="nav__links">
           <a href={`${base}#scenarios`}>Scenarios</a>
-          <a href="https://github.com/microsoft/enhanced-task-completion/tree/main/sample">Get the sample</a>
+          <a href={`${repo}/tree/main/sample/solution`}>Get the sample</a>
           <a href="https://microsoft.github.io/mcscatblog/" class="nav__blog">Blog</a>
-          <a href="https://github.com/microsoft/enhanced-task-completion" class="nav__github">
+          <button id="skin-toggle" class="skin-toggle" type="button" aria-pressed="false" aria-label="Toggle immersive BlastBox skin">
+            <span class="skin-toggle__dot"></span>
+            <span class="skin-toggle__text">Theme</span>
+          </button>
+          <a href={repo} class="nav__github" aria-label="GitHub repository">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
           </a>
         </div>
@@ -59,10 +78,41 @@ const base = import.meta.env.BASE_URL;
       });
     </script>
 
+    <script is:inline>
+      // Theme toggle: flip data-theme and persist the choice.
+      (function () {
+        var root = document.documentElement;
+        var btn = document.getElementById('skin-toggle');
+        if (!btn) return;
+        var textEl = btn.querySelector('.skin-toggle__text');
+        function sync() {
+          var on = root.getAttribute('data-theme') === 'blastbox';
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+        btn.addEventListener('click', function () {
+          var on = root.getAttribute('data-theme') === 'blastbox';
+          try {
+            if (on) {
+              root.removeAttribute('data-theme');
+              localStorage.setItem('skin', 'cat');
+            } else {
+              root.setAttribute('data-theme', 'blastbox');
+              localStorage.setItem('skin', 'blastbox');
+            }
+          } catch (e) {
+            if (on) root.removeAttribute('data-theme');
+            else root.setAttribute('data-theme', 'blastbox');
+          }
+          sync();
+        });
+        sync();
+      })();
+    </script>
+
     <footer class="footer">
       <div class="container">
         <div class="footer__inner">
-          <p>From the <a href="https://microsoft.github.io/mcscatblog/">Copilot Studio CAT</a> team. Licensed under MIT. <span class="footer__sep">&middot;</span> <a href="https://github.com/microsoft/enhanced-task-completion/issues/new?template=feedback.yml" class="footer__feedback"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Send feedback</a></p>
+          <p>A mock demo store for the Copilot Studio <strong>Modern Agent Experience</strong>. All products, members, and policies are fictional. Built by the <a href="https://microsoft.github.io/mcscatblog/">Copilot Studio CAT</a> team &middot; MIT licensed. <span class="footer__sep">&middot;</span> <a href={`${repo}/issues/new?template=feedback.yml`} class="footer__feedback"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Send feedback</a></p>
         </div>
       </div>
     </footer>
@@ -74,7 +124,7 @@ const base = import.meta.env.BASE_URL;
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(250, 250, 250, 0.88);
+    background: var(--nav-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--c-border-subtle);
@@ -83,30 +133,50 @@ const base = import.meta.env.BASE_URL;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 56px;
+    height: 60px;
   }
   .nav__brand {
     display: flex;
     align-items: center;
-    font-weight: 700;
-    font-size: 0.92rem;
+    gap: 9px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.02rem;
     color: var(--c-text);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.02em;
   }
-  .nav__brand:hover { color: var(--c-primary); }
+  .nav__brand-logo { display: inline-flex; align-items: center; }
+  .nav__brand-paw { width: 22px; height: 22px; display: block; }
+  .nav__brand-mark {
+    color: var(--c-primary);
+    font-size: 0.9rem;
+    text-shadow: var(--glow-accent);
+    display: none;
+  }
+  /* Paw mark for CAT; diamond mark for BlastBox */
+  html[data-theme="blastbox"] .nav__brand-paw { display: none; }
+  html[data-theme="blastbox"] .nav__brand-mark { display: inline; }
+  .nav__brand-name { display: inline-flex; gap: 6px; }
+  .nav__brand-omega {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .nav__brand:hover .nav__brand-mark { text-shadow: var(--glow-accent); }
   .nav__links {
     display: flex;
     align-items: center;
     gap: var(--space-lg);
     font-size: 0.88rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--c-text-secondary);
   }
   .nav__links a:hover { color: var(--c-primary); }
   .nav__blog {
     color: var(--c-purple) !important;
-    font-weight: 600 !important;
   }
+  .nav__blog:hover { color: var(--c-pink) !important; }
   .nav__github {
     display: flex;
     align-items: center;
@@ -114,11 +184,43 @@ const base = import.meta.env.BASE_URL;
   }
   .nav__github:hover { color: var(--c-text); }
 
+  /* Skin toggle */
+  .skin-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--c-text-secondary);
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .skin-toggle:hover {
+    color: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+  .skin-toggle__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--gradient-brand);
+    box-shadow: var(--glow-accent);
+  }
+  .skin-toggle__text { text-align: left; }
+
   @media (max-width: 600px) {
-    .nav__inner { height: 48px; }
-    .nav__brand { font-size: 0.82rem; }
-    .nav__links { gap: var(--space-md); font-size: 0.78rem; }
+    .nav__inner { height: 52px; }
+    .nav__brand { font-size: 0.9rem; }
+    .nav__links { gap: var(--space-md); font-size: 0.8rem; }
     .nav__links a:not(.nav__github):not(.nav__blog) { display: none; }
+    .skin-toggle__text { display: none; }
+    .skin-toggle { padding: 6px; }
   }
 
   .footer {
@@ -129,11 +231,13 @@ const base = import.meta.env.BASE_URL;
     font-size: 0.82rem;
     color: var(--c-text-muted);
   }
+  .footer p { max-width: 720px; margin: 0 auto; line-height: 1.7; }
+  .footer strong { color: var(--c-text-secondary); }
   .footer a {
     color: var(--c-purple);
-    font-weight: 500;
+    font-weight: 600;
   }
-  .footer a:hover { color: var(--c-primary); }
+  .footer a:hover { color: var(--c-pink); }
   .footer__sep { margin: 0 4px; opacity: 0.3; }
   .footer__feedback {
     display: inline-flex;

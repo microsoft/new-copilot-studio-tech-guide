@@ -1,0 +1,142 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/scenario.css';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Self-Serve Card Reissue | Copilot Studio technical guide">
+  <article class="scenario">
+    <div class="container">
+      <a href={base} class="back">&larr; All scenarios</a>
+
+      <header class="scenario__header">
+        <span class="badge badge--green">Self-serve &middot; Returns &amp; Service Assistant</span>
+        <h1>Self-Serve Card Reissue</h1>
+        <p class="scenario__lead">
+          A signed-in BlastPass member has lost their physical membership card and just wants a
+          replacement sent over. It's the kind of small, everyday errand that usually means
+          waiting in a support queue. Here it's fully self-serve, with no associate in the loop,
+          and one firm rule underneath it all: nothing on the account changes until the member
+          proves the card is really theirs.
+        </p>
+        <div class="scenario__cast">
+          <span class="pill">BlastPass Concierge</span>
+          <span class="pill">Membership MCP</span>
+          <span class="pill">membership-card-png skill</span>
+          <span class="pill">PNG out</span>
+        </div>
+      </header>
+
+      <section class="convo">
+        <h2>The conversation</h2>
+
+        <ol class="timeline">
+          <li class="tl-user">
+            <div class="tl-marker">1</div>
+            <div class="tl-content">
+              <div class="tl-label">Member (signed in)</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Hi, I lost my BlastPass card. Can you send me a new one?</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-steps">
+                <p><em>"They want a replacement card. I don't have a membership ID yet, and I can't look anything up, or verify anyone, without it. I'll ask for it first; nothing changes until I have it."</em></p>
+                <p>"Oh no, let's get you a new one. 💜 To pull up your membership, what's your <strong>BlastPass member ID</strong>? It usually looks like <code>MEGA-BLAST-####</code>."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">2</div>
+            <div class="tl-content">
+              <div class="tl-label">Member</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Sure, it's MEGA-BLAST-1024.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">get_membership</span> looks up MEGA-BLAST-1024 (read-only)</div>
+                <p>Finds a <strong>BlastPass Plus Extra</strong> membership. Before deactivating a card, the agent verifies identity with <strong>two factors the real owner has</strong>, and reveals neither.</p>
+                <p>"Got it, I found a Plus Extra membership under that ID. Before I deactivate the old card and issue a new one, I just need to confirm it's really you. Can you give me <strong>two things</strong>: the <strong>name</strong> on the membership, and the <strong>last 4 digits of your console's serial number</strong>?"</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">3</div>
+            <div class="tl-content">
+              <div class="tl-label">Member</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">It's Jordan Pixel, and the last 4 are 1024.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-steps">
+                <p><em>"Name Jordan Pixel matches, and the serial ends in 1024. Both factors match. Identity confirmed. Now I can safely reissue."</em></p>
+                <div class="tl-tool"><span class="tl-tool-name">reissue_card</span> deactivates the old card, mints a new serial, keeps membership active</div>
+                <div class="tl-skill"><span class="tl-skill-name">membership-card-png</span> generates &amp; runs Python (matplotlib)</div>
+                <p>Renders a CR80 digital card from the <code>get_membership</code> details plus the freshly minted serial: name, Plus Extra purple tier badge, member ID, console serial, dates, barcode, and perks line.</p>
+                <div class="tl-file"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#128196;</span> hands back <strong>blastpass_card.png</strong></div>
+                <p>"Thanks, Jordan. You're verified. ✅ Your new digital card is ready. The old card is now <strong>deactivated</strong>; your tier, term, and BlastPoints are unchanged."</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="result">
+          <span class="result__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/></svg></span><span class="ticon-bb">&#129466;</span></span>
+          <div>
+            <div class="result__label">Output</div>
+            <div class="result__value">blastpass_card.png: a tier-colored "PLUS EXTRA" digital membership card with the new serial</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>What was demonstrated</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Verify before you mutate</h3>
+            <p>Identity is confirmed with two factors (name and last-4 of the serial) before any card is touched. The agent never reveals either value while asking.</p>
+          </div>
+          <div class="value-card">
+            <h3>It actually changes state</h3>
+            <p><code>reissue_card</code> deactivates the lost card server-side and mints a new one, distinct from cancelling the membership. The PNG reflects the new serial, not the old.</p>
+          </div>
+          <div class="value-card">
+            <h3>The foundation pattern</h3>
+            <p>MCP &rarr; verify &rarr; MCP &rarr; skill &rarr; file is the core loop. The flagship scenario stacks connected agents, policy, and chained math on top of it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>What gets generated</h2>
+        <div class="files">
+          <div class="filecard">
+            <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#128196;</span></span>
+            <div>
+              <strong>blastpass_card.png</strong>
+              <span>matplotlib &middot; CR80 card &middot; tier-colored</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </article>
+</Base>

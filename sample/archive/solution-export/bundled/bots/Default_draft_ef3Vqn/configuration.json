@@ -1,0 +1,16 @@
+{
+  "$kind": "BotConfiguration",
+  "recognizer": {
+    "$kind": "CLICopilotRecognizer"
+  },
+  "agentSettings": {
+    "$kind": "AgentSettings",
+    "model": {
+      "$kind": "ModelConfig",
+      "series": "GPT53Chat"
+    },
+    "instructions": {
+      "$kind": "Instructions"
+    }
+  }
+}
