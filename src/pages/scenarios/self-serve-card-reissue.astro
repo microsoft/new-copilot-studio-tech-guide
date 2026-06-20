@@ -14,10 +14,12 @@ const base = import.meta.env.BASE_URL;
         <span class="badge badge--green">Self-serve &middot; Returns &amp; Service Assistant</span>
         <h1>Self-Serve Card Reissue</h1>
         <p class="scenario__lead">
-          The gentlest end-to-end shape in the demo: <strong>one MCP lookup, an identity
-          check, one state-changing MCP call, and one skill that emits a file</strong>. A
-          signed-in member lost their BlastPass card and talks to the assistant directly &mdash;
-          no associate in the loop. Nothing changes until they're verified.
+          A signed-in BlastPass member lost their physical membership card and asks the
+          assistant to send a new one. The <strong>BlastPass Concierge</strong> looks up the
+          membership, verifies identity with two factors the real owner has, deactivates the
+          lost card, issues a replacement, and hands back a freshly generated card image &mdash;
+          all self-serve, with <strong>no associate in the loop</strong>. Nothing changes on the
+          account until the member is verified.
         </p>
         <div class="scenario__cast">
           <span class="pill">BlastPass Concierge</span>
