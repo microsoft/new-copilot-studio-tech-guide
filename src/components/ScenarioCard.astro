@@ -20,12 +20,30 @@ const accentMap: Record<string, string> = {
   green: 'var(--c-green)',
 };
 const accentColor = accentMap[accent] ?? accentMap.cyan;
+
+const icons: Record<string, string> = {
+  card: '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="6" y1="15" x2="10" y2="15"/>',
+  package: '<path d="M16.5 9.4 7.5 4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  ticket: '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+  report: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+};
+const emojis: Record<string, string> = {
+  card: '🎟️',
+  package: '📦',
+  ticket: '🎟️',
+  report: '📉',
+};
+const iconPaths = icons[icon] ?? icons.card;
+const iconEmoji = emojis[icon] ?? emojis.card;
 ---
 
 <a href={href} class="card-wrapper" style={`--accent: ${accentColor};`}>
   <div class="card">
     <div class="card__art">
-      <span class="card__icon">{icon}</span>
+      <span class="card__icon">
+        <span class="ticon-cat" set:html={`<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${iconPaths}</svg>`}></span>
+        <span class="ticon-bb">{iconEmoji}</span>
+      </span>
       <span class="card__tier">{tier}</span>
       <span class="card__scanline"></span>
     </div>
@@ -100,10 +118,13 @@ const accentColor = accentMap[accent] ?? accentMap.cyan;
     overflow: hidden;
   }
   .card__icon {
-    font-size: 2.6rem;
-    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 60%, transparent));
+    color: var(--accent);
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 55%, transparent));
     z-index: 2;
+    display: inline-flex;
   }
+  .card__icon svg { width: 34px; height: 34px; }
+  .card__icon .ticon-bb { font-size: 2.6rem; filter: none; }
   .card__tier {
     position: absolute;
     top: 10px;

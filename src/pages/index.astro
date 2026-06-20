@@ -14,16 +14,22 @@ const base = import.meta.env.BASE_URL;
           <span class="hero__eyebrow-dot">&#9670;</span>
           Copilot Studio &middot; Modern Agent Experience
         </div>
-        <h1 class="hero__title">BlastBox <span class="hero__title-omega">Omega</span></h1>
-        <p class="hero__tagline">The retro-future game store, run by agents.</p>
+        <h1 class="hero__title">
+          <span class="t-cat">The new <span class="hero__title-accent">Copilot Studio</span> experience</span>
+          <span class="t-bb">BlastBox <span class="hero__title-omega">Omega</span></span>
+        </h1>
+        <p class="hero__tagline">
+          <span class="t-cat">A hands-on guide to the new AI workloads in Copilot Studio Agents and Workflows.</span>
+          <span class="t-bb">The retro-future game store, run by agents.</span>
+        </p>
         <p class="hero__subtitle">
-          A mock store that shows the <strong>Modern Agent Experience</strong>, the new
-          default Copilot Studio orchestration, working end to end:
-          a parent agent that delegates to <strong>connected agents</strong>, calls
-          <strong>multiple inline MCP servers</strong>, runs <strong>per-agent skills</strong>
-          that generate and execute Python at runtime, and hands back real
-          <strong>generated files</strong>. Two scenarios, from a self-serve warm-up to
-          the full associate flagship.
+          Copilot Studio has been <strong>rebuilt for complex, multi-step work</strong> &mdash;
+          moving from a single chatbot to coordinated, multi-agent systems. BlastBox Omega is a
+          complete, runnable reference: a parent agent that delegates to <strong>connected
+          agents</strong>, calls <strong>multiple inline MCP servers</strong>, runs
+          <strong>per-agent skills</strong> that generate and execute Python at runtime, and
+          returns real <strong>generated files</strong>. Two end-to-end scenarios, from a
+          self-serve task to a full multi-agent flagship.
         </p>
         <div class="hero__actions">
           <a href="#scenarios" class="btn btn--primary">Explore scenarios</a>
@@ -50,7 +56,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tool"><span class="tool__io">MCP</span> check_stock <span class="tool__badge">MEGA in stock</span></div>
             <div class="skill"><span class="skill__io">SKILL</span> prorated-refund-calculator <span class="skill__py">python</span></div>
             <div class="msg msg--bot">Warranty swap to MEGA &middot; refund $76.66 applied &middot; <strong>net due $23.34</strong>.</div>
-            <div class="file"><span class="file__icon">&#128196;</span> blastbox_slip.pdf <span class="file__meta">generated</span></div>
+            <div class="file"><span class="file__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="ticon-bb">&#128196;</span></span> blastbox_slip.pdf <span class="file__meta">generated</span></div>
           </div>
         </div>
       </div>
@@ -61,32 +67,47 @@ const base = import.meta.env.BASE_URL;
   <section class="pillars">
     <div class="container">
       <p class="section-label">What it shows</p>
-      <h2>Five moving parts, one conversation</h2>
-      <p class="pillars__intro">Every scenario stacks the same building blocks of the Modern Agent Experience, and the harder ones just use more of them at once.</p>
+      <h2>The building blocks of the new agent experience</h2>
+      <p class="pillars__intro">Every scenario composes the same primitives of the Copilot Studio Modern Agent Experience &mdash; the more advanced scenarios simply orchestrate more of them at once.</p>
 
       <div class="pillars__grid">
         <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-primary);">&#129518;</div>
+          <div class="pillar__icon" style="--g: var(--c-primary);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#129518;</span>
+          </div>
           <h3>Connected agents</h3>
           <p>A parent orchestrator delegates to specialist agents (Store Policy, Inventory &amp; Fulfillment) and relays their answers.</p>
         </div>
         <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-purple);">&#128268;</div>
+          <div class="pillar__icon" style="--g: var(--c-purple);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128268;</span>
+          </div>
           <h3>Multiple MCP servers</h3>
           <p>Membership, Order Management, Policy RAG, and Warehouse all run as inline MCP connectors, with no external services.</p>
         </div>
         <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-pink);">&#128221;</div>
+          <div class="pillar__icon" style="--g: var(--c-pink);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128221;</span>
+          </div>
           <h3>Per-agent skills</h3>
           <p>Each agent carries its own skills that <em>generate and run Python at runtime</em>: refunds, settlements, charts, optimizers.</p>
         </div>
         <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-orange);">&#128190;</div>
+          <div class="pillar__icon" style="--g: var(--c-orange);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128190;</span>
+          </div>
           <h3>File generation</h3>
           <p>Real outputs the associate can hand over: a membership card, an itemized settlement, a one-page markdown report, all PDFs.</p>
         </div>
         <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-green);">&#128172;</div>
+          <div class="pillar__icon" style="--g: var(--c-green);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128172;</span>
+          </div>
           <h3>Adaptive orchestration</h3>
           <p>State carries across turns: the agent remembers earlier results, asks a clarifying question when the next step is ambiguous, and revises its plan when you change the ask mid-conversation.</p>
         </div>
@@ -107,7 +128,7 @@ const base = import.meta.env.BASE_URL;
           capability="Self-serve"
           tier="Returns &amp; Service Assistant"
           accent="green"
-          icon="🎟️"
+          icon="card"
           description="A member lost their BlastPass card. The agent verifies their identity, reissues the card, and renders a fresh tier-colored membership card. Membership MCP + card skill."
           href={`${base}scenarios/self-serve-card-reissue`}
           pillars={["Membership MCP", "card skill", "PNG out", "identity check"]}
@@ -117,7 +138,7 @@ const base = import.meta.env.BASE_URL;
           capability="Store associate"
           tier="Store Associate Assistant"
           accent="purple"
-          icon="📦"
+          icon="package"
           description="A defective console trade-up: rule the warranty, check stock, prorate the refund, apply loyalty points, and settle the balance. Two connected agents, four MCPs, chained skills, settlement PDF."
           href={`${base}scenarios/block-party-trade-up`}
           pillars={["4 MCPs", "2 connected agents", "chained skills", "settlement PDF"]}
@@ -196,6 +217,12 @@ const base = import.meta.env.BASE_URL;
     background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  .hero__title-accent {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
   .hero__tagline {
     font-family: var(--font-mono);
     font-size: 1rem;
@@ -261,7 +288,8 @@ const base = import.meta.env.BASE_URL;
   .tool__badge, .skill__py, .file__meta { margin-left: auto; color: var(--c-text-muted); font-size: 0.68rem; }
   .skill__py { color: var(--c-pink); }
   .file { border-color: var(--border-orange); }
-  .file__icon { background: var(--tint-orange); }
+  .file__icon { background: var(--tint-orange); color: var(--c-orange); display: inline-flex; padding: 3px; }
+  .file__icon svg { width: 13px; height: 13px; }
 
   /* ── Pillars ── */
   .pillars { padding: var(--space-2xl) 0; }
@@ -283,11 +311,13 @@ const base = import.meta.env.BASE_URL;
   .pillar__icon {
     width: 44px; height: 44px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.4rem; border-radius: 10px;
+    color: var(--g);
+    border-radius: 10px;
     background: color-mix(in srgb, var(--g) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--g) 35%, transparent);
     margin-bottom: var(--space-md);
   }
+  .pillar__icon svg { width: 22px; height: 22px; }
   .pillar h3 { font-size: 1rem; margin-bottom: var(--space-xs); }
   .pillar p { font-size: 0.86rem; color: var(--c-text-secondary); line-height: 1.6; }
   .pillar em { color: var(--c-text); font-style: normal; font-weight: 600; }

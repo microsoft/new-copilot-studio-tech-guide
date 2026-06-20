@@ -244,6 +244,17 @@ color: var(--c-purple);
 border: 1px solid color-mix(in srgb, var(--c-purple) 30%, transparent);
 }
 
+/* Theme-conditional icons: clean SVG for CAT (default), original emoji for BlastBox */
+.ticon-cat { display: inline-flex; align-items: center; justify-content: center; }
+.ticon-bb { display: none; align-items: center; justify-content: center; line-height: 1; }
+html[data-theme="blastbox"] .ticon-cat { display: none; }
+html[data-theme="blastbox"] .ticon-bb { display: inline-flex; }
+
+/* Theme-conditional text: professional copy for CAT (default), BlastBox branding for BlastBox skin */
+.t-bb { display: none; }
+html[data-theme="blastbox"] .t-cat { display: none; }
+html[data-theme="blastbox"] .t-bb { display: inline; }
+
 .section-label {
   font-size: 0.72rem;
   font-weight: 700;

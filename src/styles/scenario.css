@@ -41,13 +41,16 @@
 
 /* Result callout */
 .result { display: flex; align-items: center; gap: var(--space-md); margin-top: var(--space-xl); padding: var(--space-lg); border-radius: var(--radius-md); background: var(--gradient-brand-soft), var(--c-surface); border: 1px solid var(--c-border); }
-.result__icon { font-size: 1.8rem; }
+.result__icon { display: inline-flex; color: var(--c-primary); }
+.result__icon svg { width: 26px; height: 26px; }
 .result__label { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-text-muted); }
 .result__value { font-size: 1.05rem; font-weight: 700; color: var(--c-text); font-family: var(--font-display); }
 
 /* File chip */
 .files { display: flex; flex-wrap: wrap; gap: var(--space-md); }
 .filecard { display: flex; align-items: center; gap: 12px; padding: var(--space-md) var(--space-lg); background: var(--c-surface); border: 1px solid var(--c-border-subtle); border-radius: var(--radius-md); }
-.filecard__icon { font-size: 1.6rem; }
+.filecard__icon { display: inline-flex; color: var(--c-orange); }
+.filecard__icon svg { width: 22px; height: 22px; }
+.tl-file svg { width: 15px; height: 15px; color: var(--c-orange); flex-shrink: 0; align-self: center; }
 .filecard strong { display: block; font-size: 0.9rem; color: var(--c-text); }
 .filecard span { font-size: 0.78rem; color: var(--c-text-muted); font-family: var(--font-mono); }
