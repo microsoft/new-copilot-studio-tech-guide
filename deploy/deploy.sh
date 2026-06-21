@@ -2,11 +2,14 @@
 # deploy.sh — one-shot, repeatable BlastBox Omega deployment.
 #
 # Mints a fresh Early Release (Developer SKU) environment with Dataverse, imports
-# the BlastBoxDemo solution, publishes customizations, creates the MCP
-# connections, binds them, publishes the agents, and validates the two packaged
-# scenarios end-to-end. On any failure the freshly minted environment is deleted
-# so nothing is left dangling. Success = zero manual configuration outside this
-# script.
+# the BlastBoxDemo solution, deploys each connector's inline code, creates a
+# no-auth MCP connection per connector, publishes the agents, and validates the
+# two packaged scenarios end-to-end. On any failure the freshly minted
+# environment is deleted so nothing is left dangling.
+#
+# ONE manual step remains afterwards (no supported API): re-attach each agent's
+# MCP server in the Copilot Studio UI. Step 70 prints exactly what to do, and it
+# is also printed at the end of every run. See deploy/README.md.
 #
 # Usage:
 #   deploy/deploy.sh                 # full run (mint -> ... -> validate)
@@ -52,4 +55,7 @@ run_step 50 "50_publish_agents.sh"
 run_step 60 "60_validate.sh"
 
 state_load
-ok "DEPLOY COMPLETE — env $ENV_ID ($ORG_URL) deployed and validated."
+ok "DEPLOY COMPLETE — env $ENV_ID ($ORG_URL)."
+# Always print the one manual UI step (connections are in place, tools loaded;
+# each agent's MCP server must be re-attached once in the UI — no API for this).
+bash "$DEPLOY_DIR/steps/70_manual_steps.sh"

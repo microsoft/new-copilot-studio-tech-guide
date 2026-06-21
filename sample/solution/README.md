@@ -94,7 +94,23 @@ create one connection for each of the four connectors:
 > No manual binding is needed: the tools use `authMode: Maker`, so the runtime resolves
 > the maker's connection for each connector automatically once it exists.
 
-### 4. Publish the agents
+### 4. Re-attach each agent's MCP server (required, UI-only)
+
+With the connections in place and the tools loaded, the modern Copilot Studio canvas
+still needs each agent's MCP server re-attached once before the published agent will
+surface the tools at runtime. There is no supported API for this — it must be done in
+the UI. For **each** agent below, open it → **Tools** → **remove** the listed MCP
+server → **Add a tool → Model Context Protocol** → pick the connector and select the
+**existing Connected connection** (do not create a new one) → **Save**:
+
+| Agent | MCP server to remove + re-add |
+| --- | --- |
+| Store Policy Agent | Policy RAG MCP v2 |
+| Inventory & Fulfillment Agent | Warehouse MCP |
+| Returns & Service Assistant | Order Management MCP, Membership MCP v2 |
+| Store Associate Assistant | (orchestrates the children — republish after the children are re-saved) |
+
+### 5. Publish the agents
 
 Publish **all four** agents so the connected-agent graph is live:
 
@@ -105,7 +121,7 @@ Publish **all four** agents so the connected-agent graph is live:
 
 > Connected (child) agents must be **published** for the parents to delegate to them.
 
-### 5. Validate — run the two scenarios
+### 6. Validate — run the two scenarios
 
 Open each parent agent in the **Test** pane and run the scripted transcripts:
 

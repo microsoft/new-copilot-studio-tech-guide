@@ -1,10 +1,14 @@
 # BlastBox Omega — repeatable deploy (`deploy/`)
 
 One-shot, idempotent deployment of the BlastBoxDemo solution into a **freshly
-minted Early Release environment**, with **zero manual configuration**. Mints the
-env, imports the solution, publishes, deploys the connector code, creates the MCP
-connections, publishes the agents, validates the two packaged scenarios e2e, and tears the
-env down on failure.
+minted Early Release environment**. Mints the env, imports the solution, deploys
+the connector code, creates the MCP connections, publishes the agents, and
+validates the two packaged scenarios e2e (and tears the env down on failure).
+
+After the script finishes there is **one manual UI step** (it has no supported
+API): re-attach each agent's MCP server in Copilot Studio. The script prints
+exactly what to do at the end of every run — see
+[Manual post-install step](#manual-post-install-step-required) below.
 
 > ⚠️ **Use at your own peril.** This automates against live Power Platform /
 > Dataverse / BAP admin APIs in the PPlatform tenant. It creates and **deletes**
@@ -23,7 +27,8 @@ env down on failure.
 | `steps/30_connectors.sh` | Downloads each MCP connector from the source env and `pac connector update`s it into the target to **deploy its inline `.csx`** (import alone does not), verifying `modifiedon` advances. |
 | `steps/40_connections.sh` | Creates one no-auth connection per MCP connector (BAP REST API). No binding needed — `authMode: Maker` resolves any Connected connection. |
 | `steps/50_publish_agents.sh` | `PvaPublish` the 4 bots (children first, then parents). |
-| `steps/60_validate.sh` | Drives the two scenarios e2e on the portal preview canvas (playwright-cli) and asserts the README numbers (one-time human MFA). |
+| `steps/60_validate.sh` | Drives the two scenarios e2e on the portal preview canvas (playwright-cli) and asserts the README numbers (one-time human MFA). Run **after** the manual step below. |
+| `steps/70_manual_steps.sh` | Read-only. Prints the one manual UI step (re-attach each agent's MCP server). Also printed at the end of `deploy.sh`. |
 | `steps/99_teardown.sh` | Deletes the env (used by the ERR trap; also runnable standalone). |
 
 ## Prerequisites
@@ -45,9 +50,11 @@ START_AT=40 deploy/deploy.sh     # resume from a step
 
 ## What works today
 
-A full automated run (steps 10→50) provisions a fresh EU env to the point where all
-four agents load their MCP tools, with **no manual UI configuration**. The final
-end-to-end scenario check (step 60) needs a one-time human MFA sign-in.
+A full automated run (steps 10→50) provisions a fresh EU env to the point where the
+solution is imported, every connector's inline code is deployed, a Connected no-auth
+connection exists per connector, and all four agents are published. **One manual UI
+step then remains** (re-attach each agent's MCP server — see below); after it, the
+tools load and the end-to-end scenario check (step 60) passes.
 
 - **Env minting + Early Release.** `pac admin create --type Developer --region europe`
   provisions Dataverse and is inherently Early Release (`updateCadence=Frequent`).
@@ -58,6 +65,32 @@ end-to-end scenario check (step 60) needs a one-time human MFA sign-in.
 - **Connector code deploy** via `pac connector update` (blocker #2).
 - **No-auth connections** via the BAP REST API; tools resolve via `authMode: Maker`,
   so no connectionreference binding is required.
+
+## Manual post-install step (required)
+
+Everything above is automated. The one thing the script cannot do — there is no
+supported API for it — is finalise each agent's MCP tool wiring, which the modern
+Copilot Studio authoring canvas only does when a maker re-attaches the MCP server in
+the UI. The connections already exist and the tool definitions are present; this
+re-attach is what makes the published agents surface the tools at runtime.
+
+`deploy.sh` prints these instructions at the end of every run; re-print any time with
+`bash deploy/steps/70_manual_steps.sh`.
+
+1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
+2. For **each** agent below: open it → **Tools** → **remove** the listed MCP server →
+   **Add a tool → Model Context Protocol** → pick the connector and select the
+   **existing Connected connection** (do not create a new one) → **Save** → **Publish**.
+
+   | Agent | MCP connector to remove + re-add |
+   | --- | --- |
+   | Store Policy Agent | Policy RAG MCP v2 |
+   | Inventory & Fulfillment Agent | Warehouse MCP |
+   | Returns & Service Assistant | Order Management MCP, Membership MCP v2 |
+   | Store Associate Assistant | (orchestrates the children — republish after the children are re-saved) |
+
+After re-attaching, run `START_AT=60 deploy/deploy.sh` (or `bash deploy/steps/60_validate.sh`)
+to confirm both scenarios pass.
 
 ## Architecture decision: connectors stay IN the solution
 
