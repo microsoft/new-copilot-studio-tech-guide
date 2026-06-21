@@ -53,7 +53,7 @@ const base = import.meta.env.BASE_URL;
                 <div class="tl-tool"><span class="tl-tool-name">get_catalog</span> price, unit cost, stock on hand per SKU</div>
                 <p>The MCP returns <em>raw rows only</em>, no pre-baked analytics, so the skill derives the metrics itself.</p>
                 <div class="tl-skill"><span class="tl-skill-name">sales-analysis-chart</span> runs Python (matplotlib) &rarr; velocity, weeks-of-cover, margin &rarr; <strong>top_sellers.png</strong>, <strong>slow_movers.png</strong></div>
-                <p>"Here's the quarter. <strong>Top sellers</strong> (units): <em>MEGA Lizards from Outer Space</em> 540 (67.5/wk), <em>PulseGrip Pro Controller</em> 410 (51.3/wk), <em>Omega MEGA Edition</em> 320 (40/wk). <strong>Slow movers</strong> (weeks-of-cover, anything past the 8-week line): <em>OmegaVision VR Headset</em> 64 wks, <em>Cadet Bundle</em> 53, <em>Galaxy Smash</em> 51, <em>Omega Core (1st-gen)</em> 12.5. Charts attached."</p>
+                <p>"Here's the quarter. <strong>Top sellers</strong> (units): <em>MEGA Lizards from Outer Space</em> 408 (68/wk), <em>PulseGrip Pro Controller</em> 310 (51.7/wk), <em>Omega MEGA Edition</em> 240 (40/wk). <strong>Slow movers</strong> (weeks-of-cover, anything past the 8-week line): <em>OmegaVision VR Headset</em> 72 wks, <em>Cadet Bundle</em> 60, <em>Galaxy Smash</em> 56, <em>Omega Core (1st-gen)</em> 14.5. Charts attached."</p>
               </div>
             </div>
           </li>
@@ -94,7 +94,7 @@ const base = import.meta.env.BASE_URL;
               <div class="tl-steps">
                 <div class="tl-tool"><span class="tl-tool-name">Sales &amp; Performance Agent &middot; query_sales</span> filtered to <code>sku = SKU-OMEGA-CORE</code>, week by week</div>
                 <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; get_inventory_aging</span> weeks-in-stock, inbound PO</div>
-                <p>"It's <strong>fading, not flat</strong>: weekly units run <code>9 &rarr; 8 &rarr; 7 &rarr; 6 &rarr; 6 &rarr; 5 &rarr; 4 &rarr; 3</code>, down about 67% across the window. It's been in stock <strong>16 weeks with no inbound PO</strong>, it's being phased out by the MEGA Edition. This is the one to act on."</p>
+                <p>"It's <strong>fading, not flat</strong>: weekly units run <code>9 &rarr; 8 &rarr; 7 &rarr; 6 &rarr; 6 &rarr; 5 &rarr; 4 &rarr; 3</code>, down about 67% across the window. It's sitting on <strong>75 units with no inbound PO</strong> (about 16 weeks of cover at its slowing pace), and it's being phased out by the MEGA Edition. This is the one to act on."</p>
               </div>
             </div>
           </li>
@@ -142,7 +142,7 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Agent (drill-down 3: the rationale)</div>
               <div class="tl-steps">
-                <p>"It's the <strong>margin floor</strong>, not the 30% cap. The Core costs <strong>$320</strong> against a <strong>$399.99</strong> price, that's only a 20% starting margin. The 15% floor puts the lowest legal price at <strong>$376.47</strong>, which is just 5.9% off. That's below the 10% min-useful-promo line, so a promo discount won't move it. Given 16 weeks aged and no inbound PO, the right call is a <strong>separate clearance</strong> (which needs a manager flag), not this promo."</p>
+                <p>"It's the <strong>margin floor</strong>, not the 30% cap. The Core costs <strong>$320</strong> against a <strong>$399.99</strong> price, that's only a 20% starting margin. The 15% floor puts the lowest legal price at <strong>$376.47</strong>, which is just 5.9% off. That's below the 10% min-useful-promo line, so a promo discount won't move it. Given 75 units, a fading pace, and no inbound PO, the right call is a <strong>separate clearance</strong> (which needs a manager flag), not this promo."</p>
               </div>
             </div>
           </li>
