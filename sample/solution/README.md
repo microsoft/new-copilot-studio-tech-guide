@@ -5,9 +5,18 @@ demo, plus everything you need to import and run it in your own environment.
 
 | File / folder | What it is |
 | --- | --- |
-| `BlastBoxDemo_1_0_0_1.zip` | The **unmanaged solution** — import this. |
+| `BlastBoxDemo_1_0_0_2.zip` | The **unmanaged solution** — import this. |
 | `src/` | The **unpacked** solution source (via `pac solution unpack`), for inspection/diffing. |
 | `README.md` | This import guide. |
+
+> **v1.0.0.2 (complete rebuild).** Rebuilt from the source environment so the package is
+> finally complete and portable. Fixes vs `1_0_0_1`: (1) the **Store Associate Assistant**
+> now ships its **Order Management MCP + Membership MCP v2** tools (they were missing
+> before, so Block Party Trade-Up could not complete); (2) **Store Policy Agent** ships the
+> **Policy RAG MCP v2** connector it actually references (the duplicate non-v2 `…PFO` tool
+> that caused "Tool call · unknown" was excluded); (3) the package carries **no connection
+> references** — connections are created and bound per environment by the deploy pipeline
+> (`deploy/`), keeping the solution portable across environments.
 
 ## What's inside
 
@@ -17,7 +26,7 @@ demo, plus everything you need to import and run it in your own environment.
 | --- | --- |
 | Membership MCP v2 | `cat_membership-20mcp-20v2` |
 | Order Management MCP | `new_order-20management-20mcp` |
-| Policy RAG MCP | `new_policy-20rag-20mcp` |
+| Policy RAG MCP v2 | `new_policy-20rag-20mcp-20v2` |
 | Warehouse MCP | `new_warehouse-20mcp` |
 
 **Agents (4 bots):**
@@ -47,7 +56,7 @@ demo, plus everything you need to import and run it in your own environment.
 ### 1. Import the solution
 
 In the [Power Apps maker portal](https://make.powerapps.com) → **Solutions** → **Import
-solution** → upload `BlastBoxDemo_1_0_0_1.zip` → **Next** → **Import**.
+solution** → upload `BlastBoxDemo_1_0_0_2.zip` → **Next** → **Import**.
 
 ### 2. Publish all customizations
 

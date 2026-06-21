@@ -72,17 +72,22 @@ These are why a fully clean e2e is **not yet** achievable from the current
    that maps each to a per-env connection; this solution deliberately ships **zero**
    connection references, so binding must be reconstructed post-import.
 
-3. **The packaged solution is incomplete.** The Store Associate Assistant (the
-   Block Party flagship) ships with only 2 connected-agent tools + 3 skills — its
-   **Order Management MCP and Membership MCP v2 tools are missing** from the zip
-   (they exist on the working env `org5d9d4b6b`). Without Order Management the
-   Block Party scenario (`request_return`, `cancel_membership`, points
-   reconciliation) cannot complete, regardless of binding. The Store Policy agent
-   also references a **`Policy RAG MCP v2`** connector that isn't the packaged
-   `Policy RAG MCP`.
+3. **~~The packaged solution is incomplete.~~ — FIXED in `BlastBoxDemo_1_0_0_2.zip`.**
+   The original `1_0_0_1` zip shipped the Store Associate Assistant (Block Party
+   flagship) with only 2 connected-agent tools + 3 skills — its **Order Management
+   MCP and Membership MCP v2 tools were missing**, so Block Party could not complete.
+   The package was **rebuilt from the source env `org5d9d4b6b`** as a new solution
+   (`BlastBoxDeploy`) containing all 4 bots, **all 14 botcomponents** (Store Associate
+   now has both MCP tools), and the 4 connectors — including the **`Policy RAG MCP v2`**
+   connector the Store Policy agent actually references. The stale duplicate
+   `…PolicyRAGMCPServer_PFO` tool (cause of "Tool call · unknown") was excluded.
+   Proven: imports + publishes cleanly into a fresh EU env, with both Store Associate
+   MCP tools present post-import.
 
-**Recommended fix:** re-export a complete, portable `BlastBoxDemo` solution from
-the working env with connection references included as components + a deployment
-settings file, then point this pipeline at the new zip. Steps 10/20/50/60/99 are
-already correct; step 40 simplifies to "create connection per ref + write the
-settings file" once the refs are real solution components.
+**Remaining work (blocker #2):** the rebuilt package deliberately ships **zero
+connection references** (portable by convention), so step 40 must, per env: create a
+no-auth connection per connector, create the `connectionreference` record with the
+exact logical name each tool's `data` expects, recreate the `botcomponent_connectionreference`
+binding, and rewrite each tool's `connectorId` to the fresh env hash (source
+`-5fee08b8354fad177a` → e.g. `-5f10ac44513d214b06`). Steps 10/20/50/60/99 are already
+correct.

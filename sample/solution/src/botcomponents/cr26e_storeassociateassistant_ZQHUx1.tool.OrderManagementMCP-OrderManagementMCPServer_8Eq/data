@@ -1,0 +1,5 @@
+kind: McpTool
+authMode: Maker
+connectionReference: cr26e_storeassociateassistant_ZQHUx1.cr.shared_new-5forder-2.cb2adaae92bc4036b3f88856336a64d6
+connectorId: /providers/Microsoft.PowerApps/apis/shared_new-5forder-20management-20mcp-5fee08b8354fad177a
+operationId: InvokeMCP

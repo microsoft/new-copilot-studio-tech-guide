@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.MembershipMCPv2-MembershipMCPv2Server_Zkq">
+  <componenttype>9</componenttype>
+  <description>MCP server for BlastPass memberships. Tools: get_membership, cancel_membership, reissue_card.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Membership MCP v2 — Membership MCP v2 Server</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,27 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ImportExportXml version="9.2.26062.135" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26062.135" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26062.00142">
+<ImportExportXml version="9.2.26062.135" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26062.135" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.26063.00133">
   <SolutionManifest>
-    <UniqueName>BlastBoxDemo</UniqueName>
+    <UniqueName>BlastBoxDeploy</UniqueName>
     <LocalizedNames>
-      <LocalizedName description="BlastBoxDemo" languagecode="1033" />
+      <LocalizedName description="BlastBox Deploy" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
     <Version>1.0.0.1</Version>
     <Managed>0</Managed>
     <Publisher>
-      <UniqueName>CAT</UniqueName>
+      <UniqueName>Cr5a062</UniqueName>
       <LocalizedNames>
-        <LocalizedName description="CAT" languagecode="1033" />
+        <LocalizedName description="CDS Default Publisher" languagecode="1033" />
       </LocalizedNames>
       <Descriptions />
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
-      <CustomizationPrefix>cat</CustomizationPrefix>
-      <CustomizationOptionValuePrefix>76486</CustomizationOptionValuePrefix>
+      <CustomizationPrefix>cr26e</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>80871</CustomizationOptionValuePrefix>
       <Addresses>
         <Address>
           <AddressNumber>1</AddressNumber>
-          <AddressTypeCode>1</AddressTypeCode>
+          <AddressTypeCode xsi:nil="true"></AddressTypeCode>
           <City xsi:nil="true"></City>
           <County xsi:nil="true"></County>
           <Country xsi:nil="true"></Country>
@@ -37,7 +37,7 @@
           <PostalCode xsi:nil="true"></PostalCode>
           <PostOfficeBox xsi:nil="true"></PostOfficeBox>
           <PrimaryContactName xsi:nil="true"></PrimaryContactName>
-          <ShippingMethodCode>1</ShippingMethodCode>
+          <ShippingMethodCode xsi:nil="true"></ShippingMethodCode>
           <StateOrProvince xsi:nil="true"></StateOrProvince>
           <Telephone1 xsi:nil="true"></Telephone1>
           <Telephone2 xsi:nil="true"></Telephone2>
@@ -49,7 +49,7 @@
         </Address>
         <Address>
           <AddressNumber>2</AddressNumber>
-          <AddressTypeCode>1</AddressTypeCode>
+          <AddressTypeCode xsi:nil="true"></AddressTypeCode>
           <City xsi:nil="true"></City>
           <County xsi:nil="true"></County>
           <Country xsi:nil="true"></Country>
@@ -65,7 +65,7 @@
           <PostalCode xsi:nil="true"></PostalCode>
           <PostOfficeBox xsi:nil="true"></PostOfficeBox>
           <PrimaryContactName xsi:nil="true"></PrimaryContactName>
-          <ShippingMethodCode>1</ShippingMethodCode>
+          <ShippingMethodCode xsi:nil="true"></ShippingMethodCode>
           <StateOrProvince xsi:nil="true"></StateOrProvince>
           <Telephone1 xsi:nil="true"></Telephone1>
           <Telephone2 xsi:nil="true"></Telephone2>
@@ -80,7 +80,7 @@
     <RootComponents>
       <RootComponent type="372" id="{5d6180ed-0d6f-418c-8ccb-1360b7c33f88}" schemaName="cat_membership-20mcp-20v2" behavior="0" />
       <RootComponent type="372" id="{e4e7e713-5c3f-f111-bec6-70a8a59a4421}" schemaName="new_order-20management-20mcp" behavior="0" />
-      <RootComponent type="372" id="{2449e305-4c62-f111-ab0b-0022480a52c7}" schemaName="new_policy-20rag-20mcp" behavior="0" />
+      <RootComponent type="372" id="{32399478-9062-f111-ab0b-0022480a52c7}" schemaName="new_policy-20rag-20mcp-20v2" behavior="0" />
       <RootComponent type="372" id="{357a348b-d53f-f111-bec6-70a8a59a4421}" schemaName="new_warehouse-20mcp" behavior="0" />
     </RootComponents>
     <MissingDependencies />
