@@ -85,42 +85,58 @@ const base = import.meta.env.BASE_URL;
         <div class="pillar">
           <div class="pillar__icon" style="--g: var(--c-primary);">
             <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></span>
-            <span class="ticon-bb" style="font-size:1.4rem;">&#129518;</span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#129309;</span>
           </div>
           <h3>Connected agents</h3>
-          <p>A parent orchestrator delegates to specialist agents (Store Policy, Inventory &amp; Fulfillment) and relays their answers.</p>
+          <p>A parent orchestrator delegates to specialist child agents and weaves their answers back into a single conversation.</p>
         </div>
         <div class="pillar">
           <div class="pillar__icon" style="--g: var(--c-purple);">
-            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
-            <span class="ticon-bb" style="font-size:1.4rem;">&#128268;</span>
-          </div>
-          <h3>Multiple MCP servers</h3>
-          <p>Membership, Order Management, Policy RAG, and Warehouse all run as inline MCP connectors, with no external services.</p>
-        </div>
-        <div class="pillar">
-          <div class="pillar__icon" style="--g: var(--c-pink);">
             <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
-            <span class="ticon-bb" style="font-size:1.4rem;">&#128221;</span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128013;</span>
           </div>
-          <h3>Per-agent skills</h3>
-          <p>Each agent carries its own skills that <em>generate and run Python at runtime</em>: refunds, settlements, charts, optimizers.</p>
+          <h3>AI Skills</h3>
+          <p>Agents <em>generate and run Python at runtime</em> to compute, transform, and analyze, going beyond text to real calculation.</p>
         </div>
         <div class="pillar">
           <div class="pillar__icon" style="--g: var(--c-orange);">
             <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span>
-            <span class="ticon-bb" style="font-size:1.4rem;">&#128190;</span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128196;</span>
           </div>
-          <h3>File generation</h3>
-          <p>Real outputs the associate can hand over: a membership card, an itemized settlement, a one-page markdown report, all PDFs.</p>
+          <h3>File Generation</h3>
+          <p>Agents produce real deliverables, PDFs, images, and documents, that users can download and hand off.</p>
         </div>
         <div class="pillar">
           <div class="pillar__icon" style="--g: var(--c-green);">
             <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
-            <span class="ticon-bb" style="font-size:1.4rem;">&#128172;</span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128260;</span>
           </div>
-          <h3>Adaptive orchestration</h3>
-          <p>State carries across turns: the agent remembers earlier results, asks a clarifying question when the next step is ambiguous, and revises its plan when you change the ask mid-conversation.</p>
+          <h3>Adaptive Orchestration</h3>
+          <p>The agent plans dynamically across turns, asks for clarification when a step is ambiguous, and revises its plan when the request changes.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-pink);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 5v6c0 1.66-4 3-9 3s-9-1.34-9-3V5"/><path d="M21 11v6c0 1.66-4 3-9 3s-9-1.34-9-3v-6"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#129504;</span>
+          </div>
+          <h3>Memory</h3>
+          <p>Context and earlier results persist across the conversation, so the agent builds on what is already known instead of starting over.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-teal);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128218;</span>
+          </div>
+          <h3>Knowledge</h3>
+          <p>Grounded answers from connected sources, documents, sites, and structured data, so responses cite real information instead of inventing it.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon" style="--g: var(--c-indigo);">
+            <span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
+            <span class="ticon-bb" style="font-size:1.4rem;">&#128736;&#65039;</span>
+          </div>
+          <h3>Tools/MCP Servers</h3>
+          <p>Agents call external systems and APIs as tools through inline MCP servers, with no separate hosting to stand up.</p>
         </div>
       </div>
     </div>
