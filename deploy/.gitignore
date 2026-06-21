@@ -1,0 +1,5 @@
+# Local-only env lifecycle helpers — we do not ship scripts that create/delete envs.
+steps/10_env.sh
+steps/99_teardown.sh
+# Runtime state (target env id/url discovered or seeded locally)
+.deploy-state.env

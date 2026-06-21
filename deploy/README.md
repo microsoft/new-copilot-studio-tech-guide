@@ -1,9 +1,10 @@
 # BlastBox Omega — repeatable deploy (`deploy/`)
 
-One-shot, idempotent deployment of the BlastBoxDemo solution into a **freshly
-minted Early Release environment**. Mints the env, imports the solution, deploys
-the connector code, creates the MCP connections, publishes the agents, and
-validates the two packaged scenarios e2e (and tears the env down on failure).
+One-shot, idempotent deployment of the BlastBoxDemo solution into an **existing
+environment**. Imports the solution, deploys the connector code, creates the MCP
+connections, publishes the agents, and validates the two packaged scenarios e2e.
+It does **not** create or delete environments — you point it at an env you already
+have (set `TARGET_ENV_URL` + `TARGET_ENV_ID`).
 
 After the script finishes there is **one manual UI step** (it has no supported
 API): re-attach each agent's MCP server in Copilot Studio. The script prints
@@ -11,60 +12,68 @@ exactly what to do at the end of every run — see
 [Manual post-install step](#manual-post-install-step-required) below.
 
 > ⚠️ **Use at your own peril.** This automates against live Power Platform /
-> Dataverse / BAP admin APIs in the PPlatform tenant. It creates and **deletes**
-> environments. Read the script before running it.
+> Dataverse / BAP APIs. Read the script before running it.
+>
+> The env-lifecycle helpers (`steps/10_env.sh` mint, `steps/99_teardown.sh`
+> delete) are **not committed** — we don't ship scripts that create/delete
+> environments. They are kept locally (gitignored) only for our own testing.
 
 ## Layout
 
 | File | Role |
 | --- | --- |
-| `deploy.sh` | Orchestrator. Runs the steps in order; ERR-trap tears down the env on failure. |
-| `config.env` | Stable, env-independent identifiers (connector ids + display names, source env, agent schema names, region, timing). |
+| `deploy.sh` | Orchestrator. Runs the steps in order against an existing env; on failure it stops and leaves the env untouched. |
+| `config.env` | Stable, env-independent identifiers (target env, connector ids + display names, source env, agent schema names, timing). |
 | `lib/common.sh` | Logging, token helpers (BAP + Dataverse), Dataverse Web API helper, state persistence. |
-| `steps/00_preflight.sh` | Asserts tooling, az/pac auth + tenant, solution zip present. |
-| `steps/10_env.sh` | Deletes any prior `copilot-adilei*` env (one-at-a-time), mints a fresh Developer (== Early Release) EU env with Dataverse. |
+| `steps/00_preflight.sh` | Asserts tooling, az/pac auth + tenant, solution zip present; resolves + records the target env. |
 | `steps/20_import.sh` | `pac solution import --publish-changes`. Verifies success **server-side** (the custom-code compile routinely exceeds pac's hard 30-min client timeout while the server job completes), with retry/backoff for the function-app capacity error. |
 | `steps/30_connectors.sh` | Downloads each MCP connector from the source env and `pac connector update`s it into the target to **deploy its inline `.csx`** (import alone does not), verifying `modifiedon` advances. |
 | `steps/40_connections.sh` | Creates one no-auth connection per MCP connector (BAP REST API). No binding needed — `authMode: Maker` resolves any Connected connection. |
 | `steps/50_publish_agents.sh` | `PvaPublish` the 4 bots (children first, then parents). |
 | `steps/60_validate.sh` | Drives the two scenarios e2e on the portal preview canvas (playwright-cli) and asserts the README numbers (one-time human MFA). Run **after** the manual step below. |
 | `steps/70_manual_steps.sh` | Read-only. Prints the one manual UI step (re-attach each agent's MCP server). Also printed at the end of `deploy.sh`. |
-| `steps/99_teardown.sh` | Deletes the env (used by the ERR trap; also runnable standalone). |
 
 ## Prerequisites
 
-- `pac` CLI with `DOTNET_ROOT=/Users/administrator/.dotnet` (.NET 10), authed as `EladG@PPlatform`.
-- `az` logged into the PPlatform tenant (`az login --tenant 8a235459-3d2c-415d-8c1e-e2fe133509ad`).
+- An **existing** target environment with Dataverse (the pipeline does not create one).
+- `pac` CLI with `DOTNET_ROOT=/Users/administrator/.dotnet` (.NET 10), authed with access to both the source and target envs.
+- `az` logged into the same tenant as the target env (`az login --tenant <tenant>`).
 - `playwright-cli` for the e2e step (one-time MFA approval — see `~/.copilot/skills/test-copilot-agent`).
 
 ## Usage
 
+Point the pipeline at an existing env via `TARGET_ENV_URL` + `TARGET_ENV_ID`
+(or set them in `config.env`, or seed `deploy/.deploy-state.env`):
+
 ```bash
-deploy/deploy.sh                 # full run
-KEEP_ON_FAILURE=1 deploy/deploy.sh   # keep env on failure for debugging
-SKIP_ENV=1 deploy/deploy.sh      # reuse env in .deploy-state.env
-START_AT=40 deploy/deploy.sh     # resume from a step
+TARGET_ENV_URL=https://<org>.crm4.dynamics.com/ \
+TARGET_ENV_ID=<env-guid> \
+  deploy/deploy.sh                 # full run against that env
+
+START_AT=40 deploy/deploy.sh       # resume from a step (reads env from state)
 ```
 
 ---
 
 ## What works today
 
-A full automated run (steps 10→50) provisions a fresh EU env to the point where the
+A full automated run (steps 20→50) takes an existing env to the point where the
 solution is imported, every connector's inline code is deployed, a Connected no-auth
 connection exists per connector, and all four agents are published. **One manual UI
 step then remains** (re-attach each agent's MCP server — see below); after it, the
 tools load and the end-to-end scenario check (step 60) passes.
 
-- **Env minting + Early Release.** `pac admin create --type Developer --region europe`
-  provisions Dataverse and is inherently Early Release (`updateCadence=Frequent`).
-  Teardown via `pac admin delete`.
 - **Solution import + publish** of the 4 inline custom-code MCP connectors + 4 agents.
   Use the env **URL** (not id) for `pac solution import`. Import verified server-side
   (see blocker #1 below).
 - **Connector code deploy** via `pac connector update` (blocker #2).
 - **No-auth connections** via the BAP REST API; tools resolve via `authMode: Maker`,
   so no connectionreference binding is required.
+
+> The target env must be **Early Release** with Dataverse and able to host inline
+> custom-code connectors. (Our local-only mint helper uses
+> `pac admin create --type Developer --region europe`, which is inherently Early
+> Release; the US custom-code function-app pool is capacity-exhausted, so EU.)
 
 ## Manual post-install step (required)
 

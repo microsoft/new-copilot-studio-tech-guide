@@ -22,6 +22,18 @@ ok "pac active as: $PAC_UPN"
 # solution zip present
 [ -f "$REPO_ROOT/$SOLUTION_ZIP" ] || die "solution zip not found: $REPO_ROOT/$SOLUTION_ZIP"
 
+# resolve the TARGET environment (this pipeline deploys into an existing env).
+# precedence: TARGET_ENV_* (env/config) > already-seeded state.
+state_load
+RESOLVED_URL="${TARGET_ENV_URL:-${ORG_URL:-}}"
+RESOLVED_ID="${TARGET_ENV_ID:-${ENV_ID:-}}"
+if [ -z "$RESOLVED_URL" ] || [ -z "$RESOLVED_ID" ]; then
+  die "no target environment. Set TARGET_ENV_URL + TARGET_ENV_ID (env or config.env), or seed $STATE_FILE with ORG_URL/ENV_ID."
+fi
+state_set ORG_URL "$RESOLVED_URL"
+state_set ENV_ID  "$RESOLVED_ID"
+ok "Target env: $RESOLVED_ID  ($RESOLVED_URL)"
+
 # token sanity
 T="$(bap_token)"; [ -n "$T" ] || die "could not acquire BAP token"
 ok "Preflight passed."
