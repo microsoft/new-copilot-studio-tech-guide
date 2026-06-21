@@ -32,6 +32,9 @@
 .tl-tool-name { font-family: var(--font-mono); font-size: 0.78em; font-weight: 600; color: var(--c-primary); background: var(--c-primary-light); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
 .tl-skill-name { font-family: var(--font-mono); font-size: 0.78em; font-weight: 600; color: var(--c-pink); background: rgba(255,46,136,0.12); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
 .tl-delegate-name { font-family: var(--font-mono); font-size: 0.78em; font-weight: 600; color: var(--c-purple); background: rgba(176,107,255,0.12); padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+.tl-list { margin: 8px 0 0; padding-left: 1.1rem; list-style: none; }
+.tl-list li { position: relative; padding: 3px 0; }
+.tl-list li::before { content: "\2192"; position: absolute; left: -1.1rem; color: var(--c-orange); }
 
 /* Value cards */
 .value-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-lg); }

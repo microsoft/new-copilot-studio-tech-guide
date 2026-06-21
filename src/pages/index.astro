@@ -178,7 +178,16 @@ const base = import.meta.env.BASE_URL;
           href={`${base}scenarios/block-party-trade-up`}
           pillars={["4 MCPs", "2 connected agents", "chained skills", "settlement PDF"]}
         />
-      </div>
+        <ScenarioCard
+          title="End-of-Quarter Markdown Review"
+          capability="Store manager"
+          tier="Merch Insights Assistant"
+          accent="orange"
+          icon="report"
+          description="A manager works out end-of-quarter markdowns by drilling from a store-wide view down to one SKU week-by-week, then to policy-grounded discounts. Three connected agents, live charts, recommendations, manager PDF."
+          href={`${base}scenarios/markdown-review`}
+          pillars={["3 connected agents", "live charts", "policy-bound recs", "manager PDF"]}
+        />
     </div>
   </section>
 

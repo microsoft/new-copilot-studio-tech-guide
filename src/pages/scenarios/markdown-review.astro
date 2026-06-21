@@ -1,0 +1,220 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/scenario.css';
+
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="End-of-Quarter Markdown Review | Copilot Studio technical guide">
+  <article class="scenario">
+    <div class="container">
+      <a href={base} class="back">&larr; All scenarios</a>
+
+      <header class="scenario__header">
+        <span class="badge badge--accent">Store manager &middot; Merch Insights Assistant</span>
+        <h1>End-of-Quarter Markdown Review</h1>
+        <p class="scenario__lead">
+          It's the last week of the quarter, and the BlastBox Omega store manager has the usual
+          chore: figure out what's selling, what's dead on the shelf, and what to mark down before
+          the numbers close. Instead of exporting a spreadsheet and squinting at pivot tables, she
+          works the question out loud with the <strong>Merch Insights Assistant</strong>, starting
+          from a store-wide view and drilling all the way down to a single SKU, week by week, then
+          to a discount she can actually defend.
+        </p>
+        <div class="scenario__cast">
+          <span class="pill">Merch Insights Assistant</span>
+          <span class="pill">Sales &amp; Performance Agent</span>
+          <span class="pill">Inventory &amp; Fulfillment Agent</span>
+          <span class="pill">Store Policy Agent</span>
+          <span class="pill">3 Python skills</span>
+          <span class="pill">Charts + PDF out</span>
+        </div>
+      </header>
+
+      <section class="convo">
+        <h2>The conversation</h2>
+
+        <ol class="timeline">
+          <li class="tl-user">
+            <div class="tl-marker">1</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">It's end of quarter and I need to tidy up inventory. Over the last 8 weeks, what's selling and what's just sitting on the shelf? Show me the numbers.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent &rarr; Sales &amp; Performance Agent &rarr; Manager</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Sales &amp; Performance Agent &middot; query_sales</span> raw weekly rows, 2026-04-12 &rarr; 2026-05-31</div>
+                <div class="tl-tool"><span class="tl-tool-name">get_catalog</span> price, unit cost, stock on hand per SKU</div>
+                <p>The MCP returns <em>raw rows only</em>, no pre-baked analytics, so the skill derives the metrics itself.</p>
+                <div class="tl-skill"><span class="tl-skill-name">sales-analysis-chart</span> runs Python (matplotlib) &rarr; velocity, weeks-of-cover, margin &rarr; <strong>top_sellers.png</strong>, <strong>slow_movers.png</strong></div>
+                <p>"Here's the quarter. <strong>Top sellers</strong> (units): <em>MEGA Lizards from Outer Space</em> 540 (67.5/wk), <em>PulseGrip Pro Controller</em> 410 (51.3/wk), <em>Omega MEGA Edition</em> 320 (40/wk). <strong>Slow movers</strong> (weeks-of-cover, anything past the 8-week line): <em>OmegaVision VR Headset</em> 64 wks, <em>Cadet Bundle</em> 53, <em>Galaxy Smash</em> 51, <em>Omega Core (1st-gen)</em> 12.5. Charts attached."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">2</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Four slow movers across three categories. Is this a category-wide problem, or just specific products? Break it down.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent (drill-down 1: by category)</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Sales &amp; Performance Agent &middot; query_sales</span> re-queried per <code>category</code> (console / game / accessory)</div>
+                <p>"It's <strong>not</strong> a category problem, it's specific SKUs. Within the <em>same</em> category the spread is huge: <em>MEGA Lizards</em> (game) is your #1 seller while <em>Galaxy Smash</em> (game) is dead stock; <em>PulseGrip</em> (accessory) flies while the <em>VR Headset</em> (accessory) sits. The one place a whole category skews slow is <strong>consoles</strong>, and that's almost entirely the 1st-gen Omega Core dragging it down."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">3</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">The Omega Core is the one I care about, it's last year's console. Pull it on its own, week by week, is it fading or just flat? And how long have we been sitting on it?</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent (drill-down 2: single SKU + aging)</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Sales &amp; Performance Agent &middot; query_sales</span> filtered to <code>sku = SKU-OMEGA-CORE</code>, week by week</div>
+                <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; get_inventory_aging</span> weeks-in-stock, inbound PO</div>
+                <p>"It's <strong>fading, not flat</strong>: weekly units run <code>9 &rarr; 8 &rarr; 7 &rarr; 6 &rarr; 6 &rarr; 5 &rarr; 4 &rarr; 3</code>, down about 67% across the window. It's been in stock <strong>16 weeks with no inbound PO</strong>, it's being phased out by the MEGA Edition. This is the one to act on."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">4</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">OK. What should I mark down, and by how much? Keep it within policy, this is a promo, not a clearance.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent &rarr; Store Policy Agent &rarr; Manager</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent &middot; get_markdown_policy</span> "promo" &rarr; max 30% off, 15% margin floor, 10% min-useful</div>
+                <p>The guardrails are never hardcoded in the skill, they come from the Policy Agent and get passed straight into the math.</p>
+                <div class="tl-skill"><span class="tl-skill-name">markdown-optimizer</span> runs Python &rarr; per-SKU discount, new price, new margin, binding constraint &rarr; <strong>markdowns.png</strong></div>
+                <p>"Recommended promo markdowns, all within policy:</p>
+                <ul class="tl-list">
+                  <li><strong>OmegaVision VR Headset</strong> &middot; &minus;30% &middot; $199.99 &rarr; <strong>$139.99</strong> &middot; margin 50.0% <em>(max-discount cap)</em></li>
+                  <li><strong>Galaxy Smash</strong> &middot; &minus;30% &middot; $49.99 &rarr; <strong>$34.99</strong> &middot; margin 48.6% <em>(max-discount cap)</em></li>
+                  <li><strong>Cadet Bundle</strong> &middot; &minus;13.7% &middot; $149.99 &rarr; <strong>$129.42</strong> &middot; margin 15.0% <em>(margin floor)</em></li>
+                  <li><strong>Omega Core (1st-gen)</strong> &middot; only &minus;5.9% possible under the floor &rarr; <strong>flagged for clearance, not promo</strong></li>
+                </ul>
+                <p>The first three are clean promos. The Core can't be meaningfully promoted, want to know why?"</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">5</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Yes, why does the Core only get 5.9% when everything else gets 30?</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent (drill-down 3: the rationale)</div>
+              <div class="tl-steps">
+                <p>"It's the <strong>margin floor</strong>, not the 30% cap. The Core costs <strong>$320</strong> against a <strong>$399.99</strong> price, that's only a 20% starting margin. The 15% floor puts the lowest legal price at <strong>$376.47</strong>, which is just 5.9% off. That's below the 10% min-useful-promo line, so a promo discount won't move it. Given 16 weeks aged and no inbound PO, the right call is a <strong>separate clearance</strong> (which needs a manager flag), not this promo."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">6</div>
+            <div class="tl-content">
+              <div class="tl-label">Manager</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">Good. Apply the three-item promo set, leave the Core out for a separate clearance decision, and give me a one-pager I can send to the regional team.</blockquote>
+              </div>
+            </div>
+          </li>
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Agent &rarr; Manager</div>
+              <div class="tl-steps">
+                <div class="tl-skill"><span class="tl-skill-name">merch-report-pdf</span> runs reportlab &rarr; embeds the charts, the recommendation table, and the clearance note</div>
+                <div class="tl-file"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#128202;</span> hands back <strong>merch_review.pdf</strong></div>
+                <p>"Done. Promo set applied: VR Headset, Galaxy Smash, and Cadet Bundle, each within the 15% margin floor. Omega Core left out and noted for a separate clearance with a manager flag. The one-pager has the top-seller and slow-mover charts, the markdown table, and the guardrail source. Want me to email it to the regional team?"</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <div class="result">
+          <span class="result__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="ticon-bb">&#128202;</span></span>
+          <div>
+            <div class="result__label">Outcome</div>
+            <div class="result__value">3-item promo within policy (max 30% off, 15% floor) &middot; Omega Core flagged for clearance &middot; top_sellers / slow_movers / markdowns PNGs &middot; merch_review.pdf</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>What was demonstrated</h2>
+        <div class="value-grid">
+          <div class="value-card">
+            <h3>Drill down without leaving the chat</h3>
+            <p>The manager pivots from a store-wide view, to a per-category breakdown, to one SKU week-by-week, to the reasoning behind a single number. Each follow-up re-queries the raw MCP with <code>sku</code> / <code>category</code> / week filters and re-derives the metrics live.</p>
+          </div>
+          <div class="value-card">
+            <h3>Charts the agent draws itself</h3>
+            <p>The Sales &amp; Performance MCP returns no analytics, only raw rows. <code>sales-analysis-chart</code> computes velocity, weeks-of-cover, and margin in Python and renders the top-seller, slow-mover, and markdown charts with matplotlib.</p>
+          </div>
+          <div class="value-card">
+            <h3>Recommendations grounded in policy</h3>
+            <p>Every discount comes from the Store Policy Agent's guardrails, the max-discount cap, the margin floor, and the min-useful threshold, never hardcoded. The optimizer even flags an item a promo can't move and routes it to clearance instead.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scenario__section">
+        <h2>What gets generated</h2>
+        <div class="files">
+          <div class="filecard">
+            <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="ticon-bb">&#128200;</span></span>
+            <div>
+              <strong>top_sellers.png &middot; slow_movers.png &middot; markdowns.png</strong>
+              <span>matplotlib &middot; derived from raw MCP rows</span>
+            </div>
+          </div>
+          <div class="filecard">
+            <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#128202;</span></span>
+            <div>
+              <strong>merch_review.pdf</strong>
+              <span>reportlab &middot; one-page manager report &middot; charts + markdown table + notes</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </article>
+</Base>
