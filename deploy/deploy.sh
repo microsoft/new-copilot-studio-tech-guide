@@ -46,6 +46,7 @@ run_step() { # number script
 bash "$DEPLOY_DIR/steps/00_preflight.sh"
 [ "$SKIP_ENV" = "1" ] || run_step 10 "10_env.sh"
 run_step 20 "20_import.sh"
+run_step 30 "30_connectors.sh"
 run_step 40 "40_connections.sh"
 run_step 50 "50_publish_agents.sh"
 run_step 60 "60_validate.sh"

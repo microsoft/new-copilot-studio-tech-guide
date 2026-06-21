@@ -5,18 +5,20 @@ demo, plus everything you need to import and run it in your own environment.
 
 | File / folder | What it is |
 | --- | --- |
-| `BlastBoxDemo_1_0_0_2.zip` | The **unmanaged solution** — import this. |
+| `BlastBoxDemo_1_0_0_4.zip` | The **unmanaged solution** — import this. |
 | `src/` | The **unpacked** solution source (via `pac solution unpack`), for inspection/diffing. |
 | `README.md` | This import guide. |
 
-> **v1.0.0.2 (complete rebuild).** Rebuilt from the source environment so the package is
-> finally complete and portable. Fixes vs `1_0_0_1`: (1) the **Store Associate Assistant**
-> now ships its **Order Management MCP + Membership MCP v2** tools (they were missing
-> before, so Block Party Trade-Up could not complete); (2) **Store Policy Agent** ships the
-> **Policy RAG MCP v2** connector it actually references (the duplicate non-v2 `…PFO` tool
-> that caused "Tool call · unknown" was excluded); (3) the package carries **no connection
-> references** — connections are created and bound per environment by the deploy pipeline
-> (`deploy/`), keeping the solution portable across environments.
+> **v1.0.0.4.** Rebuilt from the source environment so the package is complete and
+> portable. Fixes vs `1_0_0_1`: (1) the **Store Associate Assistant** now ships its
+> **Order Management MCP + Membership MCP v2** tools (they were missing before, so Block
+> Party Trade-Up could not complete); (2) **Store Policy Agent** ships the **Policy RAG
+> MCP v2** connector it actually references (the duplicate non-v2 `…PFO` tool that caused
+> "Tool call · unknown" was excluded); (3) the Store Policy tool was converted from the
+> legacy `TaskDialog` format to `McpTool` so it renders in the modern UI; (4) the package
+> carries **no connection references** — connections are created per environment and
+> resolve via `authMode: Maker`, so no binding step is needed. For a fully scripted
+> deploy, use `deploy/` instead of these manual steps.
 
 ## What's inside
 
@@ -35,15 +37,15 @@ demo, plus everything you need to import and run it in your own environment.
 | --- | --- | --- |
 | **Store Associate Assistant** (`cr26e_storeassociateassistant_ZQHUx1`) | Parent — **flagship** (Block Party Trade-Up) | Order Management MCP + Membership MCP v2; connected: Store Policy, Inventory & Fulfillment; skills: prorated-refund-calculator, points-reconciliation, slip-pdf-generator |
 | **Returns & Service Assistant** (`Default_draft_IsBewO`) | Parent — **self-serve** (Card Reissue) | Membership MCP v2; connected: Store Policy; skills: card-reissue, membership-card-png |
-| **Store Policy Agent** (`Default_StorePolicyAgent_s9s-u8`) | Connected child | Policy RAG MCP |
+| **Store Policy Agent** (`Default_StorePolicyAgent_s9s-u8`) | Connected child | Policy RAG MCP v2 |
 | **Inventory & Fulfillment Agent** (`Default_InventoryFullfilmentAgent_X-w2GP`) | Connected child | Warehouse MCP |
 
 **Agent → MCP map**
 
 - **Store Associate Assistant** → Order Management MCP + Membership MCP v2
-  (+ connected: Store Policy → Policy RAG, Inventory & Fulfillment → Warehouse)
-- **Returns & Service Assistant** → Membership MCP v2 (+ connected: Store Policy → Policy RAG)
-- **Store Policy Agent** → Policy RAG MCP
+  (+ connected: Store Policy → Policy RAG v2, Inventory & Fulfillment → Warehouse)
+- **Returns & Service Assistant** → Membership MCP v2 (+ connected: Store Policy → Policy RAG v2)
+- **Store Policy Agent** → Policy RAG MCP v2
 - **Inventory & Fulfillment Agent** → Warehouse MCP
 
 ## Prerequisites
@@ -56,18 +58,27 @@ demo, plus everything you need to import and run it in your own environment.
 ### 1. Import the solution
 
 In the [Power Apps maker portal](https://make.powerapps.com) → **Solutions** → **Import
-solution** → upload `BlastBoxDemo_1_0_0_2.zip` → **Next** → **Import**.
+solution** → upload `BlastBoxDemo_1_0_0_4.zip` → **Next** → **Import**.
 
-### 2. Publish all customizations
+### 2. Deploy the connectors' inline code
 
-After the import finishes, open the solution and choose **Publish all customizations**
-(or **Solutions → … → Publish all customizations**).
+The four MCP connectors are *inline custom-code* connectors. Importing the solution
+**registers** them but does **not** compile/deploy their code, so their tools will not
+load yet. Deploy the code for each connector (this is the step the scripted `deploy/`
+pipeline automates via `pac connector update`):
 
-> **This step is required, not optional.** The four MCP connectors are *inline custom-code*
-> connectors. Publishing is what compiles their code and deploys it to the backing APIM
-> gateway. **Until you publish, the MCP tools will not load** — agents will report
-> "we couldn't find the resource you requested." (This was the #1 gotcha while building
-> the demo.) Allow ~30–60 seconds for APIM propagation after publishing.
+```bash
+pac connector download --connector-id <id> --environment <SOURCE_URL> --outputDirectory ./c
+pac connector update   --connector-id <id> --environment <TARGET_URL> \
+  --api-definition-file ./c/apiDefinition.json \
+  --api-properties-file ./c/apiProperties.json \
+  --script-file ./c/script.csx
+```
+
+> `pac connector update` can report "succesfully" without actually deploying — verify the
+> connector's `modifiedon` advanced past its `createdon`, and re-run if it didn't. Allow
+> ~30–60 seconds for APIM propagation. **Until the code is deployed, MCP tools will not
+> load** and agents report "we couldn't find the resource you requested."
 
 ### 3. Create the MCP connections
 
@@ -77,10 +88,11 @@ create one connection for each of the four connectors:
 
 - Membership MCP v2
 - Order Management MCP
-- Policy RAG MCP
+- Policy RAG MCP v2
 - Warehouse MCP
 
-Then bind each agent's tools per the **Agent → MCP map** above.
+> No manual binding is needed: the tools use `authMode: Maker`, so the runtime resolves
+> the maker's connection for each connector automatically once it exists.
 
 ### 4. Publish the agents
 

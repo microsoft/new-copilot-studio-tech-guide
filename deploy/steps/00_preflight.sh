@@ -5,8 +5,8 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/common.sh"
 log "Preflight checks"
 require_tools
 
-# .NET 10 present for pac
-pac --version >/dev/null 2>&1 || die "pac not runnable (check DOTNET_ROOT=$DOTNET_ROOT)"
+# .NET 10 present for pac (note: `pac --version` is not a valid command in 2.9.x)
+pac auth list >/dev/null 2>&1 || die "pac not runnable (check DOTNET_ROOT=$DOTNET_ROOT)"
 
 # az logged into the expected tenant + identity
 AZ_UPN="$(az account show --query user.name -o tsv 2>/dev/null || true)"

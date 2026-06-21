@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# 40_connections — create one no-auth connection per MCP connector (via the BAP
-# REST API, since `pac connection create` only does service-principal), then bind
-# every imported MCP connectionreference to the matching connection.
+# 40_connections — create one no-auth connection per MCP connector.
 #
-# Why this is needed: the solution ships NO connection records and NO bound
-# connectionreferences. On import, Copilot Studio creates connectionreference
-# rows from each agent's MCP tool definition, but with an empty connectionid.
-# An agent can't call its MCP server until that connectionid points at a real
-# connection. We create the connections and PATCH each connectionreference.
+# With `authMode: Maker` on each agent's MCP tool, the runtime resolves any
+# Connected maker connection for the tool's connector — there is NO need to bind
+# connectionreference records (proven: connections whose ids don't match the
+# guids baked in the tool data still load tools fine). So this step simply makes
+# sure exactly one Connected no-auth connection exists per connector.
+#
+# `pac connection create` only supports service-principal auth, so we use the BAP
+# REST API (PUT, self-generated GUID, no parameterValues) — see
+# ~/.copilot/skills/powerplatform-noauth-connection.
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/lib/common.sh"
 state_load
 [ -n "${ENV_ID:-}" ]  || die "ENV_ID not set"
@@ -15,21 +17,25 @@ state_load
 
 TOKEN="$(bap_token)"
 
-# Resolve a connector's BAP apiName by display name (custom apis, newest first).
-resolve_api_name() { # display-name
-  curl -s "$BAP/providers/Microsoft.PowerApps/apis?api-version=$PA_API_VERSION&\$filter=environment%20eq%20'$ENV_ID'" \
+# Resolve a connector's BAP apiName from its Dataverse connectorinternalid (which
+# equals the BAP apiName). More robust than display-name matching.
+api_name_of_connector() { # connectorId
+  dv GET "$ORG_URL" "connectors?\$select=connectorinternalid&\$filter=connectorid%20eq%20$1" \
+    | python3 -c "import sys,json;v=json.load(sys.stdin).get('value',[]);print(v[0].get('connectorinternalid','') if v else '')"
+}
+
+# List existing Connected connection ids for an apiName.
+connected_connections() { # apiName
+  curl -s "$BAP/providers/Microsoft.PowerApps/apis/$1/connections?api-version=$PA_API_VERSION&\$filter=environment%20eq%20'$ENV_ID'" \
     -H "Authorization: Bearer $TOKEN" \
-    | WANT="$1" python3 -c "
-import sys,os,json
-want=os.environ['WANT']
-cands=[a for a in json.load(sys.stdin).get('value',[])
-       if a.get('properties',{}).get('isCustomApi') and a.get('properties',{}).get('displayName')==want]
-cands.sort(key=lambda a:a.get('properties',{}).get('createdTime',''),reverse=True)
-print(cands[0]['name'] if cands else '')
+    | python3 -c "
+import sys,json
+for c in json.load(sys.stdin).get('value',[]):
+    if any(s.get('status')=='Connected' for s in c.get('properties',{}).get('statuses',[])):
+        print(c['name'])
 "
 }
 
-# Create a no-auth connection for an apiName; echo the new connection name.
 create_connection() { # apiName displayName
   local api="$1" disp="$2"
   local conn; conn="$(uuidgen | tr -d '-' | tr 'A-Z' 'a-z')"
@@ -45,36 +51,18 @@ print(json.dumps({'properties':{'environment':{'id':'/providers/Microsoft.PowerA
   printf '%s' "$conn"
 }
 
-declare -A API_OF CONN_OF
-log "Creating no-auth connections for ${#CONNECTOR_DISPLAY_NAMES[@]} connectors"
-for disp in "${CONNECTOR_DISPLAY_NAMES[@]}"; do
-  api="$(resolve_api_name "$disp")"
-  [ -n "$api" ] || die "could not resolve apiName for connector '$disp' (is it imported+published?)"
+log "Ensuring a no-auth connection for ${#CONNECTOR_IDS[@]} connectors"
+for pair in "${CONNECTOR_IDS[@]}"; do
+  disp="${pair%%::*}"; id="${pair##*::}"
+  api="$(api_name_of_connector "$id")"
+  [ -n "$api" ] || die "could not resolve apiName for '$disp' ($id) — is it imported?"
+  existing="$(connected_connections "$api" | head -1)"
+  if [ -n "$existing" ]; then
+    ok "$disp -> already Connected ($existing)"
+    continue
+  fi
   conn="$(create_connection "$api" "$disp Connection")" || die "connection create failed for '$disp'"
-  API_OF["$disp"]="$api"; CONN_OF["$disp"]="$conn"
-  ok "$disp -> api=$api conn=$conn"
+  ok "$disp -> created connection $conn (Connected)"
 done
 
-# Bind every MCP connectionreference whose connectorid matches one of our apis.
-log "Binding connectionreferences to connections"
-REFS_JSON="$(dv GET "$ORG_URL" "connectionreferences?\$select=connectionreferenceid,connectionreferencelogicalname,connectorid,connectionid")"
-bound=0
-while IFS=$'\t' read -r refid logical connectorid; do
-  [ -n "$refid" ] || continue
-  match_conn=""
-  for disp in "${CONNECTOR_DISPLAY_NAMES[@]}"; do
-    case "$connectorid" in *"/${API_OF[$disp]}") match_conn="${CONN_OF[$disp]}";; esac
-  done
-  [ -n "$match_conn" ] || continue
-  patch="$(printf '{"connectionid":"%s"}' "$match_conn")"
-  dv PATCH "$ORG_URL" "connectionreferences($refid)" "$patch" >/dev/null
-  ok "bound $logical -> $match_conn"
-  bound=$((bound+1))
-done < <(printf '%s' "$REFS_JSON" | python3 -c "
-import sys,json
-for r in json.load(sys.stdin).get('value',[]):
-    print('\t'.join([r.get('connectionreferenceid',''),r.get('connectionreferencelogicalname','') or '',r.get('connectorid','') or '']))
-")
-
-[ "$bound" -gt 0 ] || die "no connectionreferences matched our connectors — import may not have created them"
-ok "Bound $bound connectionreference(s)."
+ok "All connectors have a Connected no-auth connection."

@@ -2,8 +2,8 @@
 
 One-shot, idempotent deployment of the BlastBoxDemo solution into a **freshly
 minted Early Release environment**, with **zero manual configuration**. Mints the
-env, imports the solution, publishes, creates + binds the MCP connections,
-publishes the agents, validates the two packaged scenarios e2e, and tears the
+env, imports the solution, publishes, deploys the connector code, creates the MCP
+connections, publishes the agents, validates the two packaged scenarios e2e, and tears the
 env down on failure.
 
 > ⚠️ **Use at your own peril.** This automates against live Power Platform /
@@ -15,14 +15,15 @@ env down on failure.
 | File | Role |
 | --- | --- |
 | `deploy.sh` | Orchestrator. Runs the steps in order; ERR-trap tears down the env on failure. |
-| `config.env` | Stable, env-independent identifiers (connector display names, agent schema names, region, timing). |
+| `config.env` | Stable, env-independent identifiers (connector ids + display names, source env, agent schema names, region, timing). |
 | `lib/common.sh` | Logging, token helpers (BAP + Dataverse), Dataverse Web API helper, state persistence. |
 | `steps/00_preflight.sh` | Asserts tooling, az/pac auth + tenant, solution zip present. |
-| `steps/10_env.sh` | Deletes any prior `copilot-adilei*` env (one-at-a-time), mints a fresh Developer (== Early Release) env with Dataverse. |
-| `steps/20_import.sh` | `pac solution import --publish-changes`, with retry/backoff for the function-app capacity error. |
-| `steps/40_connections.sh` | Creates one no-auth connection per MCP connector and binds the connectionreferences. |
+| `steps/10_env.sh` | Deletes any prior `copilot-adilei*` env (one-at-a-time), mints a fresh Developer (== Early Release) EU env with Dataverse. |
+| `steps/20_import.sh` | `pac solution import --publish-changes`. Verifies success **server-side** (the custom-code compile routinely exceeds pac's hard 30-min client timeout while the server job completes), with retry/backoff for the function-app capacity error. |
+| `steps/30_connectors.sh` | Downloads each MCP connector from the source env and `pac connector update`s it into the target to **deploy its inline `.csx`** (import alone does not), verifying `modifiedon` advances. |
+| `steps/40_connections.sh` | Creates one no-auth connection per MCP connector (BAP REST API). No binding needed — `authMode: Maker` resolves any Connected connection. |
 | `steps/50_publish_agents.sh` | `PvaPublish` the 4 bots (children first, then parents). |
-| `steps/60_validate.sh` | Drives the two scenarios e2e on the portal preview canvas (playwright-cli) and asserts the README numbers. |
+| `steps/60_validate.sh` | Drives the two scenarios e2e on the portal preview canvas (playwright-cli) and asserts the README numbers (one-time human MFA). |
 | `steps/99_teardown.sh` | Deletes the env (used by the ERR trap; also runnable standalone). |
 
 ## Prerequisites
@@ -44,50 +45,52 @@ START_AT=40 deploy/deploy.sh     # resume from a step
 
 ## What works today
 
-- **Env minting + Early Release.** `pac admin create --type Developer --region <r>`
+A full automated run (steps 10→50) provisions a fresh EU env to the point where all
+four agents load their MCP tools, with **no manual UI configuration**. The final
+end-to-end scenario check (step 60) needs a one-time human MFA sign-in.
+
+- **Env minting + Early Release.** `pac admin create --type Developer --region europe`
   provisions Dataverse and is inherently Early Release (`updateCadence=Frequent`).
-  No cadence flag needed. Teardown via `pac admin delete`.
+  Teardown via `pac admin delete`.
 - **Solution import + publish** of the 4 inline custom-code MCP connectors + 4 agents.
-  Use the env **URL** (not id) for `pac solution import --environment`.
-- Connector apiName resolution, no-auth connection creation, PvaPublish.
+  Use the env **URL** (not id) for `pac solution import`. Import verified server-side
+  (see blocker #1 below).
+- **Connector code deploy** via `pac connector update` (blocker #2).
+- **No-auth connections** via the BAP REST API; tools resolve via `authMode: Maker`,
+  so no connectionreference binding is required.
 
-## Known blockers / findings (the "deployment process" problems)
+## Architecture decision: connectors stay IN the solution
 
-These are why a fully clean e2e is **not yet** achievable from the current
-`BlastBoxDemo_1_0_0_1.zip`:
+We keep the 4 connectors inside the solution (rather than an agents-only solution +
+`pac connector create`) because solution import **preserves each connector's identity**
+(the connectorid/apiName the agents' tools reference). `pac connector create` would mint
+**new** connector identities, leaving the imported agents' tools pointing at connectors
+that don't exist and forcing manual UI re-wiring. With connectors in the solution, the
+only thing import misses is compiling the inline code, which `30_connectors.sh` fixes.
 
-1. **US custom-code compute pool is capacity-exhausted.** Importing into a US
-   (`unitedstates`) env fails publish with
-   `CustomScriptProvisioningFailed … Unable to find an unassigned function app in 'East US'`.
-   This is Microsoft-side pool capacity for *new* inline-MCP provisioning (existing
-   envs keep their already-assigned function apps). **Workaround: deploy to an EU
-   (`europe`) env** — West Europe pool has capacity; import + publish succeed there.
+## Findings (the "deployment process" problems, resolved)
 
-2. **The packaged solution's agent MCP tool bindings are non-portable.** Each MCP
-   tool's `connectorId` / `connectionReference` is hardcoded to the **source env's**
-   connector hash (`-5fee08b8354fad177a`). A fresh import gets a new env-specific
-   hash (e.g. `-5f10ac44513d214b06`), so the bindings dangle. Import does **not**
-   auto-create the MCP connectionreferences. The supported portable pattern is to
-   ship connection references as solution components + an import `--settings-file`
-   that maps each to a per-env connection; this solution deliberately ships **zero**
-   connection references, so binding must be reconstructed post-import.
+1. **Import exceeds pac's 30-min client timeout.** Compiling the inline MCP connectors
+   routinely trips `The request channel timed out ... 00:30:00`, even though the
+   **server-side** import job keeps running and completes. `20_import.sh` therefore polls
+   Dataverse for the solution and treats its presence as success instead of trusting
+   pac's exit code. (Also: the US custom-code function-app pool is capacity-exhausted —
+   `Unable to find an unassigned function app in 'East US'` — so we deploy to **EU**.)
 
-3. **~~The packaged solution is incomplete.~~ — FIXED in `BlastBoxDemo_1_0_0_2.zip`.**
-   The original `1_0_0_1` zip shipped the Store Associate Assistant (Block Party
-   flagship) with only 2 connected-agent tools + 3 skills — its **Order Management
-   MCP and Membership MCP v2 tools were missing**, so Block Party could not complete.
-   The package was **rebuilt from the source env `org5d9d4b6b`** as a new solution
-   (`BlastBoxDeploy`) containing all 4 bots, **all 14 botcomponents** (Store Associate
-   now has both MCP tools), and the 4 connectors — including the **`Policy RAG MCP v2`**
-   connector the Store Policy agent actually references. The stale duplicate
-   `…PolicyRAGMCPServer_PFO` tool (cause of "Tool call · unknown") was excluded.
-   Proven: imports + publishes cleanly into a fresh EU env, with both Store Associate
-   MCP tools present post-import.
+2. **Import does not deploy the connectors' inline code.** Solution import registers each
+   custom-code connector but does **not** compile/deploy its `.csx`; the connector's
+   `modifiedon` stays equal to `createdon` and tools fail to load. Fix: `pac connector
+   update` per connector (`30_connectors.sh`), downloading from the source env.
+   **Caveat:** `pac connector update` can report "succesfully" without deploying — the
+   step verifies `modifiedon` actually advanced and retries if not.
 
-**Remaining work (blocker #2):** the rebuilt package deliberately ships **zero
-connection references** (portable by convention), so step 40 must, per env: create a
-no-auth connection per connector, create the `connectionreference` record with the
-exact logical name each tool's `data` expects, recreate the `botcomponent_connectionreference`
-binding, and rewrite each tool's `connectorId` to the fresh env hash (source
-`-5fee08b8354fad177a` → e.g. `-5f10ac44513d214b06`). Steps 10/20/50/60/99 are already
-correct.
+3. **Tool binding needs no UI step and no guid-matching.** With `authMode: Maker`, the
+   runtime resolves any Connected maker connection for the tool's connector. Connections
+   whose ids don't match the guids baked in the tool data still load tools, so
+   `40_connections.sh` just creates one no-auth connection per connector. The agents'
+   `connectorId` keeps the source-env hash and still resolves.
+
+4. **Store Policy's tool was authored in the legacy format.** It shipped as
+   `kind: TaskDialog` / `InvokeExternalAgentTaskAction`, which the modern Copilot Studio
+   UI does not render as an MCP tool (the other three are `kind: McpTool`). Fixed at the
+   source agent (now `kind: McpTool`), so the solution export carries the fix.

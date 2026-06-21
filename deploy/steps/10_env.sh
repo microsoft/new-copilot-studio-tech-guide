@@ -35,7 +35,7 @@ CREATE_OUT="$(pac admin create \
   --language "$ENV_LANGUAGE" \
   --domain "$NEW_NAME" 2>&1)"
 echo "$CREATE_OUT" | tail -6
-ORG_URL="$(printf '%s\n' "$CREATE_OUT" | grep -oE 'https://[a-z0-9-]+\.crm\.dynamics\.com/?' | head -1)"
+ORG_URL="$(printf '%s\n' "$CREATE_OUT" | grep -oE 'https://[a-z0-9-]+\.crm[0-9]*\.dynamics\.com/?' | head -1)"
 ENV_ID="$(printf '%s\n' "$CREATE_OUT" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)"
 [ -n "$ENV_ID" ] || die "could not parse Environment ID from create output"
 [ -n "$ORG_URL" ] || die "could not parse Org URL from create output"
