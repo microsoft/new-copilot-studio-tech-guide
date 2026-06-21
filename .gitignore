@@ -36,3 +36,4 @@ sample/store-solution/agents-cli/_*/
 
 # Skill build artifacts (zips are regenerated from SKILL.md + scripts)
 sample/archive/store-solution/skills/*/*.zip
+deploy/.deploy-state.env
