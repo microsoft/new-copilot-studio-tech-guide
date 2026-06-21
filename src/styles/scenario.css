@@ -54,3 +54,31 @@
 .tl-file svg { width: 15px; height: 15px; color: var(--c-orange); flex-shrink: 0; align-self: center; }
 .filecard strong { display: block; font-size: 0.9rem; color: var(--c-text); }
 .filecard span { font-size: 0.78rem; color: var(--c-text-muted); font-family: var(--font-mono); }
+
+/* Demo video block */
+.demo-video { margin: var(--space-2xl) 0 0; }
+.demo-video__player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1920 / 1022;
+  background: var(--c-bg-deep);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-console);
+}
+.demo-video__caption {
+  margin-top: var(--space-md);
+  font-size: 0.88rem;
+  color: var(--c-text-secondary);
+  line-height: 1.6;
+}
+.demo-video__label {
+  display: inline-block;
+  margin-right: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--c-purple);
+}
