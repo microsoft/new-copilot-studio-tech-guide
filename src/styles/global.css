@@ -45,6 +45,8 @@
   --c-orange: #FF8C00;
   --c-green: #16a34a;
   --c-red: #dc2626;
+  --c-teal: #0d9488;
+  --c-indigo: #4f46e5;
   --c-dark: #1b1b1b;
   --c-dark-soft: #292929;
   --c-on-primary: #ffffff;
@@ -126,6 +128,8 @@ html[data-theme="blastbox"] {
   --c-orange: #ff7a18;
   --c-green: #41f5a8;
   --c-red: #ff5470;
+  --c-teal: #1ce0c3;
+  --c-indigo: #7c83ff;
   --c-dark: #070512;
   --c-dark-soft: #15112b;
   --c-on-primary: #06121a;
