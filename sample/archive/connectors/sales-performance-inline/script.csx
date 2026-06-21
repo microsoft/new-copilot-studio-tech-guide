@@ -14,7 +14,7 @@ using Newtonsoft.Json.Linq;
 // ║                                                                            ║
 // ║  RAW, queryable retail data only — NO pre-baked analytics.                 ║
 // ║  The agent constructs its own queries and derives velocity, weeks-of-cover, ║
-// ║  and margin itself. Two tools: query_sales, get_catalog.                    ║
+// ║  and margin itself. Tools: query_sales, get_catalog, apply_markdown.        ║
 // ║  Based on Power MCP Template v2.1 by Troy Taylor.                          ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -33,7 +33,7 @@ public class Script : ScriptBase
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "Use query_sales(start_week, end_week, sku?, category?) to pull RAW weekly rows of units sold and revenue for a date window; weeks are week-ending dates from 2026-04-12 to 2026-05-31. Use get_catalog(category?, sku?) for price, unit_cost, and stock_on_hand. This server returns raw data only — construct your own queries and compute velocity (units/weeks), weeks-of-cover (stock/velocity), and margin ((price-cost)/price) yourself."
+        Instructions = "Use query_sales(start_week, end_week, sku?, category?) to pull RAW weekly rows of units sold and revenue for a date window; weeks are week-ending dates from 2026-04-12 to 2026-05-31. Use get_catalog(category?, sku?) for price, unit_cost, and stock_on_hand. This server returns raw data only — construct your own queries and compute velocity (units/weeks), weeks-of-cover (stock/velocity), and margin ((price-cost)/price) yourself. Once a markdown is decided and checked against policy, call apply_markdown(sku, new_price|discount_pct, markdown_type?, effective_date?) once per product to enact the price change and get a confirmation receipt."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -167,6 +167,93 @@ public class Script : ScriptBase
                     items.Add(JObject.Parse(item.ToString()));
                 }
                 return new JObject { ["count"] = items.Count, ["items"] = items };
+            });
+
+        // 3. apply_markdown
+        handler.AddTool("apply_markdown",
+            "Enact a price markdown for a single SKU. Call this once per product after the markdown has been decided and checked against policy. Provide either new_price or discount_pct (not both). Returns an applied-price confirmation receipt. Prices below unit_cost are rejected unless markdown_type is 'clearance' (clearance also requires prior manager approval).",
+            schemaConfig: s => s
+                .String("sku", "Required. The product SKU to mark down (e.g. 'SKU-VR-GOGGLES').", required: true)
+                .Number("new_price", "The new shelf price in dollars. Provide this OR discount_pct.")
+                .Number("discount_pct", "Percent off the current price as a whole number (e.g. 30 for 30%). Provide this OR new_price.")
+                .String("markdown_type", "'promo' (default) or 'clearance'. Clearance is required to price below unit cost and assumes manager approval was already granted.", enumValues: new[] { "promo", "clearance" })
+                .String("effective_date", "Optional date the new price takes effect (YYYY-MM-DD). Defaults to today."),
+            handler: async (args, ct) =>
+            {
+                var skuArg = (args.Value<string>("sku") ?? "").Trim();
+                if (skuArg.Length == 0)
+                    return new JObject { ["error"] = "sku is required." };
+
+                JToken item = null;
+                foreach (var it in Catalog)
+                {
+                    if (string.Equals(it["sku"]?.ToString() ?? "", skuArg, StringComparison.OrdinalIgnoreCase))
+                    {
+                        item = it;
+                        break;
+                    }
+                }
+                if (item == null)
+                    return new JObject { ["error"] = $"Unknown sku '{skuArg}'. Use get_catalog to list valid SKUs." };
+
+                var oldPrice = item["price"]?.Value<double>() ?? 0.0;
+                var cost = item["unit_cost"]?.Value<double>() ?? 0.0;
+
+                var hasNewPrice = args["new_price"] != null && args["new_price"].Type != JTokenType.Null;
+                var hasDiscount = args["discount_pct"] != null && args["discount_pct"].Type != JTokenType.Null;
+                if (hasNewPrice == hasDiscount)
+                    return new JObject { ["error"] = "Provide exactly one of new_price or discount_pct." };
+
+                double newPrice;
+                if (hasNewPrice)
+                {
+                    newPrice = args.Value<double>("new_price");
+                }
+                else
+                {
+                    var pct = args.Value<double>("discount_pct");
+                    if (pct < 0 || pct >= 100)
+                        return new JObject { ["error"] = "discount_pct must be between 0 and 100." };
+                    newPrice = oldPrice * (1.0 - pct / 100.0);
+                }
+
+                newPrice = Math.Round(newPrice, 2, MidpointRounding.AwayFromZero);
+                if (newPrice <= 0)
+                    return new JObject { ["error"] = "Resulting price must be greater than zero." };
+                if (newPrice >= oldPrice)
+                    return new JObject { ["error"] = "A markdown must lower the price below the current price." };
+
+                var markdownType = (args.Value<string>("markdown_type") ?? "promo").Trim().ToLowerInvariant();
+                if (markdownType != "promo" && markdownType != "clearance") markdownType = "promo";
+
+                if (newPrice < cost && markdownType != "clearance")
+                    return new JObject
+                    {
+                        ["error"] = $"Price {newPrice:0.00} is below unit cost {cost:0.00}. A below-cost markdown must be run as a clearance (markdown_type='clearance') with manager approval, not a promo."
+                    };
+
+                var effective = (args.Value<string>("effective_date") ?? "").Trim();
+                if (effective.Length == 0) effective = DateTime.UtcNow.ToString("yyyy-MM-dd");
+
+                var discountPctEffective = Math.Round((oldPrice - newPrice) / oldPrice * 100.0, 1, MidpointRounding.AwayFromZero);
+                var newMargin = newPrice > 0 ? Math.Round((newPrice - cost) / newPrice * 100.0, 1, MidpointRounding.AwayFromZero) : 0.0;
+                var skuSuffix = skuArg.Replace("SKU-", "").Replace("-", "");
+                var confirmationId = $"MKD-{skuSuffix}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+                return new JObject
+                {
+                    ["status"] = "applied",
+                    ["confirmation_id"] = confirmationId,
+                    ["sku"] = skuArg,
+                    ["name"] = item["name"],
+                    ["markdown_type"] = markdownType,
+                    ["old_price"] = oldPrice,
+                    ["new_price"] = newPrice,
+                    ["discount_pct"] = discountPctEffective,
+                    ["new_margin_pct"] = newMargin,
+                    ["effective_date"] = effective,
+                    ["message"] = $"Markdown applied to {item["name"]}: {oldPrice:0.00} -> {newPrice:0.00} ({discountPctEffective:0.#}% off), effective {effective}."
+                };
             });
     }
 

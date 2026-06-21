@@ -33,3 +33,6 @@ sample/store-solution/agents-cli/_*/
 
 # env backups
 *.env.bak.*
+
+# Skill build artifacts (zips are regenerated from SKILL.md + scripts)
+sample/archive/store-solution/skills/*/*.zip
