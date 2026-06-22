@@ -30,11 +30,16 @@ have, either interactively or with `--env-id` / `--env-url`.
 
 ## Usage
 
-Fully interactive (pick the pac auth profile, then filter and pick the env):
+Fully interactive (pick the pac auth profile, confirm the env, deploy):
 
 ```bash
 node deploy/deploy.mjs
 ```
+
+After you pick the profile, the script offers that profile's **connected env** (the
+one `pac org who` shows) as the default target — just confirm to deploy into it. Say
+no to instead filter the tenant's environments by a name/url substring and pick a
+different one.
 
 Non-interactive (or partly):
 
@@ -52,7 +57,7 @@ node deploy/deploy.mjs --start-at connectors      # import | connectors | connec
 | Flag | Meaning |
 | --- | --- |
 | `--profile <n>` | pac auth list index to use. Omit to choose interactively. |
-| `--env-id <guid>` / `--env-url <url>` | Target env. Omit to choose from a filtered list (the tenant can have thousands of envs, so you are prompted for a name/url substring first). |
+| `--env-id <guid>` / `--env-url <url>` | Target env. Omit and the script offers the profile's connected env as the default, or lets you filter the env list (the tenant can have thousands of envs, so you filter by a name/url substring first). |
 | `--start-at <step>` | Resume at `import`, `connectors`, `connections`, `publish` or `manual`. |
 | `--yes` | Do not pause for confirmations. |
 | `--dotnet-root <path>` | Set `DOTNET_ROOT` for the pac child processes. |

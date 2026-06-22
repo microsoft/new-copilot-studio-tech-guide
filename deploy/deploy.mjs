@@ -247,6 +247,23 @@ function pacTenantDomain() {
   const m = email.match(/@(\S+)$/);
   return m ? m[1].toLowerCase() : null;
 }
+// The active pac profile is already connected to an env; `pac org who` gives its BAP
+// EnvironmentId (same GUID `pac admin list` shows) and OrgUrl — exactly what we need.
+function getActiveEnv() {
+  const r = sh('pac', ['org', 'who', '--json']);
+  try {
+    const j = JSON.parse(r.stdout) || {};
+    if (j.EnvironmentId && j.OrgUrl) {
+      return {
+        id: j.EnvironmentId,
+        url: j.OrgUrl.endsWith('/') ? j.OrgUrl : j.OrgUrl + '/',
+        name: j.FriendlyName || '(profile env)',
+        type: '',
+      };
+    }
+  } catch { /* ignore */ }
+  return null;
+}
 function azDomains() {
   const r = sh('az', ['account', 'show', '--query', '{d:tenantDefaultDomain,u:user.name}', '-o', 'json']);
   if (r.code !== 0) return [];
@@ -287,6 +304,14 @@ async function selectEnv() {
     const url = await ask('Org URL (https://<org>.crm.dynamics.com/): ');
     return { id: id.trim(), url: url.trim().endsWith('/') ? url.trim() : url.trim() + '/', name: '(manual)' };
   };
+  // The picked pac profile is already connected to an env (pac org who). Offer it as
+  // the default target so the common case — deploy into the env you're signed in to —
+  // needs no filtering through thousands of envs. `--yes` accepts it automatically.
+  const active = getActiveEnv();
+  if (active && await confirm(`Deploy into the profile's connected env — ${active.name} [${active.type || '?'}] ${active.url} ?`)) {
+    ok(`Target env: ${active.name} ${active.url}`);
+    return active;
+  }
   log('Fetching environments for this profile...');
   const all = parsePacAdminList();
   if (!all.length) {
