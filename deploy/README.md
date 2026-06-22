@@ -22,9 +22,10 @@ have, either interactively or with `--env-id` / `--env-url`.
 - **pac CLI**, authenticated, with access to the target env. On this machine pac
   needs `DOTNET_ROOT` pointing at a .NET 10 runtime (`/Users/administrator/.dotnet`);
   set it in your environment or pass `--dotnet-root <path>`.
-- **az CLI**, logged into the **same tenant** as the target env
-  (`az login --tenant <tenant>`). az is used for the REST calls pac cannot make:
-  the BAP no-auth connection creation and the Dataverse import/connector/publish
+- **az CLI** installed. You do **not** need to log in first: the script reads the
+  tenant from the pac profile you pick and runs `az login --tenant <that tenant>` for
+  you if az isn't already signed in to it. az is used for the REST calls pac cannot
+  make: the BAP no-auth connection creation and the Dataverse import/connector/publish
   verification calls.
 
 ## Usage

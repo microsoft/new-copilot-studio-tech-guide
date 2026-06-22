@@ -12,9 +12,10 @@
 //   4. publishes the agents (children first),
 //   5. prints the one manual UI step (re-attach each agent's MCP server).
 //
-// Requirements: Node 18+, pac CLI (authenticated), az CLI (logged into the same
-// tenant as the target env). On this machine pac needs DOTNET_ROOT — set it in
-// the environment or pass --dotnet-root.
+// Requirements: Node 18+, pac CLI (authenticated). The script picks the az tenant
+// from the chosen pac profile and runs `az login` for you if az isn't already signed
+// in to it. On this machine pac needs DOTNET_ROOT — set it in the environment or pass
+// --dotnet-root.
 //
 // Usage:
 //   node deploy/deploy.mjs                       # fully interactive
@@ -82,6 +83,14 @@ function sh(cmd, args = [], opts = {}) {
   });
   const timedOut = r.error && (r.error.code === 'ETIMEDOUT' || r.signal === 'SIGKILL');
   return { code: r.status ?? 1, stdout: r.stdout || '', stderr: r.stderr || '', out: (r.stdout || '') + (r.stderr || ''), timedOut: !!timedOut };
+}
+
+// Run a command with the terminal attached (stdio inherited) — for interactive
+// flows like `az login` that open a browser / device-code prompt. Returns { code }.
+function shInteractive(cmd, args = []) {
+  const line = [cmd, ...args.map(quoteArg)].join(' ');
+  const r = spawnSync(line, { shell: true, stdio: 'inherit', env: childEnv });
+  return { code: r.status ?? 1 };
 }
 
 // Run a command asynchronously in its OWN process group so it (and any grandchildren
@@ -225,6 +234,47 @@ async function selectProfile() {
   if (sel.code !== 0) die(`pac auth select failed.\n${sel.out}`);
   ok(`Using pac profile [${chosen.index}] ${chosen.email}`);
   return chosen;
+}
+
+// The az tokens (Dataverse + BAP) must come from the SAME Entra tenant that owns
+// the target env, or the REST calls 401. pac doesn't expose the tenant GUID, but the
+// active profile's account domain IS a valid `az login --tenant` value, so we use it
+// (and skip the login if az is already signed in to that tenant's domain).
+function pacTenantDomain() {
+  const r = sh('pac', ['org', 'who', '--json']);
+  let email = '';
+  try { email = (JSON.parse(r.stdout) || {}).UserEmail || ''; } catch { /* ignore */ }
+  const m = email.match(/@(\S+)$/);
+  return m ? m[1].toLowerCase() : null;
+}
+function azDomains() {
+  const r = sh('az', ['account', 'show', '--query', '{d:tenantDefaultDomain,u:user.name}', '-o', 'json']);
+  if (r.code !== 0) return [];
+  try {
+    const j = JSON.parse(r.stdout) || {};
+    return [j.d, (j.u || '').split('@')[1]].filter(Boolean).map((s) => s.toLowerCase());
+  } catch { return []; }
+}
+async function ensureAz() {
+  const tenant = pacTenantDomain();
+  const cur = azDomains();
+  if (tenant && cur.includes(tenant)) {
+    ok(`az already signed in to the env tenant (${tenant}).`);
+    return;
+  }
+  if (!tenant && cur.length) {
+    warn(`could not resolve the env tenant from pac; using the current az session (${cur[0]}). If REST calls 401, run: az login --tenant <tenant>`);
+    return;
+  }
+  if (tenant && cur.length) warn(`az is signed in to a different tenant (${cur[0]}); the env needs ${tenant}. Signing you in to the right one...`);
+  else log(`az is not signed in${tenant ? ` to ${tenant}` : ''}. Launching az login...`);
+  const args = ['login'];
+  if (tenant) args.push('--tenant', tenant);
+  args.push('--allow-no-subscriptions');
+  if (shInteractive('az', args).code !== 0) die('az login failed. Log in manually then re-run: az login --tenant <tenant>');
+  tokenCache.clear();
+  const after = azDomains();
+  ok(`az signed in${after.length ? ` (${after[0]})` : ''}.`);
 }
 
 async function selectEnv() {
@@ -439,11 +489,11 @@ async function main() {
   if (!STEPS.includes(OPT.startAt)) die(`--start-at must be one of: ${STEPS.join(', ')}`);
   log('BlastBox Omega deploy (cross-OS). This deploys into an EXISTING environment.');
 
-  // preflight: pac + az runnable
+  // preflight: pac runnable (az is handled after profile select, see ensureAz)
   if (sh('pac', ['auth', 'list']).code !== 0) die('pac is not runnable. Install pac and set DOTNET_ROOT.');
-  if (sh('az', ['account', 'show']).code !== 0) warn('az account show failed — you may need: az login --tenant <tenant>');
 
   await selectProfile();
+  await ensureAz();
   const env = await selectEnv();
 
   // verify we can mint a Dataverse token for this env (right az tenant)
