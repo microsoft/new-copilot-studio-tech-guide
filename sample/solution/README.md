@@ -64,21 +64,25 @@ solution** → upload `BlastBoxDemo_1_0_0_4.zip` → **Next** → **Import**.
 
 The four MCP connectors are *inline custom-code* connectors. Importing the solution
 **registers** them but does **not** compile/deploy their code, so their tools will not
-load yet. Deploy the code for each connector (this is the step the scripted `deploy/`
-pipeline automates via `pac connector update`):
+load yet. Deploy the code for each connector from the files bundled in this repo under
+`connectors/<slug>/` (this is the step the scripted `deploy/` pipeline automates via
+`pac connector update`):
 
 ```bash
-pac connector download --connector-id <id> --environment <SOURCE_URL> --outputDirectory ./c
-pac connector update   --connector-id <id> --environment <TARGET_URL> \
-  --api-definition-file ./c/apiDefinition.json \
-  --api-properties-file ./c/apiProperties.json \
-  --script-file ./c/script.csx
+# slugs: membership-mcp-v2, order-management-mcp, policy-rag-mcp-v2, warehouse-mcp
+pac connector update --connector-id <id> --environment <TARGET_URL> \
+  --api-definition-file ./connectors/<slug>/apiDefinition.json \
+  --api-properties-file ./connectors/<slug>/apiProperties.json \
+  --script-file ./connectors/<slug>/script.csx
 ```
 
-> `pac connector update` can report "succesfully" without actually deploying — verify the
-> connector's `modifiedon` advanced past its `createdon`, and re-run if it didn't. Allow
-> ~30–60 seconds for APIM propagation. **Until the code is deployed, MCP tools will not
-> load** and agents report "we couldn't find the resource you requested."
+> Let `pac connector update` run to **completion** — it binds the custom-code execution
+> *after* writing the code; if you interrupt it, the connector deploys but its tools
+> return an empty `[{"jsonrpc":"2.0"}]` response. It can also report "succesfully"
+> without deploying, so verify the connector's `modifiedon` advanced past its `createdon`
+> and re-run if it didn't. Allow ~30–60 seconds for APIM propagation. **Until the code is
+> deployed, MCP tools will not load** and agents report "we couldn't find the resource
+> you requested."
 
 ### 3. Create the MCP connections
 
