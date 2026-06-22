@@ -1,0 +1,69 @@
+{
+  "solutionName": "BlastBoxDeploy",
+  "solutionZip": "sample/solution/BlastBoxDemo_1_0_0_4.zip",
+  "connectorsDir": "sample/solution/connectors",
+  "apimPropagationSeconds": 90,
+  "import": {
+    "maxAttempts": 6,
+    "backoffSeconds": 120,
+    "pollMinutes": 25
+  },
+  "connectors": [
+    {
+      "slug": "membership-mcp-v2",
+      "displayName": "Membership MCP v2",
+      "connectorId": "5d6180ed-0d6f-418c-8ccb-1360b7c33f88"
+    },
+    {
+      "slug": "order-management-mcp",
+      "displayName": "Order Management MCP",
+      "connectorId": "e4e7e713-5c3f-f111-bec6-70a8a59a4421"
+    },
+    {
+      "slug": "policy-rag-mcp-v2",
+      "displayName": "Policy RAG MCP v2",
+      "connectorId": "32399478-9062-f111-ab0b-0022480a52c7"
+    },
+    {
+      "slug": "warehouse-mcp",
+      "displayName": "Warehouse MCP",
+      "connectorId": "357a348b-d53f-f111-bec6-70a8a59a4421"
+    }
+  ],
+  "agents": [
+    {
+      "schemaName": "Default_StorePolicyAgent_s9s-u8",
+      "displayName": "Store Policy Agent",
+      "role": "child",
+      "mcp": [
+        "Policy RAG MCP v2"
+      ]
+    },
+    {
+      "schemaName": "Default_InventoryFullfilmentAgent_X-w2GP",
+      "displayName": "Inventory & Fulfillment Agent",
+      "role": "child",
+      "mcp": [
+        "Warehouse MCP"
+      ]
+    },
+    {
+      "schemaName": "Default_draft_IsBewO",
+      "displayName": "Returns & Service Assistant",
+      "role": "parent",
+      "mcp": [
+        "Membership MCP v2"
+      ]
+    },
+    {
+      "schemaName": "cr26e_storeassociateassistant_ZQHUx1",
+      "displayName": "Store Associate Assistant",
+      "role": "parent",
+      "mcp": [
+        "Order Management MCP",
+        "Membership MCP v2"
+      ]
+    }
+  ],
+  "connectorUpdateTimeoutMinutes": 15
+}
