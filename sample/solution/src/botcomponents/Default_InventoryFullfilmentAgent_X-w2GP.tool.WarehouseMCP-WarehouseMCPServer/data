@@ -1,5 +1,0 @@
-kind: McpTool
-authMode: Invoker
-connectionReference: Default_InventoryFullfilmentAgent_X-w2GP.cr.shared_new-5fwarehou.8203ff0026f84b6f9948e6fc6999903b
-connectorId: /providers/Microsoft.PowerApps/apis/shared_new-5fwarehouse-20mcp-5fee08b8354fad177a
-operationId: InvokeMCP

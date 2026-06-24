@@ -1,184 +1,237 @@
 # BlastBox Omega — repeatable deploy (`deploy/`)
 
-One cross-platform Node script (`deploy.mjs`) that deploys the BlastBox solution
-into an **existing** Power Platform environment. It imports the solution, deploys
-each MCP connector's inline custom code, creates the no-auth MCP connections,
-publishes the agents, and prints the one manual UI step that remains.
+One cross-platform Node script (`deploy.mjs`) that stands up the BlastBox demo in
+an **existing** Power Platform environment. It imports the two solutions, deploys
+each MCP connector's inline custom code, publishes all customizations, creates the
+no-auth MCP connections, publishes the agents, and prints the single manual UI
+step that has no API.
 
-It does **not** create or delete environments. You point it at an env you already
-have, either interactively or with `--env-id` / `--env-url`.
+Run it from a fresh clone — everything it needs (both solution zips and all
+connector code) is in the repo. It does **not** create or delete environments; you
+point it at an env you already have.
+
+```bash
+node deploy/deploy.mjs            # guided: pick profile, pick env, deploy
+node deploy/deploy.mjs --help     # all options
+```
+
+The script is cross-OS (Windows, macOS, Linux): it shells out with argument
+arrays (no shell string interpolation), resolves paths with `node:path`, and reads
+`DOTNET_ROOT` from `$DOTNET_ROOT` or `~/.dotnet`.
 
 > ⚠️ **Use at your own peril.** This automates against live Power Platform,
 > Dataverse and BAP APIs (including undocumented BAP endpoints). Read the script
 > before running it.
 >
-> The env-lifecycle helpers we use for our own testing (`steps/10_env.sh` to mint,
-> `steps/99_teardown.sh` to delete) are **not committed** and are gitignored. We do
-> not ship scripts that create or delete environments.
+> The env-lifecycle helpers we use for our own testing (mint / teardown) are
+> **not committed** and are gitignored. We do not ship scripts that create or
+> delete environments.
 
-## Requirements
-
-- **Node 18+** (uses global `fetch` and `node:crypto`). No npm install needed.
-- **pac CLI**, authenticated, with access to the target env. On this machine pac
-  needs `DOTNET_ROOT` pointing at a .NET 10 runtime (`/Users/administrator/.dotnet`);
-  set it in your environment or pass `--dotnet-root <path>`.
-- **az CLI** installed. You do **not** need to log in first: the script reads the
-  tenant from the pac profile you pick and runs `az login --tenant <that tenant>` for
-  you if az isn't already signed in to it. az is used for the REST calls pac cannot
-  make: the BAP no-auth connection creation and the Dataverse import/connector/publish
-  verification calls.
-
-## Usage
-
-Fully interactive (pick the pac auth profile, confirm the env, deploy):
+## TL;DR — the happy path
 
 ```bash
+# 1. Make sure pac is signed in to the target tenant:
+pac auth create            # (once) then verify with: pac auth list
+
+# 2. Deploy (guided — it lists your profiles and envs):
 node deploy/deploy.mjs
+
+# 3. Do the one manual UI step it prints at the end (re-attach each agent's
+#    MCP server in Copilot Studio — ~2 min, instructions below).
+
+# 4. Open either agent's Preview and run a scenario. Done.
 ```
 
-After you pick the profile, the script offers that profile's **connected env** (the
-one `pac org who` shows) as the default target — just confirm to deploy into it. Say
-no to instead filter the tenant's environments by a name/url substring and pick a
-different one.
-
-Non-interactive (or partly):
+Unattended into a known env:
 
 ```bash
 node deploy/deploy.mjs \
-  --profile 1 \
   --env-id <env-guid> \
   --env-url https://<org>.crm.dynamics.com/ \
   --yes
-
-# resume from a step:
-node deploy/deploy.mjs --start-at connectors      # import | connectors | connections | publish | manual
 ```
+
+## Requirements
+
+- **Node 18+** (uses global `fetch` and `node:crypto`). No `npm install` needed.
+- **pac CLI**, authenticated, with access to the target env. pac needs
+  `DOTNET_ROOT` pointing at a .NET runtime; the script defaults to `$DOTNET_ROOT`
+  or `~/.dotnet`, or pass `--dotnet-root <path>`.
+- **az CLI** installed. You do **not** need to log in first: the script reads the
+  tenant from the pac profile you pick and runs `az login --tenant <that tenant>`
+  for you if az isn't already signed in to it. az is used for the REST calls pac
+  cannot make (BAP no-auth connection creation, and the Dataverse import /
+  connector / publish verification calls).
+
+## Options
 
 | Flag | Meaning |
 | --- | --- |
+| `--env-id <guid>` / `--env-url <url>` | Target env. Omit and the script offers the profile's connected env as the default, or lets you filter the (often huge) env list by a name/url substring. |
 | `--profile <n>` | pac auth list index to use. Omit to choose interactively. |
-| `--env-id <guid>` / `--env-url <url>` | Target env. Omit and the script offers the profile's connected env as the default, or lets you filter the env list (the tenant can have thousands of envs, so you filter by a name/url substring first). |
 | `--start-at <step>` | Resume at `import`, `connectors`, `connections`, `publish` or `manual`. |
-| `--yes` | Do not pause for confirmations. |
+| `--yes` | Do not pause for confirmations (non-interactive / CI). |
 | `--dotnet-root <path>` | Set `DOTNET_ROOT` for the pac child processes. |
+| `-h`, `--help` | Print usage and exit. |
+
+Every step is idempotent and re-runnable, so if a run dies partway you can re-run
+the whole thing or jump back in with `--start-at`.
 
 ## What the script does
 
-1. **Import** `sample/solution/BlastBoxDemo_*.zip` (`pac solution import`). The
-   custom-code compile routinely exceeds pac's 30-minute client timeout while the
-   server job keeps running, so success is verified **server-side** (polling
-   Dataverse for the solution), with retry/backoff for the function-app capacity
-   error.
-2. **Connectors:** deploy each MCP connector's inline `.csx` from the files bundled
-   in `sample/solution/connectors/<slug>/`. Import registers the connectors but does
-   not compile their code, so each is `pac connector update`-d and verified by
-   watching its Dataverse `modifiedon` advance. `pac connector update` can hang for
-   30+ minutes on these connectors even when the server compile succeeds, so it runs
-   in its own process group with a deadline and the step resolves the moment
-   `modifiedon` advances (it never blocks on a hung pac).
-3. **Connections:** create one no-auth connection per connector via the BAP REST API
-   (idempotent: an existing Connected connection is reused). No binding is needed,
-   `authMode: Maker` resolves any Connected connection.
-4. **Publish:** `PvaPublish` the 4 bots, children before parents.
+The demo ships as **two solutions** that import in order:
+
+| # | Solution (zip) | Imports as unique name | Carries |
+| --- | --- | --- | --- |
+| 1 | `BlastBoxConnectors_1_0_0_1.zip` | `BlastBoxConnectors` | the 4 custom MCP connectors |
+| 2 | `BlastBoxAgents_1_0_0_1.zip` | `BlastBoxDeploy` | the 4 agents + their Python skills |
+
+Both zips are committed under `sample/solution/`, and each is also **unpacked**
+into `sample/solution/src/<UniqueName>/` so the solution contents are reviewable
+and diffable in git.
+
+Run steps:
+
+1. **Import** both solutions in order (`pac solution import`), connectors first so
+   the agents' tools resolve against connectors that already exist. The custom-code
+   compile routinely exceeds pac's 30-minute client timeout while the **server**
+   job keeps running, so success is verified server-side (polling Dataverse), and
+   each import is allowed to fully **settle** (polling `importjobs` for
+   `completedon`) before the next one starts — otherwise the second import is
+   rejected with "a previous Import is still running". Retries with backoff handle
+   the EU function-app capacity error.
+2. **Connectors:** deploy each MCP connector's inline `.csx` from the bundled files
+   in `sample/solution/connectors/<slug>/` (import registers the connectors but does
+   **not** compile their code). Each is `pac connector update`-d and verified by
+   watching its Dataverse `modifiedon` advance. Then **Publish All Customizations**
+   (Dataverse `PublishAllXml`) — this is the step that makes the custom MCP
+   connectors appear in the modern "Add a tool, Model Context Protocol" picker.
+   Finally a **settle pass** re-deploys + republishes the connector(s) flagged
+   `settlePass: true` in the manifest (only the large Warehouse connector, whose
+   runtime code binding can go stale after the first deploy).
+3. **Connections:** create one no-auth connection per connector via the BAP REST
+   API (idempotent — an existing Connected connection is reused). No guid binding is
+   needed; `authMode: Maker` resolves any Connected connection for that connector.
+4. **Publish:** `PvaPublish` the 4 agents, children before parents.
 5. **Manual step:** print the one UI action that has no supported API (below).
 
-All connector code ships **in the repo** (`sample/solution/connectors/`), so the
-script works from a fresh clone with no source environment.
+`pac connector update` can hang for 30+ minutes on these connectors even when the
+server compile succeeds, so it runs in its own process group with a deadline and
+the step resolves the moment `modifiedon` advances — it never blocks on a hung pac.
 
-## Manual post-install step (required)
+## Manual post-install step (required, ~2 min)
 
 Everything above is automated. The one thing the script cannot do (there is no
-supported API for it) is finalise each agent's MCP tool wiring, which the modern
-Copilot Studio authoring canvas only does when a maker re-attaches the MCP server in
-the UI. The connections already exist and the tool definitions are present; this
-re-attach is what makes the published agents surface the tools at runtime.
+supported API for it) is finalise each agent's MCP tool wiring. New-UI MCP
+connection references don't survive solution export cleanly, so the sanitized
+agents solution ships **without** the MCP tools, and the modern Copilot Studio
+canvas only re-creates a working tool binding when a maker re-attaches the MCP
+server in the UI. The connectors and Connected connections already exist, so this
+is just a few clicks per agent.
 
 `deploy.mjs` prints these instructions at the end of every run (or run
 `node deploy/deploy.mjs --start-at manual ...` to re-print).
 
 1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
-2. For **each** agent below: open it, go to **Tools**, **remove** the listed MCP
-   server, then **Add a tool, Model Context Protocol**, pick the connector and select
-   the **existing Connected connection** (do not create a new one), **Save**, then
-   **Publish**.
+2. For **each** agent below: open it, go to **Tools, Add a tool, Model Context
+   Protocol (MCP)**, search the connector by name, pick **`<Name> Server`**, select
+   the **existing Connected connection** (the picker pre-selects it — do not create a
+   new one), **Add**, then **Save and publish**.
 
-   | Agent | MCP server(s) to remove + re-add |
+   | Agent | MCP server(s) to add |
    | --- | --- |
    | Store Policy Agent | Policy RAG MCP v2 |
    | Inventory & Fulfillment Agent | Warehouse MCP |
    | Returns & Service Assistant | Membership MCP v2 |
-   | Store Associate Assistant | Order Management MCP, Membership MCP v2 |
+   | Store Associate Assistant | Order Management MCP **and** Membership MCP v2 |
 
-After re-attaching, the tools load and both packaged scenarios (Block Party Trade-Up
-and Self-Serve Card Reissue) work end to end.
+After re-attaching (5 attachments total), the tools load and both packaged
+scenarios work end to end.
 
-## Skills (upload manually if they are not working)
+## Verify (end-to-end test)
 
-The agents use bundled Python skills. Solution import carries the skill definitions,
-but it does not always register the compiled skill bundle in the target env, so a
-skill can land looking present yet fail to run. If a skill is not working in the
-deployed env, re-upload it through the portal: open the agent, go to **Skills**,
-**Add a skill**, and upload the matching zip from `sample/solution/skills/`. The
-portal compiles and registers the bundle fresh, which fixes the broken reference.
-Then **Publish** the agent.
+Both scenarios have been validated on a fresh env after a clean scripted run, with
+every MCP tool and every Python skill firing live (visible in the agent's activity
+map):
 
-| Agent | Skill | Artifact in `sample/solution/skills/` |
-| --- | --- | --- |
-| Store Associate Assistant | prorated-refund-calculator | `prorated-refund-calculator.zip` |
-| Store Associate Assistant | points-reconciliation | `points-reconciliation.zip` |
-| Store Associate Assistant | slip-pdf-generator | `slip-pdf-generator.zip` |
-| Returns & Service Assistant | membership-card-png | `membership-card-png.zip` |
-| Returns & Service Assistant | card-reissue | `card-reissue.md` (inline, paste the markdown) |
+- **Block Party Trade-Up** — open **Store Associate Assistant, Preview** and paste
+  the 4 turns from
+  `sample/archive/store-solution/evals/flagship-block-party-trade-up-runbook.md`.
+  Expect: `$76.66` / `$100.00` / `$23.34`, the three MEGA exclusives, and a
+  generated PDF slip. Tools that fire: Store Policy Agent, `get_membership`,
+  Inventory & Fulfillment, `get_console_exclusives`, `cancel_membership`,
+  `search_orders`, `get_order`, `request_return`. Skills: `prorated-refund-calculator`,
+  `points-reconciliation`, `slip-pdf-generator`.
+- **Self-Serve Card Reissue** — open **Returns & Service Assistant, Preview** and
+  paste the 3 turns from
+  `sample/archive/store-solution/evals/self-serve-card-reissue.md`. Expect identity
+  verification, the old card deactivated, a new card serial, and a generated PNG
+  card. Tools: `get_membership`, `reissue_card`. Skills: `card-reissue`,
+  `membership-card-png`.
 
-Each `.zip` is a flat archive of the skill's `SKILL.md` plus its bundled Python
-script, the exact format the **Add a skill** uploader expects. `card-reissue` is an
-inline skill with no Python, so it ships as a single `SKILL.md` you paste in rather
-than a zip you upload.
+The Python skills ride in on the agents solution and register on `PublishAllXml`;
+no manual skill upload is needed. (If a skill ever lands present-but-broken in some
+env, re-upload its zip from `sample/solution/skills/` via the agent's **Add a
+skill** dialog and republish — the portal recompiles the bundle.)
 
 ## Configuration
 
-`deploy/manifest.json` holds the declarative metadata: solution name and zip,
-connectors directory, import retry/timeout settings, and the connector and agent
-tables (slug, display name, connector id, agent schema name, role, MCP server). Edit
-it if the solution contents change. The connector files themselves live under
-`sample/solution/connectors/<slug>/` (`apiDefinition.json`, `apiProperties.json`,
-`script.csx`).
+`deploy/manifest.json` holds the declarative metadata:
 
-## Architecture decision: connectors stay IN the solution
+- `solutions` — the two zips to import, in order, with their target unique names.
+- `connectors` — slug, display name, connector id, and `settlePass` flag per MCP
+  connector. The connector files live under `sample/solution/connectors/<slug>/`
+  (`apiDefinition.json`, `apiProperties.json`, `script.csx`).
+- `agents` — schema name, display name, role (child/parent), and the MCP server(s)
+  each agent re-attaches in the manual step.
+- `import` retry/timeout and `apimPropagationSeconds` tuning.
 
-We keep the 4 connectors inside the solution (rather than an agents-only solution
-plus `pac connector create`) because solution import **preserves each connector's
-identity** (the connectorid / apiName the agents' tools reference). `pac connector
-create` would mint **new** connector identities, leaving the imported agents' tools
-pointing at connectors that don't exist and forcing manual UI re-wiring. With
-connectors in the solution, the only thing import misses is compiling the inline
-code, which the connectors step fixes by deploying the bundled `.csx`.
+Edit it if the solution contents change.
+
+## Why two solutions?
+
+The connectors and the agents have different lifecycles and the MCP connection
+references don't export cleanly from the new authoring UI (they're born in the CDS
+Default Solution and export with no edges). Splitting them keeps the connectors —
+whose identity the agents' tools reference — in their own stable solution, while
+the agents solution is sanitized to strip the un-exportable MCP tools. The cost is
+the one manual re-attach step above, which recreates a fresh, working tool binding
+against the connection that already exists. This is the only flow validated end to
+end.
 
 ## Findings (the "deployment process" problems, resolved)
 
 1. **Import exceeds pac's 30-minute client timeout.** Compiling the inline MCP
    connectors routinely trips `The request channel timed out ... 00:30:00`, even
-   though the **server-side** import job keeps running and completes. The import step
-   polls Dataverse for the solution and treats its presence as success instead of
-   trusting pac's exit code. (Also: the US custom-code function-app pool can be
-   capacity-exhausted, `Unable to find an unassigned function app in 'East US'`, so we
-   deploy to **EU**.)
+   though the server-side import job keeps running and completes. The import step
+   polls Dataverse and treats the solution's presence as success instead of trusting
+   pac's exit code. (Also: the US custom-code function-app pool can be
+   capacity-exhausted, `Unable to find an unassigned function app in 'East US'`, so
+   we deploy to **EU**.)
 
-2. **Import does not deploy the connectors' inline code.** Solution import registers
+2. **Back-to-back imports collide.** Importing the second solution while the first
+   is still finalising async fails with "Cannot start another Import because there is
+   a previous Import running". Fix: poll `importjobs` until the first import reports
+   `completedon` before starting the next.
+
+3. **Import does not deploy the connectors' inline code.** Solution import registers
    each custom-code connector but does not compile/deploy its `.csx`; the connector's
-   `modifiedon` stays equal to `createdon` and tools fail to load. Fix: `pac connector
-   update` per connector from the bundled files, verifying `modifiedon` advanced.
-   `pac connector update` can also report "succesfully" without deploying, or hang for
-   30+ minutes, so the step verifies via `modifiedon` and uses a deadline plus retry.
+   `modifiedon` stays equal to `createdon` and tools fail to load. Fix:
+   `pac connector update` per connector from the bundled files, verifying `modifiedon`
+   advanced, with a deadline + retry (pac can report "succesfully" without deploying,
+   or hang).
 
-3. **Tool binding needs no UI binding and no guid-matching.** With `authMode: Maker`,
-   the runtime resolves any Connected maker connection for the tool's connector.
-   Connections whose ids don't match the guids baked into the tool data still load
-   tools, so the connections step just creates one no-auth connection per connector.
-   The agents' `connectorId` keeps the source-env hash and still resolves.
+4. **Connectors don't appear in the modern MCP picker until you publish.** After
+   `pac connector update` you **must** run Dataverse `PublishAllXml`, otherwise the
+   custom-code MCP connectors never surface in "Add a tool, Model Context Protocol".
+   This single missing step was the original blocker; it's now step 2.
 
-4. **Store Policy's tool was authored in the legacy format.** It shipped as
-   `kind: TaskDialog` / `InvokeExternalAgentTaskAction`, which the modern Copilot
-   Studio UI does not render as an MCP tool (the other three are `kind: McpTool`).
-   Fixed at the source agent (now `kind: McpTool`), so the solution export carries the
-   fix.
+5. **The big Warehouse connector can bind stale code.** After its first deploy the
+   7-tool Warehouse connector showed in the picker but 500'd at runtime. A second
+   deploy + publish (the manifest `settlePass`) re-binds the active revision. Only
+   Warehouse is flagged, to keep deploys fast.
+
+6. **Tool binding needs no UI binding and no guid-matching.** With `authMode: Maker`
+   the runtime resolves any Connected maker connection for the tool's connector, so
+   the connections step just creates one no-auth connection per connector and the
+   agents' source-env `connectorId` hashes still resolve.

@@ -1,6 +1,16 @@
 {
-  "solutionName": "BlastBoxDeploy",
-  "solutionZip": "sample/solution/BlastBoxDeploy_1_0_0_5.zip",
+  "solutions": [
+    {
+      "name": "BlastBoxConnectors",
+      "zip": "sample/solution/BlastBoxConnectors_1_0_0_1.zip",
+      "kind": "connectors"
+    },
+    {
+      "name": "BlastBoxDeploy",
+      "zip": "sample/solution/BlastBoxAgents_1_0_0_1.zip",
+      "kind": "agents"
+    }
+  ],
   "connectorsDir": "sample/solution/connectors",
   "apimPropagationSeconds": 90,
   "import": {
@@ -27,7 +37,8 @@
     {
       "slug": "warehouse-mcp",
       "displayName": "Warehouse MCP",
-      "connectorId": "357a348b-d53f-f111-bec6-70a8a59a4421"
+      "connectorId": "357a348b-d53f-f111-bec6-70a8a59a4421",
+      "settlePass": true
     }
   ],
   "agents": [

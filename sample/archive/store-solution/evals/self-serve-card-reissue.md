@@ -16,7 +16,7 @@
 
 | Component | Kind | Role in this run |
 | --- | --- | --- |
-| **BlastPass Concierge** | Parent agent | Talks directly to the signed-in member; owns the Membership MCP + the card skill. |
+| **Returns & Service Assistant** | Parent agent | Talks directly to the signed-in member; owns the Membership MCP + the card skill. |
 | **Membership MCP** | Parent tool | `get_membership` (look up + verify), `reissue_card` (deactivate old card, mint new one). |
 | **membership-card-png** | Skill (runtime Python) | Renders the new digital card to a **PNG** via matplotlib. |
 | **File generation** | Output | A digital BlastPass membership card (`blastpass_card.png`) the member can save immediately. |
@@ -35,11 +35,11 @@ console serial `OMEGA-7F3A-1024`, card on file `BLAST-7F3A-1024`, activated
 
 ### ⚙️ Orchestration (what the agent did)
 
-1. **BlastPass Concierge** (reasoning): *"They want a replacement card. I don't have
+1. **Returns & Service Assistant** (reasoning): *"They want a replacement card. I don't have
    a membership ID yet, and I can't look anything up — or verify anyone — without
    it. I'll ask for it first; nothing changes until I have it."*
 
-### 🤖 BlastPass Concierge
+### 🤖 Returns & Service Assistant
 
 > Oh no — let's get you a new one. 💜 No problem at all.
 >
@@ -62,12 +62,12 @@ console serial `OMEGA-7F3A-1024`, card on file `BLAST-7F3A-1024`, activated
 
 1. → **`get_membership`** (Membership MCP) — record for `MEGA-BLAST-1024`
    (Jordan Pixel, Plus Extra, console `OMEGA-7F3A-1024`).
-2. **BlastPass Concierge** (reasoning): *"Before I deactivate a card and issue a new
+2. **Returns & Service Assistant** (reasoning): *"Before I deactivate a card and issue a new
    one, I should confirm this is really the account holder. I'll verify with **two
    factors the real owner has** — their **name** and the **last 4 of the console
    serial** — and I won't reveal either; the member has to tell me both."*
 
-### 🤖 BlastPass Concierge
+### 🤖 Returns & Service Assistant
 
 > Got it — I found a **BlastPass Plus Extra** membership under that ID. 💜
 >
@@ -94,7 +94,7 @@ console serial `OMEGA-7F3A-1024`, card on file `BLAST-7F3A-1024`, activated
 
 ### ⚙️ Orchestration (what the agent did)
 
-1. **BlastPass Concierge** (reasoning): *"Name **Jordan Pixel** matches the record,
+1. **Returns & Service Assistant** (reasoning): *"Name **Jordan Pixel** matches the record,
    and `OMEGA-7F3A-1024` ends in `1024` — both factors match. Identity confirmed.
    Now I can safely reissue the card."*
 2. → **`reissue_card("MEGA-BLAST-1024", reason: "lost")`** (Membership MCP) —
@@ -108,7 +108,7 @@ console serial `OMEGA-7F3A-1024`, card on file `BLAST-7F3A-1024`, activated
    dates, a decorative barcode keyed to the new serial, and the tier perks line.
    Writes `blastpass_card.png`.
 
-### 🤖 BlastPass Concierge
+### 🤖 Returns & Service Assistant
 
 > Thanks, Jordan — you're verified. ✅ Here's everything in one go:
 >

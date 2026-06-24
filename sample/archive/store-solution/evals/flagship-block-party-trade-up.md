@@ -232,8 +232,8 @@
   illustrative. Headline numbers ($76.66 / $100.00 / **$23.34**; **21,400 pts → $105.00**)
   are reproduced by the bundled scripts `blastpass_refund.py` and
   `points_reconciliation.py`.
-- This is the **associate-facing** agent (separate from the self-serve BlastPass
-  Concierge). It reuses the backed-up associate skills/connected agents in
+- This is the **associate-facing** agent (separate from the self-serve card-reissue
+  scenario on the Returns & Service Assistant). It reuses the backed-up associate skills/connected agents in
   `agents-cli/_associate-skill-library/` plus the new `get_console_exclusives` tool.
 - Build order: (1) add `get_console_exclusives` to the Warehouse MCP, (2) attach the three
   Python skills to the parent, (3) wire the two connected agents with their MCPs, (4) run
