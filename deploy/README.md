@@ -112,6 +112,29 @@ re-attach is what makes the published agents surface the tools at runtime.
 After re-attaching, the tools load and both packaged scenarios (Block Party Trade-Up
 and Self-Serve Card Reissue) work end to end.
 
+## Skills (upload manually if they are not working)
+
+The agents use bundled Python skills. Solution import carries the skill definitions,
+but it does not always register the compiled skill bundle in the target env, so a
+skill can land looking present yet fail to run. If a skill is not working in the
+deployed env, re-upload it through the portal: open the agent, go to **Skills**,
+**Add a skill**, and upload the matching zip from `sample/solution/skills/`. The
+portal compiles and registers the bundle fresh, which fixes the broken reference.
+Then **Publish** the agent.
+
+| Agent | Skill | Artifact in `sample/solution/skills/` |
+| --- | --- | --- |
+| Store Associate Assistant | prorated-refund-calculator | `prorated-refund-calculator.zip` |
+| Store Associate Assistant | points-reconciliation | `points-reconciliation.zip` |
+| Store Associate Assistant | slip-pdf-generator | `slip-pdf-generator.zip` |
+| Returns & Service Assistant | membership-card-png | `membership-card-png.zip` |
+| Returns & Service Assistant | card-reissue | `card-reissue.md` (inline, paste the markdown) |
+
+Each `.zip` is a flat archive of the skill's `SKILL.md` plus its bundled Python
+script, the exact format the **Add a skill** uploader expects. `card-reissue` is an
+inline skill with no Python, so it ships as a single `SKILL.md` you paste in rather
+than a zip you upload.
+
 ## Configuration
 
 `deploy/manifest.json` holds the declarative metadata: solution name and zip,
