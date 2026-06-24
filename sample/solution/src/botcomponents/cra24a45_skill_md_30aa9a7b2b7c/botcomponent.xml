@@ -1,0 +1,14 @@
+<botcomponent schemaname="cra24a45_skill_md_30aa9a7b2b7c">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">SKILL.md</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>SKILL.md</name>
+  <parentbotcomponentid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1.skill.prorated-refund-calculator_KZe</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

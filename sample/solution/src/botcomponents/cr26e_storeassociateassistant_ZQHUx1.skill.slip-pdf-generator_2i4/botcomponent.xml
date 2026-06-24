@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.skill.slip-pdf-generator_2i4">
+  <componenttype>9</componenttype>
+  <description>Generate a printable BlastBox return / RMA / exchange slip as a PDF for the associate to hand to the customer. Use at the end of a return, warranty swap, membership cancellation, or upgrade once all amounts are final. The skill runs a bundled Python script that renders the confirmed slip values into a real PDF file.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>slip-pdf-generator</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,4 +1,4 @@
-<botcomponent schemaname="Default_draft_IsBewO.tool.MembershipMCPv2-MembershipMCPv2Server">
+<botcomponent schemaname="Default_draft_IsBewO.tool.MembershipMCPv2-MembershipMCPv2Server_u4P">
   <componenttype>9</componenttype>
   <description>MCP server for BlastPass memberships. Tools: get_membership, cancel_membership, reissue_card.</description>
   <iscustomizable>0</iscustomizable>

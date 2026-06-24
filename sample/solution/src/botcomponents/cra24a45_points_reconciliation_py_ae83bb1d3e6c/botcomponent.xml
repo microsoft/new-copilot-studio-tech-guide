@@ -1,0 +1,14 @@
+<botcomponent schemaname="cra24a45_points_reconciliation_py_ae83bb1d3e6c">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">points_reconciliation.py</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>points_reconciliation.py</name>
+  <parentbotcomponentid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1.skill.points-reconciliation__iK</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,0 +1,17 @@
+<botcomponent_connectionreferenceset>
+  <botcomponent_connectionreference botcomponentid.schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.MembershipMCPv2-MembershipMCPv2Server_Zkq" connectionreferenceid.connectionreferencelogicalname="cr26e_storeassociateassistant_ZQHUx1.cr.shared_membership-20.cd48113e28c44025952903ba1e42cd0b">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+  <botcomponent_connectionreference botcomponentid.schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.OrderManagementMCP-OrderManagementMCPServer_cG4" connectionreferenceid.connectionreferencelogicalname="cr26e_storeassociateassistant_ZQHUx1.cr.shared_new-5forder-2.cb2adaae92bc4036b3f88856336a64d6">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+  <botcomponent_connectionreference botcomponentid.schemaname="Default_draft_IsBewO.tool.MembershipMCPv2-MembershipMCPv2Server_u4P" connectionreferenceid.connectionreferencelogicalname="Default_draft_IsBewO.cr.shared_membership-20.a1791b1cc0bd4c2985d732222f7b1c21">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+  <botcomponent_connectionreference botcomponentid.schemaname="Default_InventoryFullfilmentAgent_X-w2GP.tool.WarehouseMCP-WarehouseMCPServer" connectionreferenceid.connectionreferencelogicalname="Default_InventoryFullfilmentAgent_X-w2GP.cr.shared_new-5fwarehou.8203ff0026f84b6f9948e6fc6999903b">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+  <botcomponent_connectionreference botcomponentid.schemaname="Default_StorePolicyAgent_s9s-u8.action.PolicyRAGMCPv2-PolicyRAGMCPv2Server" connectionreferenceid.connectionreferencelogicalname="Default_StorePolicyAgent_s9s-u8.cr.shared_new-5fpolicy-.a0917153355e4e5587a4616f83b31ef2">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+</botcomponent_connectionreferenceset>

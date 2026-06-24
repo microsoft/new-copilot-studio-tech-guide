@@ -1,0 +1,14 @@
+<botcomponent schemaname="cra24a45_skill_md_4e6ebf925ae8">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">SKILL.md</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>SKILL.md</name>
+  <parentbotcomponentid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1.skill.points-reconciliation__iK</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

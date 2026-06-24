@@ -1,0 +1,14 @@
+<botcomponent schemaname="cra24a45_skill_md_d925ad573675">
+  <componenttype>14</componenttype>
+  <filedata mimetype="application/octet-stream">SKILL.md</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>SKILL.md</name>
+  <parentbotcomponentid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1.skill.slip-pdf-generator_2i4</schemaname>
+  </parentbotcomponentid>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

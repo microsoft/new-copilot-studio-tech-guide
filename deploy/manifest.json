@@ -1,6 +1,6 @@
 {
   "solutionName": "BlastBoxDeploy",
-  "solutionZip": "sample/solution/BlastBoxDemo_1_0_0_4.zip",
+  "solutionZip": "sample/solution/BlastBoxDeploy_1_0_0_5.zip",
   "connectorsDir": "sample/solution/connectors",
   "apimPropagationSeconds": 90,
   "import": {

@@ -1,4 +1,4 @@
-<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.OrderManagementMCP-OrderManagementMCPServer_8Eq">
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.tool.OrderManagementMCP-OrderManagementMCPServer_cG4">
   <componenttype>9</componenttype>
   <description>MCP server for e-commerce order management. Tools: search_orders, get_order, get_shipment, request_return, get_return_status.</description>
   <iscustomizable>0</iscustomizable>

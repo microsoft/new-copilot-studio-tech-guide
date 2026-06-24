@@ -1,0 +1,11 @@
+<botcomponent schemaname="cr26e_storeassociateassistant_ZQHUx1.skill.prorated-refund-calculator_KZe">
+  <componenttype>9</componenttype>
+  <description>Calculate the exact prorated refund when a customer cancels a BlastPass membership, and the net settlement when a defective unit is traded up to a pricier model. Use after the Store Policy Agent confirms the refund rule and the Membership MCP has returned the membership details. The skill runs a bundled Python script so the arithmetic is exact.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>prorated-refund-calculator</name>
+  <parentbotid>
+    <schemaname>cr26e_storeassociateassistant_ZQHUx1</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

@@ -1,5 +1,5 @@
 kind: McpTool
 authMode: Maker
-connectionReference: Default_StorePolicyAgent_s9s-u8.cr.shared_new-5fpolicy-2.1d7ba24296314fd18b7ce9d4fb97d766
+connectionReference: Default_StorePolicyAgent_s9s-u8.cr.shared_new-5fpolicy-.a0917153355e4e5587a4616f83b31ef2
 connectorId: /providers/Microsoft.PowerApps/apis/shared_new-5fpolicy-20rag-20mcp-20v2-5fee08b8354fad177a
 operationId: InvokeMCP
