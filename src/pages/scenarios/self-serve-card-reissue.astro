@@ -127,15 +127,32 @@ const base = import.meta.env.BASE_URL;
 
       <section class="scenario__section">
         <h2>What gets generated</h2>
+        <p class="gen-note">
+          The member gets a digital card, rendered live by the
+          <code>membership-card-png</code> skill (matplotlib) from the
+          <code>get_membership</code> details plus the freshly minted serial.
+          This is the actual PNG from a real run of the skill &mdash; download it
+          to see exactly what the member saves to their phone.
+        </p>
         <div class="files">
-          <div class="filecard">
+          <a class="filecard filecard--download" href={`${base}img/blastpass_card.png`} download>
             <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#128196;</span></span>
             <div>
               <strong>blastpass_card.png</strong>
               <span>matplotlib &middot; CR80 card &middot; tier-colored</span>
             </div>
-          </div>
+            <span class="filecard__dl">Download &darr;</span>
+          </a>
         </div>
+        <figure class="slip-preview">
+          <a href={`${base}img/blastpass_card.png`} target="_blank" rel="noopener">
+            <img
+              src={`${base}img/blastpass_card.png`}
+              alt="BlastPass Plus Extra digital membership card for Jordan Pixel, member ID MEGA-BLAST-1024, with the freshly reissued card serial BLAST-A1B2-1024, purple tier band, member dates, console serial, and barcode."
+              loading="lazy"
+            />
+          </a>
+        </figure>
       </section>
     </div>
   </article>
