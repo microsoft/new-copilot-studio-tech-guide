@@ -13,7 +13,7 @@ Completion"). It packages exactly **two tested scenarios**:
 Everything is mock retail data for a fictional retro‑gaming store, **BlastBox
 Omega**, and its **BlastPass** membership program.
 
-> **Use at your own peril.** This is a demo solution exported from a working dev
+> This is a demo solution exported from a working dev
 > environment, not a supported product. Connector identities, MCP servers, and
 > mock data are environment‑specific — read the **Known caveats** section before
 > importing, especially the **Membership MCP v2** connector note.

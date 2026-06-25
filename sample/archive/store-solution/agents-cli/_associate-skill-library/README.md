@@ -16,5 +16,3 @@ are the associate / returns-desk machinery, kept here to seed a future
 > The connected-agent **agents themselves** still exist in the environment; these
 > files are only the *references* this agent held. The inline skills' full source
 > lives in their `content` blocks here.
-
-> Use at your own peril — these are demo artifacts, not production config.
