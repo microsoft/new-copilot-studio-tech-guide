@@ -18,9 +18,11 @@ Four agents (flagship Store Associate Assistant, self-serve Returns & Service As
 and two connected agents) and four inline MCP connectors (Membership, Order Management,
 Policy RAG, Warehouse). Everything runs inside the Power Platform: no external servers.
 
-Stand it up with one cross-platform script:
+Stand it up with one cross-platform script (needs **Node 18+**, **pac CLI**, and **az
+CLI** installed):
 
 ```bash
+pac auth create                   # once: sign pac in to the target tenant
 node deploy/deploy.mjs            # guided: pick profile, pick env, deploy
 node deploy/deploy.mjs --help     # all options
 ```

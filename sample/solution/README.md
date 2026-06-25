@@ -7,12 +7,12 @@ bundles.
 ## To deploy, use `deploy/`
 
 Don't stand this up by hand. The repo ships a single cross-platform script that does the
-whole thing — imports both solutions, deploys every MCP connector's inline code,
-publishes customizations, creates the no-auth connections, and publishes the agents —
-then prints the one manual UI step that has no API (re-attaching each agent's MCP server,
-~2 min).
+whole thing: imports both solutions, deploys every MCP connector's inline code, publishes
+customizations, creates the no-auth connections, and publishes the agents, then prints the
+one manual UI step that has no API (re-attaching each agent's MCP server, ~2 min).
 
 ```bash
+pac auth create                   # once: sign pac in to the target tenant
 node deploy/deploy.mjs            # guided: pick profile, pick env, deploy
 node deploy/deploy.mjs --help     # all options
 ```
