@@ -19,14 +19,6 @@ The script is cross-OS (Windows, macOS, Linux): it shells out with argument
 arrays (no shell string interpolation), resolves paths with `node:path`, and reads
 `DOTNET_ROOT` from `$DOTNET_ROOT` or `~/.dotnet`.
 
-> ⚠️ **Use at your own peril.** This automates against live Power Platform,
-> Dataverse and BAP APIs (including undocumented BAP endpoints). Read the script
-> before running it.
->
-> The env-lifecycle helpers we use for our own testing (mint / teardown) are
-> **not committed** and are gitignored. We do not ship scripts that create or
-> delete environments.
-
 ## TL;DR — the happy path
 
 ```bash
