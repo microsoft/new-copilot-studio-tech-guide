@@ -17,7 +17,7 @@ node deploy/deploy.mjs            # guided: pick profile, pick env, deploy
 node deploy/deploy.mjs --help     # all options
 ```
 
-See **`deploy/README.md`** for the full walkthrough, requirements, and the manual
+See [`deploy/README.md`](../../deploy/README.md) for the full walkthrough, requirements, and the manual
 re-attach table.
 
 ## What's in this folder
