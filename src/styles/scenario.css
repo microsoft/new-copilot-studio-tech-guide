@@ -57,6 +57,22 @@
 .tl-file svg { width: 15px; height: 15px; color: var(--c-orange); flex-shrink: 0; align-self: center; }
 .filecard strong { display: block; font-size: 0.9rem; color: var(--c-text); }
 .filecard span { font-size: 0.78rem; color: var(--c-text-muted); font-family: var(--font-mono); }
+.filecard--download { text-decoration: none; transition: border-color 0.15s ease, transform 0.15s ease; }
+.filecard--download:hover { border-color: var(--c-orange); transform: translateY(-1px); }
+.filecard__dl { margin-left: auto; font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-orange); }
+
+/* Generated-file note + slip preview */
+.gen-note { margin-bottom: var(--space-lg); font-size: 0.9rem; color: var(--c-text-secondary); line-height: 1.6; max-width: 70ch; }
+.slip-preview { margin: var(--space-lg) 0 0; max-width: 560px; }
+.slip-preview a { display: block; }
+.slip-preview img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-console);
+  background: #fff;
+}
 
 /* Demo video block */
 .demo-video { margin: var(--space-2xl) 0 0; }

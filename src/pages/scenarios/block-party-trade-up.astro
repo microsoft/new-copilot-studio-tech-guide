@@ -67,10 +67,14 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Agent &rarr; connected agents &rarr; Associate</div>
               <div class="tl-steps">
-                <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent &middot; search_policy</span> "defective console warranty vs accidental damage"</div>
-                <p>The Policy Agent's rule is to <strong>establish the defect cause first</strong>, so it returns a <em>question</em>, not a ruling.</p>
+                <p>The orchestrator fans out and front-loads the whole picture in a single pass, rather than asking one question at a time.</p>
                 <div class="tl-tool"><span class="tl-tool-name">get_membership</span> reads MEGA-BLAST-1024 (Plus Extra, 8 months unused, $10 fee)</div>
-                <p>"One thing decides how the console is treated: a <strong>manufacturing defect</strong> &rarr; free warranty swap, no restocking fee, vs. <strong>accidental / physical / liquid damage</strong> &rarr; standard return, possible fee. <strong>Which is it?</strong>"</p>
+                <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent &middot; search_policy</span> "defective console warranty vs accidental damage" &rarr; returns a <em>question</em>, not a ruling (its rule is to establish the defect cause first)</div>
+                <div class="tl-tool"><span class="tl-tool-name">Order Management MCP &middot; search_orders</span> finds nothing under the member ID, so it retries <strong>by customer name</strong> (Jordan Pixel) and gets a hit</div>
+                <div class="tl-tool"><span class="tl-tool-name">get_order</span> &rarr; ORD-10502: BlastBox Omega, $399.99 on Visa ending 1024, inside the 30-day defective window</div>
+                <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; Warehouse MCP</span> check_stock (base = 0 local), get_restock_date (~4 days), find_alternatives (MEGA Edition, $499.99, 5 in stock)</div>
+                <div class="tl-skill"><span class="tl-skill-name">prorated-refund-calculator</span> runs Python &rarr; $129.99 ÷ 12 × 8 &minus; $10 = <strong>$76.66</strong></div>
+                <p>It lays out the console options &mdash; <strong>wait ~4 days</strong> for the base restock, <strong>upgrade to the MEGA Edition</strong> now (the $76.66 BlastPass refund covers most of the $100 gap &rarr; <strong>$23.34</strong> net), or a <strong>full refund</strong> &mdash; plus the BlastPass cancellation breakdown, then asks the one thing that gates it all: <strong>"manufacturing defect, or physical / liquid damage?"</strong></p>
               </div>
             </div>
           </li>
@@ -90,9 +94,8 @@ const base = import.meta.env.BASE_URL;
               <div class="tl-label">Agent</div>
               <div class="tl-steps">
                 <div class="tl-tool"><span class="tl-tool-name">Store Policy Agent</span> confirms defective within 30 days = free warranty swap, no restocking fee</div>
-                <div class="tl-tool"><span class="tl-tool-name">Inventory &amp; Fulfillment Agent &middot; Warehouse MCP</span> check_stock (base = 0 local), get_restock_date (~4 days), find_alternatives (MEGA Edition, $499.99, 5 in stock)</div>
-                <div class="tl-skill"><span class="tl-skill-name">prorated-refund-calculator</span> runs Python &rarr; $129.99 ÷ 12 × 8 &minus; $10 = <strong>$76.66</strong></div>
-                <p>"Confirmed: manufacturing defect inside 30 days &rarr; free warranty swap. Base console is out of stock (restock ~4 days); MEGA Edition is in stock now at $499.99. Membership prorated refund: <strong>$76.66</strong>. He can wait ~4 days, upgrade to MEGA now, or take a refund. Which way is he leaning?"</p>
+                <p>With the cause settled, the warranty-swap path locks in. Nothing new has to be looked up &mdash; orders, stock, and the $76.66 refund were already pulled in the first pass.</p>
+                <p>"Confirmed: manufacturing defect inside 30 days &rarr; free warranty swap, no fee. The base console is out of stock, so it's: wait ~4 days for the restock, upgrade to the MEGA Edition today (his <strong>$76.66</strong> refund covers most of the $100 difference &rarr; <strong>$23.34</strong> net), or take a full refund. Which way is he leaning?"</p>
               </div>
             </div>
           </li>
@@ -173,15 +176,31 @@ const base = import.meta.env.BASE_URL;
 
       <section class="scenario__section">
         <h2>What gets generated</h2>
+        <p class="gen-note">
+          The associate hands the customer a settlement slip, generated live by the
+          <code>slip-pdf-generator</code> skill (reportlab) from the reconciled numbers.
+          This is the actual PDF from a real run of the agent &mdash; download it to see
+          exactly what a customer walks out with.
+        </p>
         <div class="files">
-          <div class="filecard">
+          <a class="filecard filecard--download" href={`${base}files/blastbox_slip.pdf`} download>
             <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#129534;</span></span>
             <div>
               <strong>blastbox_slip.pdf</strong>
               <span>reportlab &middot; settlement slip &middot; swap + cancellation + math</span>
             </div>
-          </div>
+            <span class="filecard__dl">Download &darr;</span>
+          </a>
         </div>
+        <figure class="slip-preview">
+          <a href={`${base}files/blastbox_slip.pdf`} target="_blank" rel="noopener">
+            <img
+              src={`${base}img/blastbox_slip-preview.png`}
+              alt="BlastBox Returns & Service settlement slip: warranty exchange of the defective console for the MEGA Edition, BlastPass cancellation refund applied as store credit, net due $23.34."
+              loading="lazy"
+            />
+          </a>
+        </figure>
       </section>
     </div>
   </article>
