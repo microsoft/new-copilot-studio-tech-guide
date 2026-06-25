@@ -14,20 +14,19 @@ A showcase site and deployable sample for the new Agents and Workflows experienc
 
 ## Deploying the sample
 
-The sample is a portable Copilot Studio solution with **four agents** (a flagship Store
-Associate Assistant and a self-serve Returns & Service Assistant, plus two connected
-agents) and **four inline MCP connectors** (Membership, Order Management, Policy RAG, and
-Warehouse). Everything runs inside the Power Platform: the connectors use inline custom
-code, so no external servers are needed.
+Four agents (flagship Store Associate Assistant, self-serve Returns & Service Assistant,
+and two connected agents) and four inline MCP connectors (Membership, Order Management,
+Policy RAG, Warehouse). Everything runs inside the Power Platform: no external servers.
 
-The fastest way to stand it up is the scripted deploy, one cross-platform Node script that
-imports both solutions, deploys the connector code, publishes, creates the connections,
-and publishes the agents, then prints the single ~2-minute manual UI step:
+Stand it up with one cross-platform script:
 
 ```bash
 node deploy/deploy.mjs            # guided: pick profile, pick env, deploy
 node deploy/deploy.mjs --help     # all options
 ```
+
+It imports both solutions, deploys the connector code, creates the connections, and
+publishes the agents, then prints one ~2-minute manual UI step.
 
 ```
 deploy/             Scripted, repeatable deploy (deploy.mjs + README)
