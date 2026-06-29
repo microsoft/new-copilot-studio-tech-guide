@@ -8,9 +8,10 @@ interface Props {
   tier: string;          // "Warm-up" | "Store associate" | "Store manager"
   accent: string;        // css color var name token: cyan | purple | pink | orange | green
   pillars: string[];     // small chips, e.g. ["1 MCP", "1 skill", "PDF out"]
+  upcoming?: boolean;    // flag the scenario as not-yet-available
 }
 
-const { title, description, capability, href, icon, tier, accent, pillars } = Astro.props;
+const { title, description, capability, href, icon, tier, accent, pillars, upcoming = false } = Astro.props;
 
 const accentMap: Record<string, string> = {
   cyan: 'var(--c-primary)',
@@ -37,7 +38,7 @@ const iconPaths = icons[icon] ?? icons.card;
 const iconEmoji = emojis[icon] ?? emojis.card;
 ---
 
-<a href={href} class="card-wrapper" style={`--accent: ${accentColor};`}>
+<a href={upcoming ? undefined : href} class:list={["card-wrapper", { "card-wrapper--upcoming": upcoming }]} aria-disabled={upcoming ? "true" : undefined} style={`--accent: ${accentColor};`}>
   <div class="card">
     <div class="card__art">
       <span class="card__icon">
@@ -45,6 +46,7 @@ const iconEmoji = emojis[icon] ?? emojis.card;
         <span class="ticon-bb">{iconEmoji}</span>
       </span>
       <span class="card__tier">{tier}</span>
+      {upcoming && <span class="card__upcoming">Upcoming</span>}
       <span class="card__scanline"></span>
     </div>
     <div class="card__body">
@@ -54,10 +56,14 @@ const iconEmoji = emojis[icon] ?? emojis.card;
       <div class="card__pillars">
         {pillars.map((p) => <span class="pill">{p}</span>)}
       </div>
-      <span class="card__link">
-        Explore scenario
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </span>
+      {upcoming ? (
+        <span class="card__link card__link--soon">Coming soon</span>
+      ) : (
+        <span class="card__link">
+          Explore scenario
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        </span>
+      )}
     </div>
   </div>
 </a>
@@ -196,4 +202,32 @@ const iconEmoji = emojis[icon] ?? emojis.card;
     transition: gap 0.2s ease;
   }
   .card-wrapper:hover .card__link { gap: 10px; }
+
+  /* Upcoming (not-yet-available) scenarios */
+  .card-wrapper--upcoming { cursor: default; }
+  .card-wrapper--upcoming:hover::before { opacity: 0; }
+  .card-wrapper--upcoming:hover .card {
+    border-color: var(--c-border);
+    box-shadow: none;
+    transform: none;
+  }
+  .card-wrapper--upcoming .card { opacity: 0.82; }
+  .card-wrapper--upcoming .card__upcoming {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--c-text-muted);
+    border: 1px solid var(--c-border);
+    background: var(--c-surface-raised);
+    padding: 3px 8px;
+    border-radius: 20px;
+    z-index: 2;
+  }
+  .card__link--soon { color: var(--c-text-muted); }
+  .card-wrapper--upcoming:hover .card__link--soon { gap: 6px; }
 </style>
