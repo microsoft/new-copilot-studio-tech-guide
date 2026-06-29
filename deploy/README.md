@@ -52,7 +52,9 @@ arrays (no shell string interpolation), resolves paths with `node:path`, and rea
    That is 5 attachments total. See [Manual post-install step](#manual-post-install-step-required-2-min)
    for why this can't be scripted.
 
-4. **Run a scenario.** Open either agent's **Preview** and try it. Done.
+4. **Validate using the scenarios** at
+   https://microsoft.github.io/new-copilot-studio-tech-guide/#scenarios — open
+   the matching agent's **Preview** and walk a scenario end to end. Done.
 
 ## Requirements
 
@@ -149,9 +151,11 @@ packaged scenarios work end to end.
 
 ## Verify (end-to-end test)
 
-Both scenarios have been validated on a fresh env after a clean scripted run, with
-every MCP tool and every Python skill firing live (visible in the agent's activity
-map):
+Validate using the scenarios at
+https://microsoft.github.io/new-copilot-studio-tech-guide/#scenarios — each one
+names the agent to test it with and the exact turns to paste. Both scenarios have
+been validated on a fresh env after a clean scripted run, with every MCP tool and
+every Python skill firing live (visible in the agent's activity map):
 
 - **Block Party Trade-Up** — open **Store Associate Assistant, Preview** and paste
   the 4 turns from
