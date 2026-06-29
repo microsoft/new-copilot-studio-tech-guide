@@ -11,7 +11,6 @@ const base = import.meta.env.BASE_URL;
       <a href={base} class="back">&larr; All scenarios</a>
 
       <header class="scenario__header">
-        <span class="badge badge--accent">Store manager &middot; Merch Insights Assistant</span>
         <h1>End-of-Quarter Markdown Review</h1>
         <p class="scenario__lead">
           It's the last week of the quarter, and the BlastBox Omega store manager has the usual
@@ -21,13 +20,12 @@ const base = import.meta.env.BASE_URL;
           from a store-wide view and drilling all the way down to a single SKU, week by week, then
           to a discount she can actually defend.
         </p>
-        <div class="scenario__cast">
-          <span class="pill">Merch Insights Assistant</span>
-          <span class="pill">Sales &amp; Performance Agent</span>
-          <span class="pill">Inventory &amp; Fulfillment Agent</span>
-          <span class="pill">Store Policy Agent</span>
-          <span class="pill">3 Python skills</span>
-          <span class="pill">Charts + PDF out</span>
+        <div class="scenario__agent" style="--accent: var(--c-orange);">
+          <span class="scenario__agent-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/></svg></span>
+          <span class="scenario__agent-text">
+            <span class="scenario__agent-label">Test this scenario with</span>
+            <span class="scenario__agent-name">Merch Insights Assistant</span>
+          </span>
         </div>
       </header>
 

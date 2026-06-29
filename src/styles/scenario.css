@@ -7,6 +7,12 @@
 .scenario__lead { margin-top: var(--space-lg); font-size: 1.05rem; color: var(--c-text-secondary); line-height: 1.7; }
 .scenario__cast { display: flex; flex-wrap: wrap; gap: 7px; margin-top: var(--space-lg); }
 .scenario__cast .pill { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; color: var(--c-text-secondary); background: var(--c-surface); border: 1px solid var(--c-border-subtle); padding: 4px 9px; border-radius: 6px; }
+.scenario__agent { --accent: var(--c-primary); display: flex; align-items: center; gap: 14px; margin-top: var(--space-xl); padding: var(--space-md) var(--space-lg); border: 1px solid var(--c-border-subtle); border-radius: var(--radius-md); background: var(--c-surface); }
+.scenario__agent-icon { flex-shrink: 0; display: inline-flex; color: var(--accent); }
+.scenario__agent-icon svg { width: 24px; height: 24px; }
+.scenario__agent-text { display: flex; flex-direction: column; gap: 2px; }
+.scenario__agent-label { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-text-muted); }
+.scenario__agent-name { font-size: 1.05rem; font-weight: 700; color: var(--c-text); font-family: var(--font-display); letter-spacing: -0.01em; line-height: 1.2; }
 .scenario__section { margin-top: var(--space-3xl); }
 .scenario__section h2 { margin-bottom: var(--space-lg); }
 

@@ -11,20 +11,20 @@ const base = import.meta.env.BASE_URL;
       <a href={base} class="back">&larr; All scenarios</a>
 
       <header class="scenario__header">
-        <span class="badge badge--green">Self-serve &middot; Returns &amp; Service Assistant</span>
         <h1>Self-Serve Card Reissue</h1>
         <p class="scenario__lead">
-          A signed-in BlastPass member has lost their physical membership card and just wants a
+          A BlastPass member has lost their physical membership card and just wants a
           replacement sent over. It's the kind of small, everyday errand that usually means
           waiting in a support queue. Here it's fully self-serve, with no associate in the loop,
           and one firm rule underneath it all: nothing on the account changes until the member
           proves the card is really theirs.
         </p>
-        <div class="scenario__cast">
-          <span class="pill">BlastPass Concierge</span>
-          <span class="pill">Membership MCP</span>
-          <span class="pill">membership-card-png skill</span>
-          <span class="pill">PNG out</span>
+        <div class="scenario__agent" style="--accent: var(--c-green);">
+          <span class="scenario__agent-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/></svg></span>
+          <span class="scenario__agent-text">
+            <span class="scenario__agent-label">Test this scenario with</span>
+            <span class="scenario__agent-name">Returns &amp; Service Assistant</span>
+          </span>
         </div>
       </header>
 
@@ -35,7 +35,7 @@ const base = import.meta.env.BASE_URL;
           <li class="tl-user">
             <div class="tl-marker">1</div>
             <div class="tl-content">
-              <div class="tl-label">Member (signed in)</div>
+              <div class="tl-label">Member</div>
               <div class="try-prompt">
                 <blockquote class="try-prompt__text">Hi, I lost my BlastPass card. Can you send me a new one?</blockquote>
               </div>
@@ -44,7 +44,7 @@ const base = import.meta.env.BASE_URL;
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
-              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-label">Returns &amp; Service Assistant</div>
               <div class="tl-steps">
                 <p><em>"They want a replacement card. I don't have a membership ID yet, and I can't look anything up, or verify anyone, without it. I'll ask for it first; nothing changes until I have it."</em></p>
                 <p>"Oh no, let's get you a new one. 💜 To pull up your membership, what's your <strong>BlastPass member ID</strong>? It usually looks like <code>MEGA-BLAST-####</code>."</p>
@@ -64,7 +64,7 @@ const base = import.meta.env.BASE_URL;
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
-              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-label">Returns &amp; Service Assistant</div>
               <div class="tl-steps">
                 <div class="tl-tool"><span class="tl-tool-name">get_membership</span> looks up MEGA-BLAST-1024 (read-only)</div>
                 <p>Finds a <strong>BlastPass Plus Extra</strong> membership. Before deactivating a card, the agent verifies identity with <strong>two factors the real owner has</strong>, and reveals neither.</p>
@@ -85,7 +85,7 @@ const base = import.meta.env.BASE_URL;
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
-              <div class="tl-label">BlastPass Concierge</div>
+              <div class="tl-label">Returns &amp; Service Assistant</div>
               <div class="tl-steps">
                 <p><em>"Name Jordan Pixel matches, and the serial ends in 1024. Both factors match. Identity confirmed. Now I can safely reissue."</em></p>
                 <div class="tl-tool"><span class="tl-tool-name">reissue_card</span> deactivates the old card, mints a new serial, keeps membership active</div>
@@ -111,16 +111,16 @@ const base = import.meta.env.BASE_URL;
         <h2>What was demonstrated</h2>
         <div class="value-grid">
           <div class="value-card">
-            <h3>Verify before you mutate</h3>
-            <p>Identity is confirmed with two factors (name and last-4 of the serial) before any card is touched. The agent never reveals either value while asking.</p>
+            <h3>Confirms identity before acting</h3>
+            <p>The agent checks two things only the real owner would know, the name on the membership and the last four of the console serial, before it changes anything. It never reveals either value while it asks.</p>
           </div>
           <div class="value-card">
-            <h3>It actually changes state</h3>
-            <p><code>reissue_card</code> deactivates the lost card server-side and mints a new one, distinct from cancelling the membership. The PNG reflects the new serial, not the old.</p>
+            <h3>Takes a real action through a tool</h3>
+            <p>Through the Membership MCP server, <code>reissue_card</code> deactivates the lost card and issues a new serial in the system of record. That is a real change, separate from cancelling the membership, not just a written answer.</p>
           </div>
           <div class="value-card">
-            <h3>The foundation pattern</h3>
-            <p>MCP &rarr; verify &rarr; MCP &rarr; skill &rarr; file is the core loop. The flagship scenario stacks connected agents, policy, and chained math on top of it.</p>
+            <h3>Hands back a real file</h3>
+            <p>An AI Skill runs code at runtime to render the new card as a PNG, printed with the freshly issued serial. The member gets a card they can use right away while the physical one ships.</p>
           </div>
         </div>
       </section>
