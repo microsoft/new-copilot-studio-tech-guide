@@ -28,11 +28,29 @@ pac auth create            # (once) then verify with: pac auth list
 # 2. Deploy (guided — it lists your profiles and envs):
 node deploy/deploy.mjs
 
-# 3. Do the one manual UI step it prints at the end (re-attach each agent's
-#    MCP server in Copilot Studio — ~2 min, instructions below).
+# 3. Do the one manual UI step below (re-attach each agent's MCP server in
+#    Copilot Studio — ~2 min). The script also prints it at the end of the run.
 
 # 4. Open either agent's Preview and run a scenario. Done.
 ```
+
+**Step 3 — re-attach the MCP tools (the one manual step):**
+
+1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
+2. For **each** agent below: open it, go to **Tools, Add a tool, Model Context
+   Protocol (MCP)**, search the connector by name, pick **`<Name> Server`**, select
+   the **existing Connected connection** (the picker pre-selects it — do not create a
+   new one), **Add**, then **Save and publish**.
+
+   | Agent | MCP server(s) to add |
+   | --- | --- |
+   | Store Policy Agent | Policy RAG MCP v2 |
+   | Inventory & Fulfillment Agent | Warehouse MCP |
+   | Returns & Service Assistant | Membership MCP v2 |
+   | Store Associate Assistant | Order Management MCP **and** Membership MCP v2 |
+
+   That is 5 attachments total. See [Manual post-install step](#manual-post-install-step-required-2-min)
+   below for why this can't be scripted.
 
 Unattended into a known env:
 
@@ -121,24 +139,11 @@ canvas only re-creates a working tool binding when a maker re-attaches the MCP
 server in the UI. The connectors and Connected connections already exist, so this
 is just a few clicks per agent.
 
-`deploy.mjs` prints these instructions at the end of every run (or run
-`node deploy/deploy.mjs --start-at manual ...` to re-print).
-
-1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
-2. For **each** agent below: open it, go to **Tools, Add a tool, Model Context
-   Protocol (MCP)**, search the connector by name, pick **`<Name> Server`**, select
-   the **existing Connected connection** (the picker pre-selects it — do not create a
-   new one), **Add**, then **Save and publish**.
-
-   | Agent | MCP server(s) to add |
-   | --- | --- |
-   | Store Policy Agent | Policy RAG MCP v2 |
-   | Inventory & Fulfillment Agent | Warehouse MCP |
-   | Returns & Service Assistant | Membership MCP v2 |
-   | Store Associate Assistant | Order Management MCP **and** Membership MCP v2 |
-
-After re-attaching (5 attachments total), the tools load and both packaged
-scenarios work end to end.
+The concrete steps and the agent → MCP table are in
+[Step 3 of the happy path](#tldr--the-happy-path) above. `deploy.mjs` also prints
+them at the end of every run (or run `node deploy/deploy.mjs --start-at manual ...`
+to re-print). After re-attaching (5 attachments total), the tools load and both
+packaged scenarios work end to end.
 
 ## Verify (end-to-end test)
 
