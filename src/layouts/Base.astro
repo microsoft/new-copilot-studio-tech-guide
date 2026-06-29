@@ -9,6 +9,11 @@ interface Props {
 const { title, description = 'A technical guide to the new AI workloads in Copilot Studio Agents and Workflows' } = Astro.props;
 const base = import.meta.env.BASE_URL;
 const repo = 'https://github.com/microsoft/new-copilot-studio-tech-guide';
+
+// Microsoft Clarity analytics. Loads in production builds only (never on
+// localhost dev). Project id is overridable via PUBLIC_CLARITY_ID.
+const clarityId = import.meta.env.PUBLIC_CLARITY_ID ?? 'xafqjylsli';
+const enableClarity = import.meta.env.PROD;
 ---
 
 <!doctype html>
@@ -19,6 +24,15 @@ const repo = 'https://github.com/microsoft/new-copilot-studio-tech-guide';
     <meta name="description" content={description} />
     <link rel="icon" type="image/png" href={`${base}favicon.png`} />
     <title>{title}</title>
+    {enableClarity && (
+      <script is:inline define:vars={{ clarityId }}>
+        (function (c, l, a, r, i, t, y) {
+          c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+          t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+          y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, 'clarity', 'script', clarityId);
+      </script>
+    )}
     <script is:inline>
       // Apply the saved skin before first paint (avoids a flash). Default = CAT.
       (function () {

@@ -50,6 +50,10 @@ npm run dev        # http://localhost:4321/new-copilot-studio-tech-guide/
 npm run build      # Build to ./dist/
 ```
 
+Site analytics use [Microsoft Clarity](https://clarity.microsoft.com/), loaded in
+production builds only (never on `npm run dev`). Override the project id with the
+`PUBLIC_CLARITY_ID` env var — see [`.env.example`](./.env.example).
+
 ## Contributing
 
 This project welcomes contributions and suggestions. See [CONTRIBUTING](https://github.com/microsoft/new-copilot-studio-tech-guide/blob/main/CONTRIBUTING.md) for details.
