@@ -21,45 +21,38 @@ arrays (no shell string interpolation), resolves paths with `node:path`, and rea
 
 ## TL;DR — the happy path
 
-```bash
-# 1. Make sure pac is signed in to the target tenant:
-pac auth create            # (once) then verify with: pac auth list
+1. **Sign pac in to the target tenant** (once):
 
-# 2. Deploy (guided — it lists your profiles and envs):
-node deploy/deploy.mjs
+   ```bash
+   pac auth create            # then verify with: pac auth list
+   ```
 
-# 3. Do the one manual UI step below (re-attach each agent's MCP server in
-#    Copilot Studio — ~2 min). The script also prints it at the end of the run.
+2. **Deploy** (guided — it lists your profiles and envs):
 
-# 4. Open either agent's Preview and run a scenario. Done.
-```
+   ```bash
+   node deploy/deploy.mjs
+   ```
 
-**Step 3 — re-attach the MCP tools (the one manual step):**
+3. **Re-attach the MCP tools** — the one manual UI step (~2 min). The script
+   also prints these instructions at the end of the run.
 
-1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
-2. For **each** agent below: open it, go to **Tools, Add a tool, Model Context
-   Protocol (MCP)**, search the connector by name, pick **`<Name> Server`**, select
-   the **existing Connected connection** (the picker pre-selects it — do not create a
-   new one), **Add**, then **Save and publish**.
+   1. Open **Copilot Studio** (https://copilotstudio.microsoft.com/) in the deployed env.
+   2. For **each** agent below: open it, go to **Tools → Add a tool → Model Context
+      Protocol (MCP)**, search the connector by name, pick **`<Name> Server`**, select
+      the **existing Connected connection** (the picker pre-selects it — do not create a
+      new one), **Add**, then **Save and publish**.
 
-   | Agent | MCP server(s) to add |
-   | --- | --- |
-   | Store Policy Agent | Policy RAG MCP v2 |
-   | Inventory & Fulfillment Agent | Warehouse MCP |
-   | Returns & Service Assistant | Membership MCP v2 |
-   | Store Associate Assistant | Order Management MCP **and** Membership MCP v2 |
+      | Agent | MCP server(s) to add |
+      | --- | --- |
+      | Store Policy Agent | Policy RAG MCP v2 |
+      | Inventory & Fulfillment Agent | Warehouse MCP |
+      | Returns & Service Assistant | Membership MCP v2 |
+      | Store Associate Assistant | Order Management MCP **and** Membership MCP v2 |
 
    That is 5 attachments total. See [Manual post-install step](#manual-post-install-step-required-2-min)
-   below for why this can't be scripted.
+   for why this can't be scripted.
 
-Unattended into a known env:
-
-```bash
-node deploy/deploy.mjs \
-  --env-id <env-guid> \
-  --env-url https://<org>.crm.dynamics.com/ \
-  --yes
-```
+4. **Run a scenario.** Open either agent's **Preview** and try it. Done.
 
 ## Requirements
 
@@ -86,6 +79,15 @@ node deploy/deploy.mjs \
 
 Every step is idempotent and re-runnable, so if a run dies partway you can re-run
 the whole thing or jump back in with `--start-at`.
+
+Unattended into a known env (non-interactive / CI):
+
+```bash
+node deploy/deploy.mjs \
+  --env-id <env-guid> \
+  --env-url https://<org>.crm.dynamics.com/ \
+  --yes
+```
 
 ## What the script does
 
