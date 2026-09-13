@@ -142,6 +142,14 @@ Both zips are committed under `sample/solution/`, and each is also **unpacked**
 into `sample/solution/src/<UniqueName>/` so the solution contents are reviewable
 and diffable in git.
 
+Before any import, `deploy.mjs` runs
+`deploy/validate_solution_packages.py`. Deployment stops if a ZIP lacks
+`solution.xml`, `customizations.xml`, or `[Content_Types].xml` at its root; if
+it incorrectly contains the unpacked `Other/` folder; if package content differs
+from source; or if the Curb Pickup Assistant has anything other than one
+non-empty instruction segment. Always rebuild solution ZIPs with
+`pac solution pack`, never with a general-purpose ZIP command.
+
 Run steps:
 
 1. **Import** both solutions in order (`pac solution import`), connectors first so
@@ -216,12 +224,16 @@ agent, and Python skill fires:
   the turns on the
   [scenario page](https://microsoft.github.io/new-copilot-studio-tech-guide/scenarios/curb-pickup-assistant).
   Expect the agent to request the membership ID only after membership is claimed,
-  verify `ORD-10502` and `MEGA-BLAST-1024`, retrieve fresh bays and relevant live
-  weather, invoke `staging-window-calculator`, confirm the assignment through Curb
-  Pickup MCP, and generate the PDF only after consent. Exact weather, times, and
-  bay vary with live conditions and occupancy. Tools: Store Associate Assistant,
-  Curb Pickup MCP, Get current weather, Get forecast for today. Skills:
-  `staging-window-calculator`, `curbside-slip-pdf`.
+  verify `ORD-10502` and the exact `tier_code` for `MEGA-BLAST-1024`, retrieve
+  informational store hours and relevant live weather, retrieve one fresh bay queue
+  snapshot,
+  and invoke `curbside-bay-selector`. The selector preserves simultaneous and partial
+  weather conditions, reasons over every available bay, applies queue and optional ETA,
+  and uses membership only as an equal-wait tie-breaker. The agent presents the
+  recommendation in chat and generates the recommendation PDF only when the customer
+  explicitly asks for it.
+  Tools: Store Associate Assistant, Curb Pickup MCP, Get current weather, Get forecast
+  for today. Skills: `curbside-bay-selector`, `curbside-slip-pdf`.
 
 The Python skills ride in on the agents solution and register on `PublishAllXml`;
 no manual skill upload is needed. (If a skill ever lands present-but-broken in some

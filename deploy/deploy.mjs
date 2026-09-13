@@ -80,6 +80,7 @@ OPTIONS
 
 PREREQUISITES
   • Node 18+
+  • Python 3 (used to validate solution package structure before import)
   • pac CLI installed and authenticated (pac auth create ...).
   • az CLI installed. The script signs az in to the target tenant for you if needed.
 
@@ -154,6 +155,24 @@ function shInteractive(cmd, args = []) {
   const line = [cmd, ...args.map(quoteArg)].join(' ');
   const r = spawnSync(line, { shell: true, stdio: 'inherit', env: childEnv });
   return { code: r.status ?? 1 };
+}
+
+function validateSolutionPackages() {
+  const validator = join(__dirname, 'validate_solution_packages.py');
+  const candidates = isWin
+    ? [['py', ['-3', validator]], ['python', [validator]]]
+    : [['python3', [validator]], ['python', [validator]]];
+  for (const [command, args] of candidates) {
+    const result = sh(command, args);
+    if (result.code === 0) {
+      process.stdout.write(result.stdout);
+      return;
+    }
+    if (!/not recognized|not found|no such file/i.test(result.out)) {
+      die(`solution package validation failed:\n${result.out}`);
+    }
+  }
+  die('Python 3 is required to validate solution packages before import.');
 }
 
 // Run a command asynchronously in its OWN process group so it (and any grandchildren
@@ -786,6 +805,7 @@ function ensurePacRunnable() {
 async function main() {
   if (!STEPS.includes(OPT.startAt)) die(`--start-at must be one of: ${STEPS.join(', ')}`);
   log('BlastBox Omega deploy (cross-OS). This deploys into an EXISTING environment.');
+  validateSolutionPackages();
 
   // preflight: pac runnable (az is handled after profile select, see ensureAz)
   if (!ensurePacRunnable()) {

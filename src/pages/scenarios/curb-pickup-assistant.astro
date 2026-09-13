@@ -14,11 +14,9 @@ const base = import.meta.env.BASE_URL;
       <header class="scenario__header">
         <h1>Curb Pickup Assistant</h1>
         <p class="scenario__lead">
-          A customer is on the way to collect an order. The <strong>Curb Pickup
-          Assistant</strong> verifies the order and membership, checks live weather and
-          current bay availability, calculates the curbside staging time, confirms a
-          suitable bay, and offers a barcode delivery note &mdash; all from the customer's
-          order, location, and ETA.
+          The <strong>Curb Pickup Assistant</strong> combines verified order, store,
+          weather, and bay data to recommend a pickup bay. It remembers the plan for
+          queue and weather follow-ups and creates a PDF on request.
         </p>
         <div class="scenario__tools">
           <div class="scenario__agent" style="--accent: var(--c-primary);">
@@ -35,10 +33,12 @@ const base = import.meta.env.BASE_URL;
       <section class="convo">
         <h2>The conversation</h2>
         <p class="gen-note">
-          The agent follows the same orchestration on every run, but the response may change
-          based on store location, expected arrival time, live weather, and current bay
-          availability. The conversation below shows one illustrative run.
+          The customer questions follow a controlled workflow, but the outcome is not
+          hardcoded. Store facts, weather, occupancy, and queue values are evaluated
+          at runtime. Repeating the same scenario can produce a different bay, wait,
+          conditions summary, and recommendation reason.
         </p>
+
         <aside class="tl-steps demo-orders">
           <p><strong>Try one of these sample orders:</strong></p>
           <p>
@@ -48,8 +48,9 @@ const base = import.meta.env.BASE_URL;
             Pixel Heights, WA &mdash; <code>ORD-10502</code>
           </p>
           <p>
-            To test membership-based priority, use <code>ORD-10502</code> with membership ID
-            <code>MEGA-BLAST-1024</code>.
+            To make the verified membership tie-break eligible, use <code>ORD-10502</code> with
+            BlastPass ID <code>MEGA-BLAST-1024</code>. Because queues are simulated independently,
+            membership affects the result only when the shortest waits are equal.
           </p>
         </aside>
 
@@ -59,17 +60,17 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Customer</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Hi, I'm coming to the Pixel Heights, Washington store to collect order ORD-10502. I should be there in about 20 minutes.</blockquote>
+                <blockquote class="try-prompt__text">I am collecting order ORD-10502.</blockquote>
               </div>
             </div>
           </li>
+
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
               <div class="tl-label">Curb Pickup Assistant</div>
               <div class="tl-steps">
-                <p>The order, location, and ETA are already present, so the agent asks only for the missing eligibility information.</p>
-                <p>"Do you have a BlastPass membership?"</p>
+                <p>"Do you have a BlastPass? If so, please provide the BlastPass ID."</p>
               </div>
             </div>
           </li>
@@ -79,17 +80,17 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Customer</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Yes, I have BlastPass Mega.</blockquote>
+                <blockquote class="try-prompt__text">Yes, MEGA-BLAST-1024.</blockquote>
               </div>
             </div>
           </li>
+
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
               <div class="tl-label">Curb Pickup Assistant</div>
               <div class="tl-steps">
-                <p>A claimed tier is not used for bay selection until it is verified.</p>
-                <p>"What's your BlastPass membership ID?"</p>
+                <p>"Approximately how many minutes until you arrive? You can skip this if you are not sure."</p>
               </div>
             </div>
           </li>
@@ -99,23 +100,25 @@ const base = import.meta.env.BASE_URL;
             <div class="tl-content">
               <div class="tl-label">Customer</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">It's MEGA-BLAST-1024.</blockquote>
+                <blockquote class="try-prompt__text">About 20 minutes.</blockquote>
               </div>
             </div>
           </li>
+
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
-              <div class="tl-label">Curb Pickup Assistant &rarr; connected agent and tools &rarr; Customer</div>
+              <div class="tl-label">Curb Pickup Assistant &rarr; evidence &rarr; recommendation &rarr; optional PDF</div>
               <div class="tl-steps">
-                <div class="tl-tool"><span class="tl-tool-name">Store Associate Assistant</span> verifies ORD-10502 for Jordan Pixel, one BlastBox Omega Console, and the membership record for MEGA-BLAST-1024</div>
-                <div class="tl-tool"><span class="tl-tool-name">Curb Pickup MCP &middot; get_store_location + list_bays</span> resolves Pixel Heights, WA and retrieves a fresh list of covered, lit, priority, and occupied bays</div>
-                <div class="tl-tool"><span class="tl-tool-name">MSN Weather</span> gets current conditions, the forecast relevant to the 20-minute ETA, and sunset in Metric units</div>
-                <div class="tl-skill"><span class="tl-skill-name">staging-window-calculator</span> uses the item quantity and expected arrival time, applies the after-dark safety rule, calculates curbside staging for 15 minutes from now, and selects an available well-lit bay</div>
-                <div class="tl-tool"><span class="tl-tool-name">Curb Pickup MCP &middot; assign_bay</span> confirms the calculator-selected bay and returns confirmation CURB-10502-2</div>
-                <p>"Hello Jordan. Your BlastPass Plus Extra membership is verified. Your order will be ready at BlastBox Pixel Heights for your expected arrival in about 20 minutes. Our team will move your order into curbside staging five minutes before you arrive."</p>
-                <p>"Bay 2 is assigned. Because your arrival is after sunset, the calculator selected a well-lit bay; it is also the available priority bay for your verified tier. Please stay in your vehicle with the trunk accessible, and use caution if you need to step outside."</p>
-                <p>"Would you like me to generate a PDF delivery note for your pickup?"</p>
+                <div class="tl-tool"><span class="tl-tool-name">Store Associate Assistant</span> retrieves the order, verifies the customer and shipping address, and returns the exact membership <code>tier_code</code></div>
+                <div class="tl-tool"><span class="tl-tool-name">Curb Pickup MCP &middot; get_store_location</span> resolves Pixel Heights and returns canonical store metadata with informational local hours</div>
+                <div class="tl-tool"><span class="tl-tool-name">MSN Weather</span> retrieves Metric conditions relevant to the customer's expected arrival</div>
+                <div class="tl-tool"><span class="tl-tool-name">Curb Pickup MCP &middot; list_bays</span> returns one snapshot containing bay attributes, occupancy, 6&ndash;10 orders ahead, and 30-second-per-order wait estimates</div>
+                <div class="tl-skill"><span class="tl-skill-name">curbside-bay-selector</span> runs deterministic Python weather, ETA, and queue calculations, reasons over all available bays, and produces the selected bay with structured decision evidence</div>
+                <div class="tl-tool"><span class="tl-tool-name">Customer response</span> explains how weather, queue, and ETA led to the selected bay, then asks whether the customer wants a PDF copy</div>
+                <p>"Rain and darkness favor a covered, well-lit bay. Bay 2 has six orders ahead, about three minutes, leaving time before your arrival. Would you like a copy of the delivery slip?"</p>
+                <div class="tl-skill"><span class="tl-skill-name">curbside-slip-pdf</span> runs only after an explicit yes and renders the completed decision without assigning or reserving the bay</div>
+                <div class="tl-file"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#129534;</span> returns <strong>blastbox_curbside_slip.pdf</strong> when requested</div>
               </div>
             </div>
           </li>
@@ -123,20 +126,64 @@ const base = import.meta.env.BASE_URL;
           <li class="tl-user">
             <div class="tl-marker">4</div>
             <div class="tl-content">
-              <div class="tl-label">Customer</div>
+              <div class="tl-label">Customer follow-up</div>
               <div class="try-prompt">
-                <blockquote class="try-prompt__text">Yes, please generate it.</blockquote>
+                <blockquote class="try-prompt__text">Will weather impact my delivery?</blockquote>
               </div>
             </div>
           </li>
+
           <li class="tl-agent">
             <div class="tl-marker">&#9670;</div>
             <div class="tl-content">
-              <div class="tl-label">Curb Pickup Assistant</div>
+              <div class="tl-label">Curb Pickup Assistant &rarr; retained recommendation evidence</div>
               <div class="tl-steps">
-                <div class="tl-skill"><span class="tl-skill-name">curbside-slip-pdf</span> runs reportlab with the confirmed order, assignment, times, bay characteristics, weather handling, and safety precaution</div>
-                <div class="tl-file"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#129534;</span> hands back <strong>blastbox_curbside_slip.pdf</strong></div>
-                <p>"Your delivery note is ready. It includes your confirmed bay, pickup and curbside staging times, handling instructions, and assignment barcode."</p>
+                <div class="tl-tool"><span class="tl-tool-name">Same-session context</span> answers from the existing recommendation without another weather call</div>
+                <p>"Yes. Rain and darkness favor the covered, well-lit bay selected for your pickup."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">5</div>
+            <div class="tl-content">
+              <div class="tl-label">Customer follow-up</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">How many orders are ahead of me now?</blockquote>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Curb Pickup Assistant &rarr; remembered state &rarr; updated wait</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Same-session context</span> remembers the assigned bay and original queue start time without fetching another bay snapshot</div>
+                <div class="tl-skill"><span class="tl-skill-name">curbside-bay-selector</span> calculates progress from that start at one order every 30 seconds and returns the remaining wait with an estimated curb-ready time</div>
+                <p>"There are now five orders ahead. About 2 minutes 30 seconds remains, with curb-ready estimated for 10:24 AM."</p>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-user">
+            <div class="tl-marker">6</div>
+            <div class="tl-content">
+              <div class="tl-label">Customer follow-up</div>
+              <div class="try-prompt">
+                <blockquote class="try-prompt__text">How much longer is the current wait?</blockquote>
+              </div>
+            </div>
+          </li>
+
+          <li class="tl-agent">
+            <div class="tl-marker">&#9670;</div>
+            <div class="tl-content">
+              <div class="tl-label">Curb Pickup Assistant &rarr; previous update time &rarr; recalculated curb-ready time</div>
+              <div class="tl-steps">
+                <div class="tl-tool"><span class="tl-tool-name">Context memory</span> carries forward the timestamp from the preceding queue update</div>
+                <div class="tl-skill"><span class="tl-skill-name">Queue response</span> reports the remembered update time, current orders ahead, remaining wait, and new estimated curb-ready time</div>
+                <p>"Since your last update at 10:21 AM, there are now four orders ahead. About two minutes remains, with curb-ready estimated for 10:24 AM."</p>
               </div>
             </div>
           </li>
@@ -145,8 +192,8 @@ const base = import.meta.env.BASE_URL;
         <div class="result">
           <span class="result__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10l7-7 7 7v11"/><path d="M9 21v-6h6v6"/></svg></span><span class="ticon-bb">&#128663;</span></span>
           <div>
-            <div class="result__label">Illustrative pickup plan</div>
-            <div class="result__value">Verified order and tier &middot; calculated curbside staging time &middot; confirmed bay &middot; barcode delivery note</div>
+            <div class="result__label">Agentic pickup recommendation with optional PDF</div>
+            <div class="result__value">Live API reasoning &middot; context memory &middot; follow-up reasoning &middot; optional PDF</div>
           </div>
         </div>
       </section>
@@ -155,48 +202,53 @@ const base = import.meta.env.BASE_URL;
         <h2>What was demonstrated</h2>
         <div class="value-grid">
           <div class="value-card">
-            <h3>Orchestrates live pickup</h3>
-            <p>The agent combines verified order and membership details with the customer's ETA, current weather, and live bay availability to coordinate one complete pickup experience.</p>
+            <h3>Collects live and business data</h3>
+            <p>The agent combines verified order and membership data with live store, weather, bay, occupancy, and queue facts.</p>
           </div>
           <div class="value-card">
-            <h3>Calculates staging and bay</h3>
-            <p>The staging skill applies business rules to calculate the curbside staging time, select the most suitable available bay, and produce relevant handling guidance.</p>
+            <h3>Reasons over the combined data</h3>
+            <p>It evaluates weather suitability, availability, queue, ETA, and membership tie-breaks to select and explain one bay.</p>
           </div>
           <div class="value-card">
-            <h3>Confirms the customer plan</h3>
-            <p>Curb Pickup MCP reserves the selected bay, and the PDF skill turns the confirmed decision into a customer-ready handoff document with the pickup details and barcode.</p>
+            <h3>Presents a clear response</h3>
+            <p>It connects the evidence to the recommendation, gives practical pickup guidance, and creates the delivery-slip PDF only when requested.</p>
+          </div>
+          <div class="value-card">
+            <h3>Remembers and reuses context</h3>
+            <p>It retains queue timing and recommendation evidence to recalculate waits and answer later questions without repeating unnecessary data calls.</p>
           </div>
         </div>
       </section>
 
       <section class="scenario__section">
         <h2>What gets generated</h2>
-        <p class="gen-note">
-          The customer gets a collection handoff slip generated by
-          <code>curbside-slip-pdf</code> (reportlab). This illustrative file uses the
-          after-dark run above; a live run uses its own confirmed bay, times, weather,
-          handling instruction, and assignment barcode.
+        <p>
+          File generation is an optional presentation step, not the decision mechanism.
+          After the agent presents its recommendation and the customer asks for a PDF,
+          <code>curbside-slip-pdf</code> renders the selected bay, live conditions,
+          current queue, estimated wait, optional ETA comparison, and recommendation
+          reason.
         </p>
-        <div class="files">
-          <a class="filecard filecard--download" href={`${base}files/blastbox_curbside_slip.pdf`} download>
-            <span class="filecard__icon"><span class="ticon-cat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="ticon-bb">&#129534;</span></span>
-            <div>
-              <strong>blastbox_curbside_slip.pdf</strong>
-              <span>reportlab &middot; confirmed pickup &middot; assignment barcode</span>
-            </div>
-            <span class="filecard__dl">Download &darr;</span>
-          </a>
-        </div>
+        <a class="filecard filecard--download" href={`${base}files/blastbox_curbside_slip.pdf`} download>
+          <span class="filecard__icon">&#128196;</span>
+          <span class="filecard__body">
+            <strong>blastbox_curbside_slip.pdf</strong>
+            <small>Download the illustrative recommendation PDF</small>
+          </span>
+          <span class="filecard__action">Download</span>
+        </a>
         <figure class="slip-preview">
           <a href={`${base}files/blastbox_curbside_slip.pdf`} target="_blank" rel="noopener">
             <img
               src={`${base}img/blastbox_curbside_slip-preview.png`}
-              alt="BlastBox curb delivery collection slip for Jordan Pixel and order ORD-10502, showing assigned bay 2, pickup and curbside staging times, after-dark handling instructions, and an assignment barcode."
+              alt="BlastBox curb pickup recommendation PDF for Jordan Pixel and order ORD-10502, showing recommended Bay 2, queue timing, weather conditions, and the reason for the recommendation."
               loading="lazy"
             />
           </a>
+          <figcaption>Illustrative output from the optional PDF skill.</figcaption>
         </figure>
       </section>
+
     </div>
   </article>
 </Base>

@@ -1,6 +1,6 @@
 <botcomponent schemaname="crf98_curbsidepickupassistant_Q0mRmz.skill.curbside-slip-pdf_dpE">
   <componenttype>9</componenttype>
-  <description>Generate a reader-facing one-page BlastBox Curb Delivery collection slip PDF with the confirmed bay, staging time, handoff instruction, items, conditions, and required fallback disclosure.</description>
+  <description>Render the completed agentic bay recommendation as a customer-facing PDF without assigning or reserving the bay.</description>
   <iscustomizable>0</iscustomizable>
   <name>curbside-slip-pdf</name>
   <parentbotid>

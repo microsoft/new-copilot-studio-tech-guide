@@ -91,6 +91,13 @@
   box-shadow: var(--shadow-console);
   background: #fff;
 }
+.slip-preview figcaption {
+  margin-top: var(--space-sm);
+  color: var(--c-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
 
 /* Demo video block */
 .demo-video { margin: var(--space-2xl) 0 0; }

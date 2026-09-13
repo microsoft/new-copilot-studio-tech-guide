@@ -1,253 +1,128 @@
 #!/usr/bin/env python3
-"""BlastBox Curb Delivery staging-window calculator.
+"""Evaluate curbside weather signals and same-session arrival timing.
 
-Bundled skill script: the agent supplies the customer ETA, physical item count,
-Metric weather values, store, membership tier, and conditions source as CLI
-flags. The script applies policy, selects a bay, and prints a deterministic
-staging breakdown.
-
-Usage:
-    python3 blastbox_staging.py stage \\
-        --eta-minutes 20 --item-count 3 \\
-        --store "Springfield, IL" --store-timezone America/Chicago \\
-        --bays-json '{"location":"Springfield, IL","timezone_id":"America/Chicago","bays":[...]}' \\
-        --cap "Rain showers" --wx RA --temp 30 --feels 33 \\
-        --wind-spd 12 --wind-gust 20 --wind-dir 180 --rain-chance 70 \\
-        --now 2026-09-02T15:40:00-05:00 \\
-        --sunset 2026-09-02T19:20:00-05:00 \\
-        --tier-code mega --conditions-source live
+The agent supplies live Metric weather facts plus a new ETA or retained absolute
+arrival target. This script owns weather thresholds, condition precedence,
+arrival-time arithmetic, and elapsed queue arithmetic. It never receives order,
+membership, occupancy, candidate-bay, or selected-bay data and never selects a
+bay.
 """
 
 import argparse
-from datetime import datetime, time, timedelta, timezone, tzinfo
+from datetime import datetime, timedelta, timezone, tzinfo
 import json
-import re
+import math
 import sys
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
-# --- BlastBox Curb Delivery staging policy --------------------------------
-# These are store policy values, not measurements. Change here, nowhere else.
+HOT_FEELS_C = 38.0
+COLD_TEMP_C = 2.0
+WINDY_GUST_KMH = 40.0
+RAIN_CHANCE_PCT = 60
+LOW_VISIBILITY_KM = 5.0
 
-HOT_FEELS_C          = 38.0   # apparent temp at or above -> HOT band
-COLD_TEMP_C          = 2.0    # actual temp at or below   -> COLD band
-WINDY_GUST_KMH       = 40.0   # gust at or above          -> WINDY band
-RAIN_CHANCE_PCT      = 60     # forecast rain chance at or above -> treat as WET
-DARK_BUFFER_MIN      = 20     # minutes before sunset that counts as dark
-
-PICK_MINUTES_PER_ITEM = 2.0   # base pick time per physical unit
-HANDOFF_BUFFER_MIN    = 3.0   # slack so the order is ready as customer arrives
-
-# Band-specific staging adjustment (minutes). Positive = stage LATER.
-BAND_STAGE_ADJUST = {
-    "WET":    4.0,   # keep goods indoors longer
-    "HOT":    5.0,   # do not let electronics bake
-    "COLD":   3.0,   # battery cold-soak
-    "WINDY":  2.0,   # loose packaging
-    "DARK":   0.0,   # timing unaffected; bay choice changes
-    "BENIGN": -2.0,  # safe to stage early, fastest handoff
+WET_CAPTION_TOKENS = (
+    "rain",
+    "drizzle",
+    "shower",
+    "thunderstorm",
+    "sleet",
+    "snow",
+    "hail",
+    "wintry",
+    "freezing precipitation",
+)
+CONDITION_PRECEDENCE = (
+    "WET",
+    "HOT",
+    "COLD",
+    "WINDY",
+    "DARK",
+    "LOW_VISIBILITY",
+)
+QUEUE_SECONDS_PER_ORDER = 30
+REASON_CODES = {
+    "WET": "PRECIPITATION_PROTECTION",
+    "HOT": "SHADE_PROTECTION",
+    "COLD": "COLD_EXPOSURE_PROTECTION",
+    "WINDY": "WIND_PROTECTION",
+    "DARK": "LIGHTING",
+    "LOW_VISIBILITY": "VISIBILITY_LIGHTING",
 }
 
-# METAR / caption tokens that indicate wet conditions.
-WET_CAPTION_TOKENS = (
-    "rain", "drizzle", "shower", "thunderstorm", "sleet", "snow", "hail",
-    "wintry", "freezing precipitation",
-)
-WET_WX_CODES = ("RA", "DZ", "SN", "SG", "PL", "GR", "GS", "UP")
 
+def detect_active_conditions(
+    current_cap,
+    forecast_cap,
+    forecast_precip,
+    temp,
+    feels,
+    visibility,
+    wind_speed,
+    wind_gust,
+    is_night,
+):
+    """Return active conditions and normalized temperature evidence."""
+    active = []
+    unevaluated = []
 
-def detect_band(cap, wx, temp, feels, wind_gust, rain_chance, is_dark):
-    """Return one of WET/HOT/COLD/WINDY/DARK/BENIGN.
-
-    Priority order is fixed and MUST NOT be reordered:
-        WET > HOT > COLD > WINDY > DARK > BENIGN
-    Rationale: bands are ordered by risk to the goods. Precipitation is the
-    only condition that can damage boxed electronics in seconds.
-    """
-    caption = (cap or "").lower()
-    weather_code = re.sub(r"[^A-Z]", "", (wx or "").upper())
-    if (
-        any(token in caption for token in WET_CAPTION_TOKENS)
-        or any(code in weather_code for code in WET_WX_CODES)
-        or rain_chance >= RAIN_CHANCE_PCT
-    ):
-        return "WET"
-    if feels >= HOT_FEELS_C:
-        return "HOT"
-    if temp <= COLD_TEMP_C:
-        return "COLD"
-    if wind_gust >= WINDY_GUST_KMH:
-        return "WINDY"
-    if is_dark:
-        return "DARK"
-    return "BENIGN"
-
-
-def is_leeward(bay_facing, wind_dir):
-    """A bay is leeward when it faces away from the wind.
-
-    Wind direction is the direction the wind comes FROM.
-    Sheltered when the angular difference is > 90 degrees.
-    """
-    diff = abs(((bay_facing - wind_dir + 180) % 360) - 180)
-    return diff > 90
-
-
-def _choose_by_tier(candidates, tier_code):
-    ordered = sorted(candidates, key=lambda bay: bay["bay_id"])
-    tier = (tier_code or "").lower()
-    if tier in ("mega", "extra"):
-        priority = [bay for bay in ordered if bay.get("priority")]
-        return priority[0] if priority else ordered[0]
-    non_priority = [bay for bay in ordered if not bay.get("priority")]
-    return non_priority[0] if non_priority else ordered[0]
-
-
-def select_bay(band, bays, occupancy, wind_dir, tier_code):
-    """Choose a bay. Returns (bay_id, handoff_mode, note).
-
-    handoff_mode: COVERED | SHADED | LIT | LEEWARD | STANDARD | EXPOSED
-    """
-    available = sorted(
-        [
-            bay for bay in bays
-            if not occupancy.get(str(bay["bay_id"]))
-        ],
-        key=lambda bay: bay["bay_id"],
+    captions = " ".join(
+        value.lower()
+        for value in (current_cap, forecast_cap)
+        if value is not None
     )
-    if not available:
-        return None, "NONE", "No free bay"
-
-    filters = {
-        "WET": (lambda bay: bay["covered"], "COVERED"),
-        "HOT": (lambda bay: bay["covered"], "SHADED"),
-        "COLD": (lambda bay: bay["covered"], "COVERED"),
-        "DARK": (lambda bay: bay["lit"], "LIT"),
-        "WINDY": (lambda bay: is_leeward(bay["facing"], wind_dir), "LEEWARD"),
-        "BENIGN": (lambda bay: True, "STANDARD"),
-    }
-    preferred_filter, handoff_mode = filters[band]
-    candidates = [bay for bay in available if preferred_filter(bay)]
-    note = ""
-
-    if not candidates:
-        candidates = available
-        if band == "WET":
-            handoff_mode = "EXPOSED"
-            note = (
-                "No covered bay available - keep goods indoors until the customer "
-                "has stopped, bag before bringing out"
-            )
-        elif band == "HOT":
-            handoff_mode = "EXPOSED"
-            note = "No shade available - bring out only on arrival"
-        elif band == "COLD":
-            handoff_mode = "EXPOSED"
-            note = (
-                "No covered bay available - minimize outdoor exposure in cold "
-                "conditions"
-            )
-        elif band == "DARK":
-            handoff_mode = "EXPOSED"
-            note = "No lit bay free - associate will carry a torch"
-        elif band == "WINDY":
-            handoff_mode = "EXPOSED"
-            note = "No sheltered bay free"
-
-    selected = _choose_by_tier(candidates, tier_code)
-    return selected["bay_id"], handoff_mode, note
-
-
-def compute_stage_at(eta_minutes, item_count, band):
-    """Return non-negative whole minutes from now at which staging should start."""
-    pick = PICK_MINUTES_PER_ITEM * item_count
-    adjust = BAND_STAGE_ADJUST[band]
-    stage_at = eta_minutes - pick - HANDOFF_BUFFER_MIN + adjust
-    return max(0, round(stage_at))
-
-
-def build_guidance(band, handoff_mode, bay, note, tier_code):
-    """Return deterministic customer-facing weather and delivery guidance."""
-    guidance = {
-        "WET": (
-            "Rain or precipitation risk requires a covered handoff and keeps "
-            "the order indoors longer.",
-            "Keep the order indoors until the vehicle is parked, then use "
-            "weather-protective bagging for the handoff.",
-            "Remain in your vehicle and keep the trunk accessible; use caution "
-            "if you must step onto wet pavement.",
-        ),
-        "HOT": (
-            "High apparent temperature requires shade and delays outdoor staging.",
-            "Keep the order indoors until arrival and move it directly to the vehicle.",
-            "Remain in your vehicle and avoid standing on hot pavement.",
-        ),
-        "COLD": (
-            "Cold conditions require covered handling and minimal outdoor exposure.",
-            "Keep the order indoors until arrival and complete the handoff promptly.",
-            "Remain in your vehicle and use caution if the pavement is slippery.",
-        ),
-        "WINDY": (
-            "Strong gusts require a sheltered bay and secured packaging.",
-            "Secure loose packaging before taking the order outside.",
-            "Remain in your vehicle and use caution when opening doors or the trunk.",
-        ),
-        "DARK": (
-            "Arrival near or after sunset requires a well-lit bay.",
-            "Bring the order directly to the vehicle after it is parked in the lit bay.",
-            "Remain in your vehicle and use caution if you need to step outside.",
-        ),
-        "BENIGN": (
-            "Current conditions require no special weather accommodation.",
-            "Stage the order normally and bring it directly to the parked vehicle.",
-            "Remain in your vehicle until the associate begins the handoff.",
-        ),
-    }
-    weather_reason, delivery_instruction, customer_precaution = guidance[band]
-
-    if bay is None:
-        bay_reason = "No bay is currently available."
-    elif handoff_mode == "EXPOSED":
-        bay_reason = (
-            f"No bay meeting the {band.lower()} weather preference was free; "
-            f"bay {bay['bay_id']} was selected as the available fallback."
+    wet_detected = (
+        any(token in captions for token in WET_CAPTION_TOKENS)
+        or (
+            forecast_precip is not None
+            and forecast_precip >= RAIN_CHANCE_PCT
         )
-    else:
-        traits = []
-        if bay["covered"]:
-            traits.append("covered")
-        if bay["lit"]:
-            traits.append("well-lit")
-        if handoff_mode == "LEEWARD":
-            traits.append("sheltered from the wind")
-        trait_text = ", ".join(traits) if traits else "available"
-        requirement = {
-            "WET": "covered-weather",
-            "HOT": "shaded",
-            "COLD": "covered cold-weather",
-            "WINDY": "wind-sheltered",
-            "DARK": "after-dark",
-            "BENIGN": "standard",
-        }[band]
-        tier_reason = ""
-        if (tier_code or "").lower() in ("mega", "extra") and bay["priority"]:
-            tier_reason = " It also satisfies the verified membership priority."
-        elif (tier_code or "").lower() not in ("mega", "extra") and not bay["priority"]:
-            tier_reason = " The priority bay remains available for eligible members."
-        bay_reason = (
-            f"Bay {bay['bay_id']} is currently free and {trait_text}, matching "
-            f"the {requirement} handoff requirement.{tier_reason}"
-        )
+    )
+    if wet_detected:
+        active.append("WET")
+    elif (
+        current_cap is None
+        and forecast_cap is None
+        and forecast_precip is None
+    ):
+        unevaluated.append("WET")
 
-    if note:
-        delivery_instruction = f"{delivery_instruction} {note}"
+    effective_temperature = feels if feels is not None else temp
+    temperature_source = (
+        "feels" if feels is not None else "temp" if temp is not None else None
+    )
+    if effective_temperature is None:
+        unevaluated.extend(("HOT", "COLD"))
+    elif effective_temperature >= HOT_FEELS_C:
+        active.append("HOT")
+    elif effective_temperature <= COLD_TEMP_C:
+        active.append("COLD")
 
-    return {
-        "weather_reason": weather_reason,
-        "bay_reason": bay_reason,
-        "delivery_instruction": delivery_instruction,
-        "customer_precaution": customer_precaution,
-    }
+    wind_values = [
+        value for value in (wind_speed, wind_gust) if value is not None
+    ]
+    if not wind_values:
+        unevaluated.append("WINDY")
+    elif max(wind_values) >= WINDY_GUST_KMH:
+        active.append("WINDY")
+
+    if is_night is None:
+        unevaluated.append("DARK")
+    elif is_night:
+        active.append("DARK")
+
+    if visibility is None:
+        unevaluated.append("LOW_VISIBILITY")
+    elif visibility < LOW_VISIBILITY_KM:
+        active.append("LOW_VISIBILITY")
+
+    return (
+        active,
+        unevaluated,
+        effective_temperature,
+        temperature_source,
+    )
 
 
 def _parse_aware_iso(value, flag_name):
@@ -263,75 +138,6 @@ def _parse_aware_iso(value, flag_name):
             f"{flag_name} must be a timezone-aware ISO-8601 value with a UTC offset"
         )
     return parsed
-
-
-def _normalize_location(value):
-    normalized = (value or "").casefold()
-    for source, replacement in (
-        ("illinois", "il"),
-        ("california", "ca"),
-        ("washington", "wa"),
-        ("blastbox", ""),
-        ("store", ""),
-    ):
-        normalized = normalized.replace(source, replacement)
-    return "".join(character for character in normalized if character.isalnum())
-
-
-def parse_bays_json(value, expected_location, expected_timezone):
-    """Parse the current list_bays MCP response into layout and occupancy."""
-    try:
-        payload = json.loads(value)
-    except json.JSONDecodeError as exc:
-        raise ValueError("--bays-json must be valid JSON") from exc
-    if not isinstance(payload, dict):
-        raise ValueError("--bays-json must be the complete list_bays JSON object")
-    location = payload.get("location")
-    if (
-        not isinstance(location, str)
-        or _normalize_location(location) != _normalize_location(expected_location)
-    ):
-        raise ValueError("--bays-json location must match --store")
-    timezone_id = payload.get("timezone_id")
-    if timezone_id != expected_timezone:
-        raise ValueError("--bays-json timezone_id must match --store-timezone")
-    records = payload.get("bays")
-    if not isinstance(records, list) or not records:
-        raise ValueError("--bays-json must contain a non-empty bays array")
-
-    bays = []
-    occupancy = {}
-    seen = set()
-    for record in records:
-        if not isinstance(record, dict):
-            raise ValueError("--bays-json bay entries must be JSON objects")
-        bay_id = record.get("bay_id")
-        if isinstance(bay_id, bool) or not isinstance(bay_id, int) or bay_id <= 0:
-            raise ValueError("--bays-json bay_id values must be positive integers")
-        if bay_id in seen:
-            raise ValueError("--bays-json bay_id values must be unique")
-        seen.add(bay_id)
-        for field in ("covered", "lit", "priority", "occupied"):
-            if not isinstance(record.get(field), bool):
-                raise ValueError(f"--bays-json {field} values must be boolean")
-        facing = record.get("facing")
-        if isinstance(facing, bool) or not isinstance(facing, (int, float)):
-            raise ValueError("--bays-json facing values must be numeric")
-        bays.append(
-            {
-                "bay_id": bay_id,
-                "covered": record["covered"],
-                "lit": record["lit"],
-                "facing": float(facing) % 360,
-                "priority": record["priority"],
-            }
-        )
-        occupancy[str(bay_id)] = (
-            record.get("occupied_by") or "occupied"
-            if record["occupied"]
-            else None
-        )
-    return bays, occupancy
 
 
 def _first_sunday_on_or_after(value):
@@ -408,258 +214,556 @@ def _resolve_timezone(timezone_id):
         return fallback
 
 
-def _parse_sunset(sunset_iso, sunset_local, local_now, store_tz):
-    if sunset_iso:
-        return _parse_aware_iso(sunset_iso, "--sunset").astimezone(store_tz)
-    if not sunset_local:
-        raise ValueError("provide --sunset or --sunset-local")
-    try:
-        parsed_time = time.fromisoformat(sunset_local)
-    except ValueError as exc:
-        raise ValueError("--sunset-local must use HH:MM or HH:MM:SS") from exc
-    return datetime.combine(local_now.date(), parsed_time, tzinfo=store_tz)
-
-
-def compute_staging(
+def _resolve_arrival_timing(
     *,
-    eta_minutes,
-    item_count,
-    cap,
-    wx,
-    temp,
-    feels,
-    wind_spd,
-    wind_gust,
-    wind_dir,
-    rain_chance,
     now_iso,
     store_timezone,
-    sunset_iso=None,
-    sunset_local=None,
-    bays,
-    occupancy,
-    tier_code,
-    conditions_source,
+    eta_minutes=None,
+    target_local_time=None,
+    target_adjustment_minutes=0,
 ):
-    """Deterministically combine supplied operational and weather facts."""
-    now = _parse_aware_iso(now_iso, "--now")
-    store_tz = _resolve_timezone(store_timezone)
-    local_now = now.astimezone(store_tz)
-    local_sunset = _parse_sunset(sunset_iso, sunset_local, local_now, store_tz)
-    expected_arrival = (
-        local_now.astimezone(timezone.utc) + timedelta(minutes=eta_minutes)
-    ).astimezone(store_tz)
-    is_dark = expected_arrival >= local_sunset - timedelta(
-        minutes=DARK_BUFFER_MIN
-    )
-
-    band = detect_band(
-        cap, wx, temp, feels, wind_gust, rain_chance, is_dark
-    )
-    bay_id, handoff_mode, note = select_bay(
-        band, bays, occupancy, wind_dir, tier_code
-    )
-    selected_bay = next(
-        (bay for bay in bays if bay["bay_id"] == bay_id),
-        None,
-    )
-    guidance = build_guidance(
-        band, handoff_mode, selected_bay, note, tier_code
-    )
-    pick_minutes = PICK_MINUTES_PER_ITEM * item_count
-    stage_at_minutes = compute_stage_at(eta_minutes, item_count, band)
-    stage_at_clock = (
-        local_now.astimezone(timezone.utc)
-        + timedelta(minutes=stage_at_minutes)
-    ).astimezone(store_tz).strftime("%H:%M")
-    arrival_clock = expected_arrival.strftime("%H:%M")
-
-    bay_text = "NONE" if bay_id is None else str(bay_id)
-    adjust = BAND_STAGE_ADJUST[band]
-    lines = [
-        f"Customer ETA: {eta_minutes} minutes",
-        (
-            f"Operational facts: {item_count} physical units, "
-            f"{len(bays)} configured bays, tier={tier_code or 'standard'}"
-        ),
-        (
-            f"Weather facts: cap={cap or 'none'}, temp={temp:.1f}C, "
-            f"feels={feels:.1f}C, wind={wind_spd:.1f}km/h, "
-            f"gust={wind_gust:.1f}km/h, rain_chance={rain_chance:g}%, "
-            f"sunset={local_sunset.strftime('%H:%M %z')}"
-        ),
-        (
-            f"Pick time: {item_count} physical units x "
-            f"{PICK_MINUTES_PER_ITEM:.1f} = {pick_minutes:.1f} minutes"
-        ),
-        f"Conditions band: {band} (stage adjustment {adjust:+.1f} minutes)",
-        f"Bay selection: {bay_text} ({handoff_mode})",
-    ]
-    if note:
-        lines.append(f"Bay note: {note}")
-    lines.extend(
-        [
-            f"Weather impact: {guidance['weather_reason']}",
-            f"Bay reason: {guidance['bay_reason']}",
-            f"Delivery handling: {guidance['delivery_instruction']}",
-            f"Customer precaution: {guidance['customer_precaution']}",
-        ]
-    )
-    if conditions_source == "fallback":
-        lines.append(
-            "Conditions source: fallback - typical for this store, not current"
+    if eta_minutes is not None and eta_minutes < 0:
+        raise ValueError("--eta-minutes must be zero or greater")
+    if eta_minutes is not None and target_local_time is not None:
+        raise ValueError(
+            "--eta-minutes and --target-local-time cannot be used together"
         )
+    if target_adjustment_minutes and target_local_time is None:
+        raise ValueError(
+            "--target-adjustment-minutes requires --target-local-time"
+        )
+    if eta_minutes is None and target_local_time is None:
+        return None, None, None, None, "not_provided"
+    if now_iso is None or store_timezone is None:
+        raise ValueError(
+            "--now and --store-timezone are required for ETA calculations"
+        )
+
+    store_tz = _resolve_timezone(store_timezone)
+    local_now = _parse_aware_iso(now_iso, "--now").astimezone(store_tz)
+    if target_local_time is not None:
+        target_time = _parse_aware_iso(
+            target_local_time, "--target-local-time"
+        ).astimezone(store_tz)
+        target_time = (
+            target_time.astimezone(timezone.utc)
+            + timedelta(minutes=target_adjustment_minutes)
+        ).astimezone(store_tz)
     else:
-        lines.append("Conditions source: live (MSN Weather)")
-    lines.append(
-        f"Stage timing: T+{stage_at_minutes} at {stage_at_clock} store local time"
+        target_time = (
+            local_now.astimezone(timezone.utc)
+            + timedelta(minutes=eta_minutes)
+        ).astimezone(store_tz)
+
+    raw_remaining_seconds = (
+        target_time.astimezone(timezone.utc)
+        - local_now.astimezone(timezone.utc)
+    ).total_seconds()
+    remaining_seconds = max(0, math.ceil(raw_remaining_seconds))
+    remaining_minutes = math.ceil(remaining_seconds / 60)
+    target_status = (
+        "future" if raw_remaining_seconds > 0 else "due_or_passed"
     )
-    lines.append(
-        f"Customer arrival estimate: T+{eta_minutes} at {arrival_clock} "
-        "store local time"
+    return (
+        local_now,
+        target_time,
+        remaining_seconds,
+        remaining_minutes,
+        target_status,
     )
 
+
+def calculate_remaining_eta(
+    *,
+    target_local_time,
+    now_iso,
+    store_timezone,
+    target_adjustment_minutes=0,
+):
+    """Calculate same-session ETA without weather, queue, or bay inputs."""
+    (
+        local_now,
+        target_time,
+        remaining_seconds,
+        remaining_minutes,
+        target_status,
+    ) = (
+        _resolve_arrival_timing(
+            now_iso=now_iso,
+            store_timezone=store_timezone,
+            target_local_time=target_local_time,
+            target_adjustment_minutes=target_adjustment_minutes,
+        )
+    )
     return {
-        "band": band,
-        "bay_id": bay_id,
-        "handoff_mode": handoff_mode,
-        "stage_at_minutes": stage_at_minutes,
-        "stage_at_clock": stage_at_clock,
-        "arrival_clock": arrival_clock,
-        "pick_minutes": pick_minutes,
-        "conditions_source": conditions_source,
-        "note": note,
-        "bay_details": selected_bay,
-        **guidance,
-        "lines": lines,
+        "operation": "eta_only",
+        "current_local_time": local_now.isoformat(),
+        "target_local_time": target_time.isoformat(),
+        "remaining_eta_seconds": remaining_seconds,
+        "remaining_eta_minutes": remaining_minutes,
+        "target_status": target_status,
     }
 
 
-def _print_lines(lines):
-    print("\n".join(lines))
-    print("-" * 36)
-
-
-def _non_negative_int(value):
-    parsed = int(value)
-    if parsed < 0:
-        raise argparse.ArgumentTypeError("must be zero or greater")
-    return parsed
-
-
-def main(argv):
-    parser = argparse.ArgumentParser(
-        description=(
-            "Calculate a deterministic BlastBox Curb Delivery staging plan. "
-            "All weather inputs are Metric: Celsius, km/h, and percent."
-        )
-    )
-    sub = parser.add_subparsers(dest="command", required=True)
-    stage = sub.add_parser(
-        "stage",
-        help="Calculate the conditions band, bay, and staging time.",
-        description=(
-            "Calculate a Curb Delivery staging plan. Weather values must use "
-            "Metric units: Celsius, km/h, and percent."
+def calculate_queue_status(
+    *,
+    queue_observed_at,
+    initial_orders_ahead,
+    now_iso,
+    store_timezone,
+    eta_minutes=None,
+    target_local_time=None,
+    target_adjustment_minutes=0,
+):
+    """Return deterministic same-session queue progress for one retained bay."""
+    if initial_orders_ahead < 0:
+        raise ValueError("--initial-orders-ahead must be zero or greater")
+    store_tz = _resolve_timezone(store_timezone)
+    observed = _parse_aware_iso(
+        queue_observed_at, "--queue-observed-at"
+    ).astimezone(store_tz)
+    current = _parse_aware_iso(now_iso, "--now").astimezone(store_tz)
+    elapsed_seconds = max(
+        0,
+        int(
+            (
+                current.astimezone(timezone.utc)
+                - observed.astimezone(timezone.utc)
+            ).total_seconds()
         ),
     )
-    stage.add_argument("--eta-minutes", type=_non_negative_int, required=True)
-    stage.add_argument(
-        "--item-count",
-        type=_non_negative_int,
-        required=True,
-        help="Total physical units (sum of order quantities), not product lines.",
+    completed_orders = min(
+        initial_orders_ahead,
+        elapsed_seconds // QUEUE_SECONDS_PER_ORDER,
     )
-    stage.add_argument(
-        "--store",
-        required=True,
-        help="Pickup store city and state returned by Curb Delivery MCP.",
+    remaining_orders = initial_orders_ahead - completed_orders
+    (
+        _,
+        target_time,
+        remaining_eta_seconds,
+        remaining_eta_minutes,
+        target_status,
+    ) = _resolve_arrival_timing(
+        now_iso=now_iso,
+        store_timezone=store_timezone,
+        eta_minutes=eta_minutes,
+        target_local_time=target_local_time,
+        target_adjustment_minutes=target_adjustment_minutes,
     )
-    stage.add_argument(
-        "--store-timezone",
-        required=True,
-        help="IANA timezone_id returned by Curb Delivery MCP.",
+    expected_wait_seconds = remaining_orders * QUEUE_SECONDS_PER_ORDER
+    estimated_curb_ready_time = current + timedelta(
+        seconds=expected_wait_seconds
     )
-    stage.add_argument(
-        "--bays-json",
-        required=True,
-        help="Exact JSON object returned by Curb Delivery MCP list_bays.",
+    eta_margin_seconds = (
+        remaining_eta_seconds - expected_wait_seconds
+        if remaining_eta_seconds is not None
+        else None
     )
-    stage.add_argument("--cap", required=True, help="Weather caption.")
-    stage.add_argument("--wx", default="", help="Weather code reinforcement.")
-    stage.add_argument("--temp", type=float, required=True, help="Temperature in C.")
-    stage.add_argument(
-        "--feels", type=float, required=True, help="Feels-like temperature in C."
+    return {
+        "operation": "queue_status",
+        "current_local_time": current.isoformat(),
+        "queue_observed_at": observed.isoformat(),
+        "queue_seconds_per_order": QUEUE_SECONDS_PER_ORDER,
+        "initial_orders_ahead": initial_orders_ahead,
+        "completed_orders": completed_orders,
+        "orders_ahead": remaining_orders,
+        "expected_wait_seconds": expected_wait_seconds,
+        "estimated_curb_ready_time": estimated_curb_ready_time.isoformat(),
+        "queue_status": "ready" if remaining_orders == 0 else "in_progress",
+        "target_local_time": (
+            target_time.isoformat() if target_time is not None else None
+        ),
+        "remaining_eta_seconds": remaining_eta_seconds,
+        "remaining_eta_minutes": remaining_eta_minutes,
+        "target_status": target_status,
+        "eta_margin_seconds": eta_margin_seconds,
+        "eta_status": (
+            "not_provided"
+            if eta_margin_seconds is None
+            else "before_arrival"
+            if eta_margin_seconds >= 0
+            else "may_extend_beyond_arrival"
+        ),
+    }
+
+
+def preferred_attributes(active_conditions, wind_dir):
+    """Accumulate every applicable machine-readable bay preference."""
+    attributes = {
+        "covered": None,
+        "lit": None,
+        "good_drainage": None,
+        "high_wind_protection": None,
+        "facing_away_from_wind_degrees": None,
+        "shorter_distance_to_entrance": None,
+    }
+    if any(
+        condition in active_conditions
+        for condition in ("WET", "HOT", "COLD")
+    ):
+        attributes["covered"] = True
+    if "WET" in active_conditions:
+        attributes["good_drainage"] = True
+    if "WINDY" in active_conditions:
+        attributes["high_wind_protection"] = True
+    if any(
+        condition in active_conditions
+        for condition in ("DARK", "LOW_VISIBILITY")
+    ):
+        attributes["lit"] = True
+    if "WINDY" in active_conditions and wind_dir is not None:
+        attributes["facing_away_from_wind_degrees"] = round(
+            (wind_dir + 180.0) % 360.0, 1
+        )
+    if active_conditions:
+        attributes["shorter_distance_to_entrance"] = True
+    return attributes
+
+
+def select_forecast_period(
+    reference_iso, store_timezone, sunrise_iso, sunset_iso
+):
+    """Return day or night for a reference time and almanac boundaries."""
+    if (
+        reference_iso is None
+        or store_timezone is None
+        or sunrise_iso is None
+        or sunset_iso is None
+    ):
+        return None
+    store_tz = _resolve_timezone(store_timezone)
+    reference = _parse_aware_iso(
+        reference_iso, "--forecast-reference"
+    ).astimezone(store_tz)
+    sunrise = _parse_aware_iso(sunrise_iso, "--sunrise").astimezone(
+        store_tz
     )
-    stage.add_argument(
-        "--wind-spd", type=float, required=True, help="Wind speed in km/h."
-    )
-    stage.add_argument(
-        "--wind-gust", type=float, required=True, help="Wind gust in km/h."
-    )
-    stage.add_argument(
-        "--wind-dir", type=float, required=True, help="Wind-from direction in degrees."
-    )
-    stage.add_argument(
-        "--rain-chance", type=float, required=True, help="Rain chance in percent."
-    )
-    stage.add_argument(
-        "--now",
-        required=True,
-        help="Timezone-aware ISO-8601 current time with UTC offset.",
-    )
-    sunset = stage.add_mutually_exclusive_group(required=True)
-    sunset.add_argument(
-        "--sunset",
-        help="Timezone-aware ISO-8601 store-local sunset with UTC offset.",
-    )
-    sunset.add_argument(
-        "--sunset-local",
-        help="Fallback local sunset time from Curb Delivery MCP (HH:MM).",
-    )
-    stage.add_argument("--tier-code", default="standard")
-    stage.add_argument(
-        "--conditions-source", choices=("live", "fallback"), required=True
+    sunset = _parse_aware_iso(sunset_iso, "--sunset").astimezone(store_tz)
+    if sunrise >= sunset:
+        return "night" if sunset <= reference < sunrise else "day"
+    return "day" if sunrise <= reference < sunset else "night"
+
+
+def _select_forecast(
+    selected_period,
+    day_cap,
+    day_precip,
+    day_summary,
+    night_cap,
+    night_precip,
+    night_summary,
+):
+    if selected_period == "day":
+        return day_cap, day_precip, day_summary
+    if selected_period == "night":
+        return night_cap, night_precip, night_summary
+
+    candidates = (
+        (day_cap, day_precip, day_summary),
+        (night_cap, night_precip, night_summary),
     )
 
-    args = parser.parse_args(argv[1:])
+    def hazard_score(candidate):
+        caption, precipitation, _ = candidate
+        caption_score = (
+            RAIN_CHANCE_PCT
+            if caption is not None
+            and any(
+                token in caption.lower() for token in WET_CAPTION_TOKENS
+            )
+            else 0
+        )
+        return max(caption_score, precipitation or 0)
+
+    return max(candidates, key=hazard_score)
+
+
+def assess_weather(
+    *,
+    weather_available,
+    eta_minutes=None,
+    target_local_time=None,
+    target_adjustment_minutes=0,
+    current_cap=None,
+    temp=None,
+    feels=None,
+    visibility=None,
+    wind_dir=None,
+    wind_speed=None,
+    wind_gust=None,
+    day_cap=None,
+    day_precip=None,
+    day_summary=None,
+    night_cap=None,
+    night_precip=None,
+    night_summary=None,
+    now_iso=None,
+    store_timezone=None,
+    sunrise_iso=None,
+    sunset_iso=None,
+):
+    """Return a weather-only construct used by the skill for bay reasoning."""
+    (
+        local_now,
+        arrival_target,
+        remaining_eta_seconds,
+        remaining_eta_minutes,
+        target_status,
+    ) = (
+        _resolve_arrival_timing(
+            now_iso=now_iso,
+            store_timezone=store_timezone,
+            eta_minutes=eta_minutes,
+            target_local_time=target_local_time,
+            target_adjustment_minutes=target_adjustment_minutes,
+        )
+    )
+
+    if not weather_available:
+        return {
+            "weather_available": False,
+            "weather_status": "unavailable",
+            "assessment_basis": "unavailable",
+            "target_local_time": (
+                arrival_target.isoformat()
+                if arrival_target is not None
+                else None
+            ),
+            "remaining_eta_seconds": remaining_eta_seconds,
+            "remaining_eta_minutes": remaining_eta_minutes,
+            "target_status": target_status,
+            "selected_period": None,
+            "current_conditions": {},
+            "selected_forecast": {},
+            "effective_temperature": None,
+            "temperature_source": None,
+            "primary_band": "UNKNOWN",
+            "active_conditions": [],
+            "preferred_bay_attributes": {
+                "covered": None,
+                "lit": None,
+                "good_drainage": None,
+                "high_wind_protection": None,
+                "facing_away_from_wind_degrees": None,
+                "shorter_distance_to_entrance": None,
+            },
+            "reason_codes": ["QUEUE_ONLY"],
+            "unevaluated_conditions": list(CONDITION_PRECEDENCE),
+        }
+
+    forecast_reference_iso = (
+        arrival_target.isoformat()
+        if arrival_target is not None
+        else now_iso
+    )
+    selected_period = select_forecast_period(
+        forecast_reference_iso,
+        store_timezone,
+        sunrise_iso,
+        sunset_iso,
+    )
+    selected_cap, selected_precip, selected_summary = _select_forecast(
+        selected_period,
+        day_cap,
+        day_precip,
+        day_summary,
+        night_cap,
+        night_precip,
+        night_summary,
+    )
+
+    (
+        active_conditions,
+        unevaluated_conditions,
+        effective_temperature,
+        temperature_source,
+    ) = detect_active_conditions(
+        current_cap,
+        selected_cap,
+        selected_precip,
+        temp,
+        feels,
+        visibility,
+        wind_speed,
+        wind_gust,
+        selected_period == "night" if selected_period is not None else None,
+    )
+    if "WINDY" in active_conditions and wind_dir is None:
+        unevaluated_conditions.append("WIND_DIRECTION")
+
+    has_weather_evidence = any(
+        value is not None
+        for value in (
+            current_cap,
+            temp,
+            feels,
+            visibility,
+            wind_speed,
+            wind_gust,
+            selected_cap,
+            selected_precip,
+            selected_summary,
+        )
+    )
+    primary_band = next(
+        (
+            condition
+            for condition in CONDITION_PRECEDENCE
+            if condition in active_conditions
+        ),
+        "BENIGN" if has_weather_evidence else "PARTIAL",
+    )
+    attributes = preferred_attributes(active_conditions, wind_dir)
+    reason_codes = [
+        REASON_CODES[condition] for condition in active_conditions
+    ]
+    if not reason_codes:
+        reason_codes = [
+            "PARTIAL_WEATHER"
+            if unevaluated_conditions
+            else "NO_WEATHER_PREFERENCE"
+        ]
+
+    return {
+        "weather_available": True,
+        "weather_status": (
+            "partial" if unevaluated_conditions else "complete"
+        ),
+        "assessment_basis": (
+            "expected_arrival"
+            if arrival_target is not None
+            else "current_conditions"
+        ),
+        "target_local_time": (
+            arrival_target.isoformat()
+            if arrival_target is not None
+            else None
+        ),
+        "remaining_eta_seconds": remaining_eta_seconds,
+        "remaining_eta_minutes": remaining_eta_minutes,
+        "target_status": target_status,
+        "selected_period": selected_period,
+        "current_conditions": {
+            "condition": current_cap,
+            "temperature": temp,
+            "feels_like": feels,
+            "visibility": visibility,
+            "wind_direction": wind_dir,
+            "wind_speed": wind_speed,
+            "wind_gust": wind_gust,
+        },
+        "selected_forecast": {
+            "condition": selected_cap,
+            "precipitation_chance": selected_precip,
+            "summary": selected_summary,
+        },
+        "effective_temperature": effective_temperature,
+        "temperature_source": temperature_source,
+        "primary_band": primary_band,
+        "active_conditions": active_conditions,
+        "preferred_bay_attributes": attributes,
+        "reason_codes": reason_codes,
+        "unevaluated_conditions": unevaluated_conditions,
+    }
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Evaluate curbside weather and arrival timing."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    assess = subparsers.add_parser("assess")
+    assess.add_argument(
+        "--weather-available", choices=("true", "false"), required=True
+    )
+    assess.add_argument("--eta-minutes", type=int)
+    assess.add_argument("--target-local-time")
+    assess.add_argument("--target-adjustment-minutes", type=int, default=0)
+    assess.add_argument("--current-cap")
+    assess.add_argument("--temp", type=float)
+    assess.add_argument("--feels", type=float)
+    assess.add_argument("--visibility", type=float)
+    assess.add_argument("--wind-dir", type=float)
+    assess.add_argument("--wind-speed", type=float)
+    assess.add_argument("--wind-gust", type=float)
+    assess.add_argument("--day-cap")
+    assess.add_argument("--day-precip", type=float)
+    assess.add_argument("--day-summary")
+    assess.add_argument("--night-cap")
+    assess.add_argument("--night-precip", type=float)
+    assess.add_argument("--night-summary")
+    assess.add_argument("--now")
+    assess.add_argument("--store-timezone")
+    assess.add_argument("--sunrise")
+    assess.add_argument("--sunset")
+    remaining = subparsers.add_parser("remaining")
+    remaining.add_argument("--target-local-time", required=True)
+    remaining.add_argument("--now", required=True)
+    remaining.add_argument("--store-timezone", required=True)
+    remaining.add_argument(
+        "--target-adjustment-minutes", type=int, default=0
+    )
+    queue = subparsers.add_parser("queue")
+    queue.add_argument("--queue-observed-at", required=True)
+    queue.add_argument("--initial-orders-ahead", type=int, required=True)
+    queue.add_argument("--now", required=True)
+    queue.add_argument("--store-timezone", required=True)
+    queue.add_argument("--eta-minutes", type=int)
+    queue.add_argument("--target-local-time")
+    queue.add_argument("--target-adjustment-minutes", type=int, default=0)
+    return parser
+
+
+def main():
+    args = build_parser().parse_args()
     try:
-        bays, occupancy = parse_bays_json(
-            args.bays_json, args.store, args.store_timezone
-        )
-        result = compute_staging(
-            eta_minutes=args.eta_minutes,
-            item_count=args.item_count,
-            cap=args.cap,
-            wx=args.wx,
-            temp=args.temp,
-            feels=args.feels,
-            wind_spd=args.wind_spd,
-            wind_gust=args.wind_gust,
-            wind_dir=args.wind_dir,
-            rain_chance=args.rain_chance,
-            now_iso=args.now,
-            store_timezone=args.store_timezone,
-            sunset_iso=args.sunset,
-            sunset_local=args.sunset_local,
-            bays=bays,
-            occupancy=occupancy,
-            tier_code=args.tier_code,
-            conditions_source=args.conditions_source,
-        )
+        if args.command == "remaining":
+            result = calculate_remaining_eta(
+                target_local_time=args.target_local_time,
+                now_iso=args.now,
+                store_timezone=args.store_timezone,
+                target_adjustment_minutes=args.target_adjustment_minutes,
+            )
+        elif args.command == "queue":
+            result = calculate_queue_status(
+                queue_observed_at=args.queue_observed_at,
+                initial_orders_ahead=args.initial_orders_ahead,
+                now_iso=args.now,
+                store_timezone=args.store_timezone,
+                eta_minutes=args.eta_minutes,
+                target_local_time=args.target_local_time,
+                target_adjustment_minutes=args.target_adjustment_minutes,
+            )
+        else:
+            result = assess_weather(
+                weather_available=args.weather_available == "true",
+                eta_minutes=args.eta_minutes,
+                target_local_time=args.target_local_time,
+                target_adjustment_minutes=args.target_adjustment_minutes,
+                current_cap=args.current_cap,
+                temp=args.temp,
+                feels=args.feels,
+                visibility=args.visibility,
+                wind_dir=args.wind_dir,
+                wind_speed=args.wind_speed,
+                wind_gust=args.wind_gust,
+                day_cap=args.day_cap,
+                day_precip=args.day_precip,
+                day_summary=args.day_summary,
+                night_cap=args.night_cap,
+                night_precip=args.night_precip,
+                night_summary=args.night_summary,
+                now_iso=args.now,
+                store_timezone=args.store_timezone,
+                sunrise_iso=args.sunrise,
+                sunset_iso=args.sunset,
+            )
     except ValueError as exc:
-        parser.error(str(exc))
-
-    _print_lines(result["lines"])
-    bay_text = "NONE" if result["bay_id"] is None else result["bay_id"]
-    print(
-        f"STAGE AT: {result['stage_at_clock']} "
-        f"(T+{result['stage_at_minutes']}) | BAY {bay_text} | "
-        f"{result['handoff_mode']} | band={result['band']} | "
-        f"source={result['conditions_source']}"
-    )
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(result, sort_keys=True))
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    raise SystemExit(main())

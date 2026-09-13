@@ -30,6 +30,36 @@ re-attach table.
 | `skills/` | The Python skill bundles that ride in on the agents solution (reference copies). |
 | `src/` | The **unpacked** source of both solutions (`pac solution unpack`), for inspection/diffing. Not imported directly. |
 
+## Solution package layout
+
+The unpacked solution and importable ZIP intentionally use different layouts:
+
+- Unpacked source keeps `Solution.xml` and `Customizations.xml` under
+  `src/<solution>/Other/`.
+- An importable ZIP must have `solution.xml`, `customizations.xml`, and
+  `[Content_Types].xml` at its root. It must not contain an `Other/` folder.
+
+Never create a solution ZIP with a general-purpose archive command. Rebuild it
+with the Power Platform solution packer:
+
+```powershell
+pac solution pack `
+  --zipfile sample\solution\BlastBoxAgents_1_0_0_1.zip `
+  --folder sample\solution\src\BlastBoxAgents `
+  --packagetype Unmanaged `
+  --clobber
+```
+
+The Curb Pickup Assistant configuration must contain exactly one instruction
+segment. Multiple imported segments can exist in Dataverse but fail to render in
+the Copilot Studio instruction editor.
+
+Validate both committed packages before import:
+
+```powershell
+python deploy\validate_solution_packages.py
+```
+
 ### Connectors (5 inline MCP servers — custom code, no external hosting)
 
 | Connector | Slug | Schema name |
@@ -46,7 +76,7 @@ re-attach table.
 | --- | --- | --- |
 | **Store Associate Assistant** | Parent — **flagship** (Block Party Trade-Up) | Order Management MCP + Membership MCP v2; connected: Store Policy, Inventory & Fulfillment; skills: prorated-refund-calculator, points-reconciliation, slip-pdf-generator |
 | **Returns & Service Assistant** | Parent — **self-serve** (Card Reissue) | Membership MCP v2; connected: Store Policy; skills: card-reissue, membership-card-png |
-| **Curb Pickup Assistant** | Parent — **customer pickup** (Weather-aware Curb Pickup) | Curb Pickup MCP + MSN Weather; connected: Store Associate; skills: staging-window-calculator, curbside-slip-pdf |
+| **Curb Pickup Assistant** | Parent — **customer pickup** (Weather-aware Curb Pickup) | Curb Pickup MCP + MSN Weather; connected: Store Associate; skills: curbside-bay-selector, curbside-slip-pdf |
 | **Store Policy Agent** | Connected child | Policy RAG MCP v2 |
 | **Inventory & Fulfillment Agent** | Connected child | Warehouse MCP |
 
@@ -72,11 +102,14 @@ Expect: `get_membership` → identity check → `reissue_card` → `membership-c
 `$76.66` / `$100.00` / `$23.34`, the three MEGA exclusives, and a generated PDF slip.
 Prompts: `sample/archive/store-solution/evals/flagship-block-party-trade-up-runbook.md`.
 
-**Weather-aware Curb Pickup** (Curb Pickup Assistant) — order `ORD-10502`, location
-`Pixel Heights, WA`, member `MEGA-BLAST-1024`. Expect a verified order and tier, live
-weather relevant to the ETA, deterministic staging, a confirmed bay assignment, and an
-optional barcode PDF delivery note. Exact weather, times, and bay vary with live
-conditions and current occupancy. Prompts:
+**Weather-aware Curb Pickup** (Curb Pickup Assistant) — order `ORD-10502`, member
+`MEGA-BLAST-1024`, and an optional customer ETA. Expect a verified order location and
+exact membership `tier_code`, informational store hours, live-weather classification,
+one fresh bay queue snapshot, and `blastbox_curbside_slip.pdf` as the only successful
+response. Each bay starts with 6–10 demo orders ahead. For follow-up progression,
+each order clears every 30 seconds; the assistant remembers the prior update time
+and returns a recalculated curb-ready estimate. Exact weather, queue, wait, and bay
+vary by run. Prompts:
 `https://microsoft.github.io/new-copilot-studio-tech-guide/scenarios/curb-pickup-assistant`.
 
 ## Notes

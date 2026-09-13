@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 // ╔══════════════════════════════════════════════════════════════════════════════╗
 // ║  Curb Delivery MCP Connector (inline)                                       ║
 // ║                                                                            ║
-// ║  4 tools with static mock data — no external server needed.                ║
+// ║  2 tools with static mock data — no external server needed.                ║
 // ║  Based on Power MCP Template v2.1 by Troy Taylor.                          ║
 // ╚══════════════════════════════════════════════════════════════════════════════╝
 
@@ -27,11 +27,11 @@ public class Script : ScriptBase
             Name = "blastbox-curb-delivery",
             Version = "1.0.0",
             Title = "BlastBox Curb Delivery",
-            Description = "MCP-sourced BlastBox Curb Delivery operational facts for store locations, collection bay availability, bay assignment, and clearly disclosed fallback conditions. Live weather comes separately from MSN Weather."
+            Description = "BlastBox curbside pickup tools for resolving store status and retrieving current bay availability and queue estimates."
         },
         ProtocolVersion = "2025-11-25",
         Capabilities = new McpCapabilities { Tools = true },
-        Instructions = "This connector supplies operational facts only and never fetches weather. Identify the pickup store by city and state, such as Springfield, IL. Order status does not control this curbside workflow: use the order ID as a reference and do not reject, stop, or skip bay assignment because an order is processing, shipped, delivered, or has another status. Use get_store_location for store coordinates and bay layout, pass the coordinates to MSN Weather for live conditions and sunset, and use list_bays for current occupancy. The bundled staging skill deterministically combines those facts with order quantities and optional membership facts; do not invent thresholds in prose. Use assign_bay only after the staging skill selects a bay. Use get_fallback_conditions only when live weather fails or is unavailable, and always tell the customer those conditions are typical for the store, not current."
+        Instructions = "This connector supplies store and curbside pickup bay facts only. Use get_store_location for canonical store metadata, published hours, and current open status. Treat store hours and open status as informational facts. Call list_bays once for a fresh planning snapshot. Each bay has a fixed orders_ahead value from 6 through 10 and a queue rate of 30 seconds per order. Preserve queue_observed_at for deterministic same-session queue progress. The agent applies weather, queue, and any equal-wait membership tie-break when assigning a bay."
     };
 
     public override async Task<HttpResponseMessage> ExecuteAsync()
@@ -59,16 +59,11 @@ public class Script : ScriptBase
     ""lon"": -89.6501,
     ""timezone_id"": ""America/Chicago"",
     ""bays"": [
-      { ""bay_id"": 1, ""covered"": true,  ""lit"": true,  ""facing"": 90,  ""priority"": true  },
-      { ""bay_id"": 2, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""priority"": false },
-      { ""bay_id"": 3, ""covered"": false, ""lit"": false, ""facing"": 270, ""priority"": false }
+      { ""bay_id"": 1, ""covered"": true,  ""lit"": true,  ""facing"": 90,  ""wind_protection"": ""high"",   ""drainage"": ""good"", ""distance_to_entrance_m"": 12, ""priority"": true,        ""orders_ahead"": 7 },
+      { ""bay_id"": 2, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""wind_protection"": ""medium"", ""drainage"": ""good"", ""distance_to_entrance_m"": 20, ""priority"": false,       ""orders_ahead"": 6 },
+      { ""bay_id"": 3, ""covered"": false, ""lit"": false, ""facing"": 270, ""wind_protection"": ""low"",    ""drainage"": ""fair"", ""distance_to_entrance_m"": 8,  ""priority"": false,       ""orders_ahead"": 8 }
     ],
-    ""typical_conditions"": {
-      ""cap"": ""Partly cloudy"", ""temp"": 18.0, ""feels"": 17.0,
-      ""wind_spd"": 16.0, ""wind_gust"": 28.0, ""wind_dir"": 225,
-      ""sunset"": ""19:20"", ""rain_chance"": 30
-    },
-    ""fallback_note"": ""Springfield seasonal typical - variable temperatures with occasional rain""
+    ""occupancy"": { ""1"": null, ""2"": null, ""3"": null }
   },
   {
     ""location"": ""Los Angeles, CA"",
@@ -78,19 +73,14 @@ public class Script : ScriptBase
     ""lon"": -118.2437,
     ""timezone_id"": ""America/Los_Angeles"",
     ""bays"": [
-      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 0,   ""priority"": true  },
-      { ""bay_id"": 2, ""covered"": false, ""lit"": true,  ""facing"": 45,  ""priority"": false },
-      { ""bay_id"": 3, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""priority"": false },
-      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 180, ""priority"": false },
-      { ""bay_id"": 5, ""covered"": false, ""lit"": false, ""facing"": 270, ""priority"": false },
-      { ""bay_id"": 6, ""covered"": false, ""lit"": false, ""facing"": 315, ""priority"": false }
+      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 0,   ""wind_protection"": ""high"",   ""drainage"": ""good"", ""distance_to_entrance_m"": 10, ""priority"": true,        ""orders_ahead"": 6 },
+      { ""bay_id"": 2, ""covered"": false, ""lit"": true,  ""facing"": 45,  ""wind_protection"": ""medium"", ""drainage"": ""fair"", ""distance_to_entrance_m"": 14, ""priority"": false,       ""orders_ahead"": 7 },
+      { ""bay_id"": 3, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""wind_protection"": ""low"",    ""drainage"": ""good"", ""distance_to_entrance_m"": 18, ""priority"": false,       ""orders_ahead"": 8 },
+      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 180, ""wind_protection"": ""high"",   ""drainage"": ""poor"", ""distance_to_entrance_m"": 8,  ""priority"": false,       ""orders_ahead"": 9 },
+      { ""bay_id"": 5, ""covered"": false, ""lit"": false, ""facing"": 270, ""wind_protection"": ""medium"", ""drainage"": ""fair"", ""distance_to_entrance_m"": 22, ""priority"": false,       ""orders_ahead"": 10 },
+      { ""bay_id"": 6, ""covered"": false, ""lit"": false, ""facing"": 315, ""wind_protection"": ""high"",   ""drainage"": ""good"", ""distance_to_entrance_m"": 28, ""priority"": false,       ""orders_ahead"": 7 }
     ],
-    ""typical_conditions"": {
-      ""cap"": ""Sunny"", ""temp"": 27.0, ""feels"": 27.0,
-      ""wind_spd"": 12.0, ""wind_gust"": 20.0, ""wind_dir"": 270,
-      ""sunset"": ""19:05"", ""rain_chance"": 5
-    },
-    ""fallback_note"": ""Los Angeles seasonal typical - warm, dry, no covered bays at this site""
+    ""occupancy"": { ""1"": null, ""2"": null, ""3"": null, ""4"": null, ""5"": null, ""6"": null }
   },
   {
     ""location"": ""Seattle, WA"",
@@ -100,17 +90,12 @@ public class Script : ScriptBase
     ""lon"": -122.33,
     ""timezone_id"": ""America/Los_Angeles"",
     ""bays"": [
-      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 0,   ""priority"": false },
-      { ""bay_id"": 2, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""priority"": false },
-      { ""bay_id"": 3, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""priority"": true  },
-      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 270, ""priority"": false }
+      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 0,   ""wind_protection"": ""medium"", ""drainage"": ""good"", ""distance_to_entrance_m"": 10, ""priority"": false,       ""orders_ahead"": 7 },
+      { ""bay_id"": 2, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""wind_protection"": ""high"",   ""drainage"": ""fair"", ""distance_to_entrance_m"": 16, ""priority"": false,       ""orders_ahead"": 8 },
+      { ""bay_id"": 3, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""wind_protection"": ""high"",   ""drainage"": ""good"", ""distance_to_entrance_m"": 22, ""priority"": true,        ""orders_ahead"": 6 },
+      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 270, ""wind_protection"": ""low"",    ""drainage"": ""poor"", ""distance_to_entrance_m"": 8,  ""priority"": false,       ""orders_ahead"": 9 }
     ],
-    ""typical_conditions"": {
-      ""cap"": ""Light rain"", ""temp"": 9.0, ""feels"": 6.0,
-      ""wind_spd"": 15.0, ""wind_gust"": 28.0, ""wind_dir"": 225,
-      ""sunset"": ""16:25"", ""rain_chance"": 65
-    },
-    ""fallback_note"": ""Seattle seasonal typical - cool, wet, single covered bay""
+    ""occupancy"": { ""1"": null, ""2"": null, ""3"": ""ORD-OTHER"", ""4"": null }
   },
   {
     ""location"": ""Pixel Heights, WA"",
@@ -120,29 +105,24 @@ public class Script : ScriptBase
     ""lon"": -122.1215,
     ""timezone_id"": ""America/Los_Angeles"",
     ""bays"": [
-      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""priority"": false },
-      { ""bay_id"": 2, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""priority"": true  },
-      { ""bay_id"": 3, ""covered"": false, ""lit"": true,  ""facing"": 270, ""priority"": false },
-      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 0,   ""priority"": false }
+      { ""bay_id"": 1, ""covered"": false, ""lit"": true,  ""facing"": 90,  ""wind_protection"": ""medium"", ""drainage"": ""good"", ""distance_to_entrance_m"": 12, ""priority"": false,       ""orders_ahead"": 8 },
+      { ""bay_id"": 2, ""covered"": true,  ""lit"": true,  ""facing"": 180, ""wind_protection"": ""high"",   ""drainage"": ""good"", ""distance_to_entrance_m"": 20, ""priority"": true,        ""orders_ahead"": 6 },
+      { ""bay_id"": 3, ""covered"": false, ""lit"": true,  ""facing"": 270, ""wind_protection"": ""medium"", ""drainage"": ""fair"", ""distance_to_entrance_m"": 8,  ""priority"": false,       ""orders_ahead"": 7 },
+      { ""bay_id"": 4, ""covered"": false, ""lit"": false, ""facing"": 0,   ""wind_protection"": ""low"",    ""drainage"": ""poor"", ""distance_to_entrance_m"": 26, ""priority"": false,       ""orders_ahead"": 9 }
     ],
-    ""typical_conditions"": {
-      ""cap"": ""Cloudy"", ""temp"": 12.0, ""feels"": 10.0,
-      ""wind_spd"": 10.0, ""wind_gust"": 18.0, ""wind_dir"": 225,
-      ""sunset"": ""18:30"", ""rain_chance"": 40
-    },
-    ""fallback_note"": ""Pixel Heights seasonal typical - cool, cloudy, occasional rain""
+    ""occupancy"": { ""1"": null, ""2"": null, ""3"": null, ""4"": null }
   }
 ]");
 
-    private static readonly JObject BayOccupancy = JObject.Parse(@"{
-  ""Springfield, IL"": { ""1"": null, ""2"": null, ""3"": null },
-  ""Los Angeles, CA"": { ""1"": null, ""2"": null, ""3"": null, ""4"": null, ""5"": null, ""6"": null },
-  ""Seattle, WA"": { ""1"": null, ""2"": null, ""3"": ""ORD-10478"", ""4"": null },
-  ""Pixel Heights, WA"": { ""1"": null, ""2"": null, ""3"": null, ""4"": null }
+    private static readonly JObject OpeningHours = JObject.Parse(@"{
+  ""monday"": ""09:00-18:00"",
+  ""tuesday"": ""09:00-18:00"",
+  ""wednesday"": ""09:00-18:00"",
+  ""thursday"": ""09:00-18:00"",
+  ""friday"": ""09:00-18:00"",
+  ""saturday"": ""09:00-21:00"",
+  ""sunday"": ""09:00-21:00""
 }");
-
-    private static readonly JObject BayAssignedAt = JObject.Parse(@"{}");
-    private static readonly object BayAssignmentLock = new object();
 
     // ── Fixture Helpers ─────────────────────────────────────────────────
 
@@ -164,7 +144,8 @@ public class Script : ScriptBase
         var normalized = NormalizeLocation(location);
         foreach (var token in Stores)
         {
-            if (NormalizeLocation(token["location"]?.ToString()) == normalized)
+            var storeLocation = NormalizeLocation(token["location"]?.ToString());
+            if (normalized == storeLocation || normalized.Contains(storeLocation))
                 return token as JObject;
         }
         return null;
@@ -189,16 +170,52 @@ public class Script : ScriptBase
         };
     }
 
-    private static JArray FreeBayIds(string location)
+    private static TimeZoneInfo ResolveStoreTimeZone(string timezoneId)
     {
-        var occupancy = BayOccupancy[location] as JObject;
-        var ids = new JArray();
-        foreach (var property in occupancy.Properties().OrderBy(p => int.Parse(p.Name)))
+        string[] candidates;
+        if (timezoneId == "America/Chicago")
+            candidates = new[] { "America/Chicago", "Central Standard Time" };
+        else if (timezoneId == "America/Los_Angeles")
+            candidates = new[] { "America/Los_Angeles", "Pacific Standard Time" };
+        else
+            throw new InvalidOperationException($"Unsupported store timezone: {timezoneId}");
+
+        foreach (var candidate in candidates)
         {
-            if (property.Value == null || property.Value.Type == JTokenType.Null || string.IsNullOrEmpty(property.Value.ToString()))
-                ids.Add(int.Parse(property.Name));
+            try
+            {
+                return TimeZoneInfo.FindSystemTimeZoneById(candidate);
+            }
+            catch (TimeZoneNotFoundException)
+            {
+            }
+            catch (InvalidTimeZoneException)
+            {
+            }
         }
-        return ids;
+
+        throw new InvalidOperationException($"Unsupported store timezone: {timezoneId}");
+    }
+
+    private static JObject GetStoreStatus(JObject store, DateTimeOffset utcNow)
+    {
+        var timezoneId = store["timezone_id"].ToString();
+        var timezone = ResolveStoreTimeZone(timezoneId);
+        var localNow = TimeZoneInfo.ConvertTime(utcNow, timezone);
+        var day = localNow.DayOfWeek.ToString().ToLowerInvariant();
+        var todayHours = OpeningHours.Value<string>(day);
+        var parts = todayHours.Split('-');
+        var opensAt = TimeSpan.Parse(parts[0]);
+        var closesAt = TimeSpan.Parse(parts[1]);
+        var isOpen = localNow.TimeOfDay >= opensAt && localNow.TimeOfDay < closesAt;
+
+        return new JObject
+        {
+            ["store_local_time"] = localNow.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+            ["today_hours"] = todayHours,
+            ["opening_hours"] = OpeningHours.DeepClone(),
+            ["is_open"] = isOpen
+        };
     }
 
     // ── Tool Registration ───────────────────────────────────────────────
@@ -207,7 +224,7 @@ public class Script : ScriptBase
     {
         // 1. get_store_location
         handler.AddTool("get_store_location",
-            "Get a BlastBox store's location, coordinates and collection bay layout. Use the returned lat/lon with MSN Weather to look up live conditions and sunset; this connector does not fetch weather.",
+            "Resolve a supported BlastBox pickup store and return its canonical location, address, coordinates, timezone, published opening hours, current local time, and open status.",
             schemaConfig: s => s.String("location", "Pickup store city and state: Springfield, IL; Los Angeles, CA; Seattle, WA; or Pixel Heights, WA.", required: true),
             handler: async (args, ct) =>
             {
@@ -216,28 +233,22 @@ public class Script : ScriptBase
                 if (store == null)
                     return UnknownStore();
 
-                var bays = store["bays"] as JArray;
-                var covered = new JArray(bays.Where(b => b["covered"]?.Value<bool>() == true).Select(b => b["bay_id"]));
-                var lit = new JArray(bays.Where(b => b["lit"]?.Value<bool>() == true).Select(b => b["bay_id"]));
-                var priority = bays.FirstOrDefault(b => b["priority"]?.Value<bool>() == true);
-                return new JObject
+                var result = new JObject
                 {
                     ["location"] = store["location"],
                     ["name"] = store["name"],
                     ["address"] = store["address"],
                     ["lat"] = store["lat"],
                     ["lon"] = store["lon"],
-                    ["timezone_id"] = store["timezone_id"],
-                    ["bay_count"] = bays.Count,
-                    ["covered_bay_ids"] = covered,
-                    ["lit_bay_ids"] = lit,
-                    ["priority_bay_id"] = priority?["bay_id"]
+                    ["timezone_id"] = store["timezone_id"]
                 };
+                result.Merge(GetStoreStatus(store, DateTimeOffset.UtcNow));
+                return result;
             });
 
         // 2. list_bays
         handler.AddTool("list_bays",
-            "List every Curb Delivery collection bay at a BlastBox store, including cover, lighting, facing, priority status, and current process-local occupancy. Pass these MCP-sourced bay facts, live MSN Weather facts, order quantities, and membership tier to the bundled staging skill; do not choose a bay by prose reasoning.",
+            "Return one current planning snapshot of every curbside pickup bay, including cover, lighting, facing direction, wind protection, drainage, distance to the entrance, priority status, fixed demo occupancy, fixed orders_ahead from 6 through 10, and queue timing at 30 seconds per order ahead.",
             schemaConfig: s => s.String("location", "Pickup store city and state whose collection bays should be listed.", required: true),
             handler: async (args, ct) =>
             {
@@ -246,160 +257,45 @@ public class Script : ScriptBase
                 if (store == null)
                     return UnknownStore();
 
-                lock (BayAssignmentLock)
+                var occupancy = store["occupancy"] as JObject;
+                var queueObservedAt = TimeZoneInfo.ConvertTime(
+                    DateTimeOffset.UtcNow,
+                    ResolveStoreTimeZone(store["timezone_id"].ToString())
+                ).ToString("yyyy-MM-ddTHH:mm:sszzz");
+                var result = new JArray();
+                foreach (var bay in (store["bays"] as JArray).OrderBy(b => b["bay_id"].Value<int>()))
                 {
-                    var occupancy = BayOccupancy[store["location"].ToString()] as JObject;
-                    var result = new JArray();
-                    foreach (var bay in (store["bays"] as JArray).OrderBy(b => b["bay_id"].Value<int>()))
+                    var bayId = bay["bay_id"].Value<int>();
+                    var occupant = occupancy[bayId.ToString()];
+                    var occupied = occupant != null && occupant.Type != JTokenType.Null && !string.IsNullOrEmpty(occupant.ToString());
+                    var ordersAhead = bay["orders_ahead"].Value<int>();
+                    result.Add(new JObject
                     {
-                        var bayId = bay["bay_id"].Value<int>();
-                        var occupant = occupancy[bayId.ToString()];
-                        var occupied = occupant != null && occupant.Type != JTokenType.Null && !string.IsNullOrEmpty(occupant.ToString());
-                        result.Add(new JObject
-                        {
-                            ["bay_id"] = bayId,
-                            ["covered"] = bay["covered"],
-                            ["lit"] = bay["lit"],
-                            ["facing"] = bay["facing"],
-                            ["priority"] = bay["priority"],
-                            ["occupied"] = occupied,
-                            ["occupied_by"] = occupied ? occupant : JValue.CreateNull()
-                        });
-                    }
-                    return new JObject
-                    {
-                        ["location"] = store["location"],
-                        ["timezone_id"] = store["timezone_id"],
-                        ["bays"] = result
-                    };
-                }
-            });
-
-        // 3. assign_bay
-        handler.AddTool("assign_bay",
-            "Assign a Curb Delivery collection bay to an order only after the bundled staging skill has deterministically combined MCP operational facts with MSN Weather conditions and selected the bay. Treat order_id only as the collection reference; do not validate or gate assignment using order status. Repeating the same order and bay is idempotent. Moving an order to a new bay releases its previous bay. A different order receives a structured occupied-bay response with sorted free bays.",
-            schemaConfig: s => s
-                .String("location", "Pickup store city and state for the collection.", required: true)
-                .String("order_id", "Order ID being collected (for example, ORD-10421).", required: true)
-                .Integer("bay_id", "Collection bay number selected by the staging skill.", required: true),
-            handler: async (args, ct) =>
-            {
-                var location = (args.Value<string>("location") ?? "").Trim();
-                var orderId = (args.Value<string>("order_id") ?? "").Trim();
-                var bayId = args.Value<int?>("bay_id");
-                var store = FindStore(location);
-                if (store == null)
-                    return UnknownStore();
-
-                var canonicalLocation = store["location"].ToString();
-                var bays = store["bays"] as JArray;
-                var bay = bays.FirstOrDefault(b => b["bay_id"]?.Value<int>() == bayId);
-                if (!bayId.HasValue || bay == null)
-                {
-                    return new JObject
-                    {
-                        ["error"] = "Unknown bay",
-                        ["location"] = canonicalLocation,
-                        ["bay_id"] = bayId.HasValue ? (JToken)bayId.Value : JValue.CreateNull(),
-                        ["known_bays"] = new JArray(bays.Select(b => b["bay_id"]).OrderBy(id => id.Value<int>()))
-                    };
-                }
-                if (string.IsNullOrEmpty(orderId))
-                    return new JObject { ["error"] = "Missing order_id" };
-
-                lock (BayAssignmentLock)
-                {
-                    var occupancy = BayOccupancy[canonicalLocation] as JObject;
-                    var bayKey = bayId.Value.ToString();
-                    var current = occupancy[bayKey];
-                    var occupiedBy = current == null || current.Type == JTokenType.Null ? "" : current.ToString();
-                    if (!string.IsNullOrEmpty(occupiedBy) && !string.Equals(occupiedBy, orderId, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new JObject
-                        {
-                            ["error"] = "Bay occupied",
-                            ["bay_id"] = bayId.Value,
-                            ["occupied_by"] = occupiedBy,
-                            ["free_bays"] = FreeBayIds(canonicalLocation)
-                        };
-                    }
-
-                    foreach (var storeOccupancyProperty in BayOccupancy.Properties())
-                    {
-                        var storeOccupancy = storeOccupancyProperty.Value as JObject;
-                        var assignedTimes =
-                            BayAssignedAt[storeOccupancyProperty.Name] as JObject;
-                        var previousBayKeys = storeOccupancy.Properties()
-                            .Where(property =>
-                                !(string.Equals(
-                                      storeOccupancyProperty.Name,
-                                      canonicalLocation,
-                                      StringComparison.Ordinal)
-                                  && string.Equals(
-                                      property.Name,
-                                      bayKey,
-                                      StringComparison.Ordinal))
-                                && string.Equals(
-                                    property.Value?.ToString(),
-                                    orderId,
-                                    StringComparison.OrdinalIgnoreCase))
-                            .Select(property => property.Name)
-                            .ToArray();
-                        foreach (var previousBayKey in previousBayKeys)
-                        {
-                            storeOccupancy[previousBayKey] = JValue.CreateNull();
-                            assignedTimes?.Remove(previousBayKey);
-                        }
-                    }
-
-                    var storeTimes = BayAssignedAt[canonicalLocation] as JObject;
-                    if (storeTimes == null)
-                    {
-                        storeTimes = new JObject();
-                        BayAssignedAt[canonicalLocation] = storeTimes;
-                    }
-
-                    // Persist so a follow-up list_bays reflects the assignment for this process.
-                    occupancy[bayKey] = orderId;
-                    if (storeTimes[bayKey] == null)
-                        storeTimes[bayKey] = DateTime.UtcNow.ToString("o");
-
-                    var tailParts = orderId.Split('-');
-                    var orderTail = tailParts.Length == 0 ? orderId : tailParts[tailParts.Length - 1];
-                    var confirmation = $"CURB-{orderTail}-{bayId.Value}";
-                    return new JObject
-                    {
-                        ["confirmation"] = confirmation,
-                        ["location"] = canonicalLocation,
-                        ["order_id"] = orderId,
-                        ["bay_id"] = bayId.Value,
+                        ["bay_id"] = bayId,
                         ["covered"] = bay["covered"],
                         ["lit"] = bay["lit"],
-                        ["occupied_at"] = storeTimes[bayKey],
-                        ["message"] = $"Bay {bayId.Value} at {store["name"]} is assigned to order {orderId}. Pull into bay {bayId.Value} and stay in your car."
-                    };
+                        ["facing"] = bay["facing"],
+                        ["wind_protection"] = bay["wind_protection"],
+                        ["drainage"] = bay["drainage"],
+                        ["distance_to_entrance_m"] = bay["distance_to_entrance_m"],
+                        ["priority"] = bay["priority"],
+                        ["occupied"] = occupied,
+                        ["occupied_by"] = occupied ? occupant : JValue.CreateNull(),
+                        ["orders_ahead"] = ordersAhead,
+                        ["queue_seconds_per_order"] = 30,
+                        ["expected_wait_seconds"] = ordersAhead * 30,
+                        ["expected_wait_minutes"] = ordersAhead / 2.0
+                    });
                 }
-            });
-
-        // 4. get_fallback_conditions
-        handler.AddTool("get_fallback_conditions",
-            "Get typical seasonal conditions for a store. Use ONLY when the live weather lookup fails or is unavailable. The response is clearly marked as fallback data and the customer must be told the conditions are typical, not current.",
-            schemaConfig: s => s.String("location", "Pickup store city and state whose typical seasonal conditions are needed.", required: true),
-            handler: async (args, ct) =>
-            {
-                var location = (args.Value<string>("location") ?? "").Trim();
-                var store = FindStore(location);
-                if (store == null)
-                    return UnknownStore();
                 return new JObject
                 {
                     ["location"] = store["location"],
-                    ["conditions"] = JObject.Parse(store["typical_conditions"].ToString()),
                     ["timezone_id"] = store["timezone_id"],
-                    ["fallback_note"] = store["fallback_note"],
-                    ["conditions_source"] = "fallback"
+                    ["queue_observed_at"] = queueObservedAt,
+                    ["bays"] = result
                 };
             });
+
     }
 
 }

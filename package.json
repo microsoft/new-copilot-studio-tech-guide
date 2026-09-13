@@ -9,7 +9,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "validate:solutions": "python deploy/validate_solution_packages.py"
   },
   "dependencies": {
     "astro": "^6.1.9"

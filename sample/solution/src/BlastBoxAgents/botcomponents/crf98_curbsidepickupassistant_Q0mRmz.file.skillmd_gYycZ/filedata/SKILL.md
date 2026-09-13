@@ -1,69 +1,57 @@
 ---
 name: curbside-slip-pdf
-description: Generate a reader-facing one-page BlastBox Curb Delivery note with the confirmed order, pickup time, complete assigned-bay details, weather-aware handling, safety precaution, barcode, and required fallback disclosure.
+description: Render the completed agentic curbside bay recommendation as a customer-facing one-page PDF.
 ---
 
-# Curb Delivery Slip PDF
+# Curbside Recommendation PDF
 
-This skill renders the customer's final collection instructions as a one-page
-PDF. **Always run the bundled `curbside_slip.py` script. Never hand-draw the PDF
-and never write your own rendering code.**
+Use this skill only after the agent has presented the completed recommendation
+and the customer has explicitly asked for a PDF copy. The skill renders that
+completed recommendation. It does not inspect other bays, classify weather,
+calculate queues, apply membership, or select, assign, reserve, confirm, or
+guarantee a bay.
 
-## When to use
+Always run the bundled `curbside_slip.py` script. Never hand-draw the PDF or
+replace the script with generated rendering code.
 
-Use this skill last, after the order, collection bay, staging time, handoff mode,
-bay characteristics, weather-aware delivery handling, customer precaution, and
-conditions disclosure are final. It only renders confirmed values; it does not
-select a bay or calculate a staging window.
+## Inputs
 
-The staging time is when the already-picked order moves into curbside handoff
-staging, not when picking or order preparation starts.
+Pass only these final reader-facing values:
 
-The order/store/bay facts originate from MCP tools, live conditions originate
-from MSN Weather, and the staging time, band, and selected bay originate from the
-bundled staging calculator. This PDF skill only renders that completed
-orchestration.
+- `--order`, `--customer`, and canonical `--store`
+- selected `--bay`
+- current `--orders-ahead` and `--expected-wait-seconds` from queue status
+- optional `--eta-minutes`, using the selector's `remaining_eta_minutes`
+- selector `weather_summary` as concise `--conditions`
+- selector `recommendation_reason` as concise `--reason`
+- `--out blastbox_curbside_slip.pdf`
 
-## Workflow
+The PDF contains the order number as a scannable Code 128 barcode. It presents
+the queue, wait, ETA, and ETA margin once. Do not recreate or restate timing in
+the conditions or reason text.
 
-### 1. Assemble the confirmed values
+Never pass a BlastPass ID, `tier_code`, membership display name, payment,
+email, `occupied_by`, other bays, raw tool output, assignment confirmation,
+staging time, order items, or invented weather.
 
-Pass the already-confirmed, reader-facing values:
+When no weather fact is confirmed, use concise neutral conditions such as
+`Current pickup conditions did not change the bay comparison.` Never mention
+missing fields, unavailable weather, APIs, or limitations.
 
-- `--order`, `--customer`, `--store`, and assignment `--confirmation`
-- `--bay` from the Curb Delivery assignment
-- `--bay-covered`, `--bay-lit`, `--bay-facing`, and `--bay-priority` from the
-  selected bay in the current Curb Delivery response
-- `--handoff` from the staging calculator
-- `--band`, `--stage-at`, and `--arrival-at` from the staging calculator
-- `--items` as semicolon-separated item descriptions
-- `--conditions` as a short customer-facing conditions summary
-- `--delivery-note` using the calculator's delivery instruction and customer
-  precaution
-- `--conditions-source` as `live` or `fallback`
-- `--out` as the PDF output path
-
-Do not put internal paths, session IDs, tool names, or implementation details in
-any value.
-
-### Fallback disclosure
-
-When `--conditions-source fallback` is used, the PDF includes a footer stating
-that live weather was unavailable and the conditions are typical for the store,
-not current. Do not remove, obscure, or contradict that disclosure.
-
-### 2. Run the bundled script
+## Example
 
 ```bash
 python3 curbside_slip.py \
-  --order ORD-10502 --customer "Jordan Pixel" \
-  --store "BlastBox Pixel Heights" --confirmation "CURB-10502-1" --bay 1 \
-  --bay-covered no --bay-lit yes --bay-facing 90 --bay-priority no \
-  --handoff LIT --band DARK --stage-at "22:39" --arrival-at "22:44" \
-  --items "BlastBox Omega Console x1" \
-  --conditions "Partly cloudy, 13C, no rain expected before arrival" \
-  --delivery-note "After-dark pickup requires a lit bay. Remain in your vehicle and use caution if stepping outside." \
-  --conditions-source live --out blastbox_curbside_slip.pdf
+  --order ORD-10502 \
+  --customer "Jordan Pixel" \
+  --store "BlastBox Pixel Heights" \
+  --bay 2 \
+  --orders-ahead 2 \
+  --expected-wait-seconds 60 \
+  --eta-minutes 20 \
+  --conditions "Rain and strong winds are expected around arrival." \
+  --reason "Bay 2 provides the best available weather protection and queue." \
+  --out blastbox_curbside_slip.pdf
 ```
 
 The script prints:
@@ -72,13 +60,5 @@ The script prints:
 WROTE blastbox_curbside_slip.pdf
 ```
 
-### 3. Report
-
-Return the generated PDF to the customer and restate the bay number and plain
-handoff instruction.
-
-## Notes
-
-- The barcode contains the confirmed curbside assignment reference.
-- The script uses `reportlab`, matching the repository's existing PDF skill.
-- The script makes no API or network calls.
+Return only the generated PDF file to the customer. Do not add a separate
+recommendation paragraph on a successful flow.
