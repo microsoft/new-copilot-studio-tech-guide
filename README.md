@@ -2,6 +2,10 @@
 
 A showcase site and deployable sample for the Agents and Workflows experience in Microsoft Copilot Studio.
 
+> **This sample has moved to the [Copilot Studio Gallery](https://microsoft.github.io/copilot-studio-gallery/).**
+> Visit the [BlastBox Omega sample page](https://microsoft.github.io/copilot-studio-gallery/solutions/blastbox-omega/)
+> for the latest sample, walkthroughs, and deployment instructions.
+
 **Live site**: https://microsoft.github.io/new-copilot-studio-tech-guide/
 
 ## What's in this repo
