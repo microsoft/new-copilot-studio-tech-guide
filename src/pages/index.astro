@@ -6,6 +6,20 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <Base title="Copilot Studio: technical guide">
+  <section class="migration" aria-labelledby="migration-title">
+    <div class="container">
+      <div class="migration__notice">
+        <h2 id="migration-title">This sample has moved to the Copilot Studio Gallery</h2>
+        <p>
+          BlastBox Omega has been migrated to the
+          <a href="https://microsoft.github.io/copilot-studio-gallery/">Copilot Studio Gallery</a>.
+          Visit the <a href="https://microsoft.github.io/copilot-studio-gallery/solutions/blastbox-omega/">BlastBox Omega sample page</a>
+          for the latest sample, walkthroughs, and deployment instructions.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- Hero -->
   <section class="hero">
     <div class="container hero__inner">
@@ -42,9 +56,9 @@ const base = import.meta.env.BASE_URL;
           </span>
         </p>
         <div class="hero__actions">
-          <a href="#scenarios" class="btn btn--primary">Explore scenarios</a>
-          <a href="#get-started" class="btn btn--secondary">
-            Get the sample
+          <a href="https://microsoft.github.io/copilot-studio-gallery/solutions/blastbox-omega/" class="btn btn--primary">View sample in gallery</a>
+          <a href="https://microsoft.github.io/copilot-studio-gallery/" class="btn btn--secondary">
+            Browse the gallery
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
           </a>
         </div>
@@ -215,6 +229,17 @@ const base = import.meta.env.BASE_URL;
 </Base>
 
 <style>
+  .migration { padding-top: var(--space-xl); }
+  .migration__notice {
+    padding: var(--space-lg);
+    background: var(--c-primary-light);
+    border: 1px solid var(--c-primary);
+    border-radius: var(--radius-lg);
+  }
+  .migration__notice h2 { font-size: 1.4rem; }
+  .migration__notice p { margin-top: var(--space-sm); color: var(--c-text-secondary); }
+  .migration__notice a { color: var(--c-primary); text-decoration: underline; }
+
   /* ── Hero ── */
   .hero { position: relative; padding: var(--space-4xl) 0 var(--space-3xl); overflow: hidden; }
   .hero__inner {
