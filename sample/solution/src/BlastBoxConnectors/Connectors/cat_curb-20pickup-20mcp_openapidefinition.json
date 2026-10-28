@@ -1,0 +1,37 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Curb Delivery MCP",
+    "description": "BlastBox curbside pickup store and bay lookup. Tools: get_store_location, list_bays. Runs entirely inside the connector \u2014 no external MCP server needed.",
+    "version": "1.0.0"
+  },
+  "host": "placeholder.azure-apim.net",
+  "basePath": "/mcp",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/": {
+      "post": {
+        "summary": "Curb Delivery MCP Server",
+        "description": "MCP server for BlastBox curbside pickup operations. Tools: get_store_location, list_bays.",
+        "operationId": "InvokeCurbDeliveryMCP",
+        "x-ms-agentic-protocol": "mcp-streamable-1.0",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "MCP response"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {},
+  "security": []
+}

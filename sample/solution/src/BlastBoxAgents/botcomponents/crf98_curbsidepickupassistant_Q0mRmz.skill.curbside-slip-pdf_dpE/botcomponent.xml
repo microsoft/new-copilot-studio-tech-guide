@@ -1,0 +1,11 @@
+<botcomponent schemaname="crf98_curbsidepickupassistant_Q0mRmz.skill.curbside-slip-pdf_dpE">
+  <componenttype>9</componenttype>
+  <description>Render the completed agentic bay recommendation as a customer-facing PDF without assigning or reserving the bay.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>curbside-slip-pdf</name>
+  <parentbotid>
+    <schemaname>crf98_curbsidepickupassistant_Q0mRmz</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>
